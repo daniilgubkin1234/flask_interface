@@ -40,7 +40,9 @@
             <label for="comments">Комментарии:</label>
             <textarea id="comments" name="comments" placeholder="Введите комментарии"></textarea>
     
-            <button type="submit" class="submit-btn">Отправить</button>
+            <button id="submitTask" class="submit-btn">Отправить</button>
+            <button id="saveChanges" type="button" style="display: none;">Сохранить изменения</button>
+
         </fieldset>
     </form>
 
@@ -91,8 +93,9 @@
                 <td>{{ task.coexecutors }}</td>
                 <td>{{ task.comments }}</td>
                 <td>
-                    <button class="edit-btn" data-id="{{ task.id }}">Редактировать</button>
-                    <button class="delete-btn" data-id="{{ task.id }}">Удалить</button>
+                    <button class="edit-task btn btn-primary" data-id="{{ task.id }}">Редактировать</button>
+                    <button class="delete-task btn btn-danger" data-id="{{ task.id }}">Удалить</button>
+
                 </td>
             </tr>
             {% endfor %}
