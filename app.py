@@ -1,29 +1,31 @@
 from flask import Flask, render_template, request, jsonify
+from flask_pymongo import PyMongo
+from dotenv import load_dotenv
+import os
+
+# Загружаем переменные из .env
+load_dotenv()
 
 app = Flask(__name__)
-tasks_data = []
+app.config["MONGO_URI"] = os.getenv("MONGO_URI")
+# Проверяем, загрузилась ли переменная
+if not app.config["MONGO_URI"]:
+    raise ValueError("Ошибка: переменная MONGO_URI не найдена в .env!")
+
+mongo = PyMongo(app)
+tasks_collection = mongo.db.tasks
+
 
 @app.route("/")
 def index():
-    return render_template("tasks.html", tasks=tasks_data)
+    tasks = list(tasks_collection.find({}, {"_id": 0}))  # Загружаем все задачи
+    return render_template("tasks.html", tasks=tasks)
 
 @app.route("/add_task", methods=["POST"])
 def add_task():
     data = request.json
-    task = {
-        "id": len(tasks_data) + 1,
-        "task": data["task"],
-        "event": data["event"],
-        "work": data["work"],
-        "responsible": data["responsible"],
-        "deadline": data["deadline"],
-        "result": data["result"],
-        "resources": data["resources"],
-        "coexecutors": data["coexecutors"],
-        "comments": data["comments"],
-    }
-    tasks_data.append(task)
-    return jsonify({"message": "Задача добавлена", "task": task})
+    tasks_collection.insert_one(data)
+    return jsonify({"message": "Задача добавлена", "task": data})
 
 @app.route("/delete_task/<int:task_id>", methods=["DELETE"])
 def delete_task(task_id):
