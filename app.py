@@ -18,28 +18,47 @@ tasks_collection = mongo.db.tasks
 
 @app.route("/")
 def index():
-    tasks = list(tasks_collection.find({}, {"_id": 0}))  # Загружаем все задачи
-    return render_template("tasks.html", tasks=tasks)
+    """ Главная страница с таблицей задач """
+    return render_template("tasks.html")
 
+# Получение всех задач
+@app.route("/get_tasks", methods=["GET"])
+def get_tasks():
+    """ Возвращает все задачи в формате JSON """
+    tasks = list(tasks_collection.find({}, {"_id": 0}))  # Получаем все задачи без Mongo `_id`
+    return jsonify(tasks)
+
+# Добавление новой задачи
 @app.route("/add_task", methods=["POST"])
 def add_task():
+    """ Добавляет новую задачу в базу данных """
     data = request.json
-    tasks_collection.insert_one(data)
-    return jsonify({"message": "Задача добавлена", "task": data})
+    print("Полученные данные:", data)
+    if not data.get("task"):  # Проверяем, есть ли название задачи
+        return jsonify({"error": "Название задачи обязательно"}), 400
 
-@app.route("/delete_task/<int:task_id>", methods=["DELETE"])
-def delete_task(task_id):
-    global tasks_data
-    tasks_data = [task for task in tasks_data if task["id"] != task_id]
-    return jsonify({"message": "Задача удалена"})
+    tasks_collection.insert_one(data)  # Сохраняем в MongoDB
+    return jsonify({"message": "Задача успешно добавлена", "task": data})
 
-@app.route("/edit_task/<int:task_id>", methods=["PUT"])
+# Обновление задачи
+@app.route("/edit_task/<task_id>", methods=["PUT"])
 def edit_task(task_id):
+    """ Обновляет существующую задачу по task_id """
     data = request.json
-    for task in tasks_data:
-        if task["id"] == task_id:
-            task.update(data)
-            return jsonify({"message": "Задача обновлена", "task": task})
+    result = tasks_collection.update_one({"task": task_id}, {"$set": data})
+
+    if result.matched_count:
+        return jsonify({"message": "Задача успешно обновлена"})
+    return jsonify({"error": "Задача не найдена"}), 404
+
+# Удаление задачи
+@app.route("/delete_task/<task_id>", methods=["DELETE"])
+def delete_task(task_id):
+    """ Удаляет задачу из базы данных """
+    result = tasks_collection.delete_one({"task": task_id})
+
+    if result.deleted_count:
+        return jsonify({"message": "Задача успешно удалена"})
     return jsonify({"error": "Задача не найдена"}), 404
 
 if __name__ == "__main__":
