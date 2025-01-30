@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список задач</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}">
+</head>
+<body>
+    <form id="tasks-form">
+        <fieldset>
+            <legend>Составьте план работ</legend>
+    
+            <label for="task">Задача:</label>
+            <input id="task" name="task" type="text" list="task-list" placeholder="Введите или выберите задачу" required>
+            <datalist id="task-list"></datalist>
+    
+            <label for="event">Мероприятие:</label>
+            <input id="event" name="event" type="text" list="event-list" placeholder="Введите или выберите мероприятие">
+            <datalist id="event-list"></datalist>
+    
+            <label for="work">Работа:</label>
+            <textarea id="work" name="work" placeholder="Введите описание работы"></textarea>
+    
+            <label for="responsible">Ответственный:</label>
+            <input id="responsible" name="responsible" type="text" placeholder="Введите имя">
+    
+            <label for="deadline">Срок:</label>
+            <input id="deadline" name="deadline" type="date">
+    
+            <label for="result">Результат:</label>
+            <textarea id="result" name="result" placeholder="Введите ожидаемый результат"></textarea>
+    
+            <label for="resources">Ресурсы:</label>
+            <textarea id="resources" name="resources" placeholder="Введите необходимые ресурсы"></textarea>
+    
+            <label for="coexecutors">Соисполнители:</label>
+            <input id="coexecutors" name="coexecutors" type="text" placeholder="Введите соисполнителей">
+    
+            <label for="comments">Комментарии:</label>
+            <textarea id="comments" name="comments" placeholder="Введите комментарии"></textarea>
+    
+            <button type="submit" class="submit-btn">Отправить</button>
+        </fieldset>
+    </form>
+
+    <div class="filter-wrapper">
+        <select id="filter-column">
+            <option value="all">Все столбцы</option>
+            <option value="task">Задача</option>
+            <option value="event">Мероприятие</option>
+            <option value="work">Работа</option>
+            <option value="responsible">Ответственный</option>
+            <option value="deadline">Срок</option>
+            <option value="result">Результат</option>
+            <option value="resources">Ресурсы</option>
+            <option value="coexecutors">Соисполнители</option>
+            <option value="comments">Комментарии</option>
+        </select>
+        <input type="text" id="filter-input" placeholder="Поиск...">
+    </div>
+
+    <h3>Таблица всех задач</h3>
+    <table id="tasks-table">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Задача</th>
+                <th>Мероприятие</th>
+                <th>Работа</th>
+                <th>Ответственный</th>
+                <th>Срок</th>
+                <th>Результат</th>
+                <th>Ресурсы</th>
+                <th>Соисполнители</th>
+                <th>Комментарии</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr data-id="{{ task.id }}">
+                <td>{{ task.id }}</td>
+                <td>{{ task.task }}</td>
+                <td>{{ task.event }}</td>
+                <td>{{ task.work }}</td>
+                <td>{{ task.responsible }}</td>
+                <td>{{ task.deadline }}</td>
+                <td>{{ task.result }}</td>
+                <td>{{ task.resources }}</td>
+                <td>{{ task.coexecutors }}</td>
+                <td>{{ task.comments }}</td>
+                <td>
+                    <button class="edit-btn" data-id="{{ task.id }}">Редактировать</button>
+                    <button class="delete-btn" data-id="{{ task.id }}">Удалить</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    
+    <script src="{{ url_for('static', filename='tasks.js') }}"></script>
+</body>
+</html>
