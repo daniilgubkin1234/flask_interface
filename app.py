@@ -15,6 +15,7 @@ if not app.config["MONGO_URI"]:
 mongo = PyMongo(app)
 tasks_collection = mongo.db.tasks
 employees_collection = mongo.db.employees
+business_goal_collection = mongo.db.business_goal
 @app.route("/")
 def index():
     """ Главная страница с таблицей задач """
@@ -89,6 +90,22 @@ def update_employee(employee_id):
         mongo.db.personnel.update_one({"_id": employee_id}, {"$set": data})
         return jsonify({"message": "Данные обновлены!"})
     return jsonify({"error": "Ошибка при обновлении"}), 400
+
+@app.route("/business")
+def business_goals():
+    """Страница бизнес-целей"""
+    return render_template("business_goal_form.html")
+
+@app.route("/add_business_goal", methods=["POST"])
+def add_business_goal():
+    """Добавление бизнес-цели в MongoDB"""
+    data = request.json
+    if not data:
+        return jsonify({"error": "Нет данных"}), 400
+
+    mongo.db.business_goal.insert_one(data)
+    return jsonify({"message": "Бизнес-цель добавлена успешно!"}), 201
+
 
 if __name__ == "__main__":
     app.run(debug=True)

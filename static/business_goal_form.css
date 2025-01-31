@@ -1,0 +1,216 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F0F0F0;
+    margin: 0;
+    padding: 0;
+   
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #FFFFFF;
+    padding: 40px;
+    margin: 40px auto;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+}
+
+h2 {
+    text-align: center;
+    color: #2A63C2;
+    margin-bottom: 30px;
+}
+
+fieldset {
+    border: 2px solid #2A63C2;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+legend {
+    font-weight: bold;
+    color: #2A63C2;
+    padding: 0 10px;
+}
+
+label {
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-top: 15px;
+}
+
+input, select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+input:focus,
+select:focus {
+    border-color: #2A63C2;
+    outline: none;
+    box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
+}
+
+.table-container {
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate; /* Используем separate для управления границами */
+    border-spacing: 0; /* Убираем промежутки между ячейками */
+    border-radius: 4px; /* Скругляем углы таблицы */
+    overflow: hidden; /* Убираем содержимое за границами */
+}
+
+table th {
+    background-color: #E8F4FF;
+    color: #2A63C2;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-top: 2px solid #2A63C2; /* Общие границы для всех ячеек */
+    border-left: 2px solid #2A63C2; /* Общие границы для всех ячеек */
+
+}
+
+table td {
+    border-left: 2px solid #2A63C2; /* Общие границы для всех ячеек */
+    border-top: 2px solid #2A63C2; /* Общие границы для всех ячеек */
+    padding: 10px;
+    text-align: center;
+}
+
+table tr td:last-child{
+    border-right: 2px solid #2A63C2; /* Общие границы для всех ячеек */
+}
+
+table tr:last-child td {
+    border-bottom: 2px solid #2A63C2; /* Общие границы для всех ячеек */
+}
+
+/* Закругляем верхний левый угол */
+table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+/* Закругляем верхний правый угол */
+table th:last-child {
+    border-top-right-radius: 8px;
+    border-right: 2px solid #2A63C2; /* Общие границы для всех ячеек */
+}
+/* Закругляем нижний левый угол */
+table tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+}
+
+/* Закругляем нижний правый угол */
+table tr:last-child td:last-child {
+    border-bottom-right-radius: 8px;
+}
+
+table input[type="text"],
+table input[type="date"],
+table textarea {
+    width: 95%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+table textarea {
+    min-height: 50px; /* Минимальная высота */
+    resize: vertical; /* Разрешаем изменение размера по вертикали */
+}
+
+table textarea:focus,
+table input[type="text"]:focus,
+table input[type="date"]:focus {
+    border-color: #2A63C2;
+    outline: none;
+    box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
+}
+
+.add-task-btn {
+    background-color: #2A63C2;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.add-task-btn:hover {
+    background-color: #1F4B8F;
+}
+
+.btn{
+    background-color: #2A63C2;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    margin-top: 30px;
+    width: 100%;
+}
+
+.btn:hover {
+    background-color: #1F4B8F;
+}
+
+
+.recommendation-block {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 30px 0;
+}
+
+.recommendation-block h3 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Контейнер для кнопок */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Улучшенные кнопки */
+.nav-button {
+    background: #2A63C2;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
