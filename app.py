@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_pymongo import PyMongo
 from dotenv import load_dotenv
 import os
-
+from bson.objectid import ObjectId
 # Загружаем переменные из .env
 load_dotenv()
 
@@ -14,8 +14,7 @@ if not app.config["MONGO_URI"]:
 
 mongo = PyMongo(app)
 tasks_collection = mongo.db.tasks
-
-
+employees_collection = mongo.db.employees
 @app.route("/")
 def index():
     """ Главная страница с таблицей задач """
@@ -60,6 +59,36 @@ def delete_task(task_id):
     if result.deleted_count:
         return jsonify({"message": "Задача успешно удалена"})
     return jsonify({"error": "Задача не найдена"}), 404
+
+
+# Страница "Персонал"
+@app.route("/personnel")
+def personnel():
+    return render_template("employee_profile.html")
+@app.route("/add_employee", methods=["POST"])
+def add_employee():
+    data = request.json
+    if data:
+        mongo.db.personnel.insert_one(data)
+        return jsonify({"message": "Сотрудник добавлен!"}), 201
+    return jsonify({"error": "Ошибка при добавлении"}), 400
+
+@app.route("/get_employee", methods=["GET"])
+def get_employee():
+    name = request.args.get("name")
+    employee = mongo.db.personnel.find_one({"name": name})
+    if employee:
+        employee["_id"] = str(employee["_id"])
+        return jsonify(employee)
+    return jsonify({"error": "Сотрудник не найден"}), 404
+
+@app.route("/update_employee/<employee_id>", methods=["PUT"])
+def update_employee(employee_id):
+    data = request.json
+    if data:
+        mongo.db.personnel.update_one({"_id": employee_id}, {"$set": data})
+        return jsonify({"message": "Данные обновлены!"})
+    return jsonify({"error": "Ошибка при обновлении"}), 400
 
 if __name__ == "__main__":
     app.run(debug=True)

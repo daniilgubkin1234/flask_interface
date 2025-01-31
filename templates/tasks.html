@@ -101,8 +101,18 @@
             {% endfor %}
         </tbody>
     </table>
-    
+    <!-- Навигационный блок -->
+    <div class="recommendation-block">
+        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+        <div class="button-container">
+            <button class="nav-button" onclick="window.location.href='/'">Задачи</button>
+            <button class="nav-button" onclick="window.location.href='/personnel'">Персонал</button>
+        </div>
+    </div>
     
     <script src="{{ url_for('static', filename='tasks.js') }}"></script>
 </body>
 </html>
+
+
+

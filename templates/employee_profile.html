@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заполнить портрет сотрудника</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='templates_style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Заполнить портрет сотрудника</h2>
+        <form id="employeeProfileForm" action="#">
+            <fieldset>
+                <legend>Портрет сотрудника</legend>
+                <div id="profileItems">
+                    <!-- Основные поля -->
+
+                    <div class="profile-item">
+                        <label for="name">Имя сотрудника:</label>
+                        <input type="text" id="name" name="name" placeholder="Введите имя сотрудника" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="gender">Пол:</label>
+                        <input type="text" id="gender" name="gender" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="age">Возраст:</label>
+                        <input type="number" id="age" name="age" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="residence">Проживание:</label>
+                        <input type="text" id="residence" name="residence" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="education">Образование:</label>
+                        <input type="text" id="education" name="education" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="speech">Грамотная речь:</label>
+                        <input type="text" id="speech" name="speech" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="languages">Знание иностранных языков:</label>
+                        <input type="text" id="languages" name="languages" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="pc">Владение ПК, оргтехникой:</label>
+                        <input type="text" id="pc" name="pc" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="appearance">Внешний вид:</label>
+                        <input type="text" id="appearance" name="appearance" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="habits">Вредные привычки:</label>
+                        <input type="text" id="habits" name="habits" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="info">Умение работать с информацией:</label>
+                        <input type="text" id="info" name="info" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="accuracy">Точность:</label>
+                        <input type="text" id="accuracy" name="accuracy" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="scrupulousness">Скурпулезность:</label>
+                        <input type="text" id="scrupulousness" name="scrupulousness" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="systemThinking">Системное мышление:</label>
+                        <input type="text" id="systemThinking" name="systemThinking" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="decisiveness">Решительность:</label>
+                        <input type="text" id="decisiveness" name="decisiveness" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="stressResistance">Стрессоустойчивость:</label>
+                        <input type="text" id="stressResistance" name="stressResistance" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="otherQualities">Иные качества:</label>
+                        <input type="text" id="otherQualities" name="otherQualities" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="independence">Умение самостоятельно принимать решение:</label>
+                        <input type="text" id="independence" name="independence" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="organization">Умение организовать труд подчиненных:</label>
+                        <input type="text" id="organization" name="organization" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="responsibility">Умение брать ответственность:</label>
+                        <input type="text" id="responsibility" name="responsibility" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="managementStyle">Стиль управления:</label>
+                        <input type="text" id="managementStyle" name="managementStyle" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="leadership">Лидерские качества:</label>
+                        <input type="text" id="leadership" name="leadership" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="mobility">Мобильность:</label>
+                        <input type="text" id="mobility" name="mobility" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="businessTrips">Возможность и желание командировок:</label>
+                        <input type="text" id="businessTrips" name="businessTrips" placeholder="Введите значение" required>
+                    </div>
+                    <div class="profile-item">
+                        <label for="car">Наличие автомобиля:</label>
+                        <input type="text" id="car" name="car" placeholder="Введите значение" required>
+                    </div>
+                </div>
+                <div id="additional-fields"></div>
+
+                <button type="button" id="add-field-button">+ Добавить пункт</button>
+            </fieldset>
+
+            <button type="submit" id="submit-button">Отправить</button>
+            <button type="button" id="edit-button" style="display: none;">Редактировать</button>
+            <button type="button" id="save-button" style="display: none;">Сохранить изменения</button>
+        </form>
+    </div>
+
+     <!-- Навигационный блок -->
+     <div class="recommendation-block">
+        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+        <div class="button-container">
+            <button class="nav-button" onclick="window.location.href='/'">Задачи</button>
+            <button class="nav-button" onclick="window.location.href='/personnel'">Персонал</button>
+        </div>
+    </div>
+    
+    <script defer src="{{ url_for('static', filename='employee_profile.js') }}"></script>
+
+</body>
+</html>
