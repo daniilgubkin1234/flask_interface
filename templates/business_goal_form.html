@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бизнес-цель</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='business_goal_form.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Форма для заполнения бизнес-целей</h2>
+        <form id="businessForm">
+
+            <fieldset>
+                <legend>Финансы</legend>
+                <label for="financeRevenue">Выручка, руб.:</label>
+                <input type="text" id="financeRevenue" name="financeRevenue" placeholder="Введите сумму">
+
+                <label for="financeProfit">Прибыль, руб.:</label>
+                <input type="text" id="financeProfit" name="financeProfit" placeholder="Введите сумму">
+            </fieldset>
+
+            <fieldset>
+                <legend>Персонал</legend>
+                <label for="personnelCount">Количество человек:</label>
+                <input type="text" id="personnelCount" name="personnelCount" placeholder="Введите количество">
+
+                <label for="averageSalary">Средняя заработная плата, руб./мес.:</label>
+                <input type="text" id="averageSalary" name="averageSalary" placeholder="Введите сумму">
+            </fieldset>
+
+            <fieldset>
+                <legend>Продажи</legend>
+                <label for="clientBase">Клиентская база, человек:</label>
+                <input type="text" id="clientBase" name="clientBase" placeholder="Введите количество">
+
+                <label for="conversionRate">Конверсия, %:</label>
+                <input type="text" id="conversionRate" name="conversionRate" placeholder="Введите процент">
+            </fieldset>
+
+            <fieldset>
+                <legend>Социальная ответственность</legend>
+                <label for="taxes">Уплата налогов, руб./год:</label>
+                <input type="text" id="taxes" name="taxes" placeholder="Введите сумму">
+
+                <label for="treePlanting">Сажаю деревья?</label>
+                <input type="text" id="treePlanting" name="treePlanting" placeholder="Введите ответ">
+            </fieldset>
+
+            <fieldset>
+                <legend>Когда начинаем:</legend>
+                <label for="startDate">Дата:</label>
+                <input type="date" id="startDate" name="startDate">
+            </fieldset>
+
+            <div class="table-container">
+                <h2>Этапы реализации</h2>
+                <table id="stagesTable">
+                    <thead>
+                        <tr>
+                            <th>Название этапа</th>
+                            <th>Описание этапа</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" name="stageNumber[]" placeholder="Старт проекта"></td> 
+                            <td><textarea name="stageDescription[]" placeholder="Описание этапа"></textarea></td>
+                            <td><input type="date" name="stageDate[]"></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="stageNumber[]" placeholder="Название этапа"></td> 
+                            <td><textarea name="stageDescription[]" placeholder="Описание этапа"></textarea></td>
+                            <td><input type="date" name="stageDate[]"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="add-task-btn" id="addStageBtn">+ Добавить этап</button>
+            </div>
+
+            <button type="submit" class="btn">Отправить данные</button>
+        </form>
+    </div>
+
+    <!-- Навигационный блок -->
+    <div class="recommendation-block">
+        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+        <div class="button-container">
+            <button class="nav-button" onclick="window.location.href='/'">Задачи</button>
+            <button class="nav-button" onclick="window.location.href='/personnel'">Персонал</button>
+            <button class="nav-button" onclick="window.location.href='/business'">Бизнес цели</button>
+        </div>
+    </div>
+    <script defer src="{{ url_for('static', filename='business_goal_form.js') }}"></script>
+</body>
+</html>
