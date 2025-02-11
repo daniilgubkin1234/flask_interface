@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опросник AI-помощника</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="{{ url_for('static', filename='survey_ai_script.js') }}"></script>
+<script defer src="{{ url_for('static', filename='survey_ai_submit.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='survey_ai_style.css') }}">
+</head>
+<body>
+    <div class="survey-container">
+        <h2>Опросник</h2>
+        <form id="survey-form" action="">
+
+            <!-- ВСТУПИТЕЛЬНЫЕ ВОПРОСЫ -->
+            <h3>ВСТУПИТЕЛЬНЫЕ ВОПРОСЫ</h3>
+            <fieldset>
+                <legend>Вопросы 1-10</legend>
+                <label for="q1">1. Напишите, пожалуйста, как удобнее к вам обращаться:</label>
+                <textarea id="q1" name="q1" placeholder="Введите ответ"></textarea>
+
+                <label for="q2">2. Как называется ваша компания?</label>
+                <textarea id="q2" name="q2" placeholder="Введите ответ"></textarea>
+
+                <label for="q3">3. Укажите, пожалуйста, сайт компании или ссылку на соцсети:</label>
+                <textarea id="q3" name="q3" placeholder="Введите ответ"></textarea>
+
+                <label for="q4">4. Каким видом/видами деятельности занимается ваша компания?</label>
+                <textarea id="q4" name="q4" placeholder="Введите ответ"></textarea>
+
+                <label for="q5">5. Назовите, пожалуйста, ваш статус в компании:</label>
+                <textarea id="q5" name="q5" placeholder="Введите ответ"></textarea>
+
+                <label for="q6">6. Назовите, пожалуйста, должность, занимаемую вами в компании:</label>
+                <textarea id="q6" name="q6" placeholder="Введите ответ"></textarea>
+
+                <label for="q7">7. Сколько человек работает в вашей компании?</label>
+                <textarea id="q7" name="q7" placeholder="Введите ответ"></textarea>
+
+                <label for="q8">8. Назовите, пожалуйста, годовую выручку вашей компании в рублях:</label>
+                <textarea id="q8" name="q8" placeholder="Введите ответ"></textarea>
+
+                <label for="q9">9. Назовите, пожалуйста, численность управленческого персонала вашей компании:</label>
+                <textarea id="q9" name="q9" placeholder="Введите ответ"></textarea>
+
+                <label for="q10">10. Сколько человек находится в вашем прямом подчинении?</label>
+                <textarea id="q10" name="q10" placeholder="Введите ответ"></textarea>
+            </fieldset>
+
+            <!-- БЛОК №1. Задачи -->
+            <h3>БЛОК №1. Задачи</h3>
+
+            <div class="custom-select-wrapper">
+                <label for="strategy">11. Есть ли у вашей компании оформленная стратегия?</label>
+                <div class="custom-select" data-id="strategy">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="task_setting">12. Каким образом вы сейчас ставите задачи своим сотрудникам/контролируете их исполнение?</label>
+                <div class="custom-select" data-id="task_setting">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="звоню">Звоню</li>
+                        <li class="custom-option" data-value="ставлю на совещании/личной встрече">Ставлю на совещании/личной встрече</li>
+                        <li class="custom-option" data-value="пишу в мессенджере">Пишу в мессенджере</li>
+                        <li class="custom-option" data-value="есть специальное ПО">Есть специальное ПО</li>
+                        <li class="custom-option" data-value="никак">Никак</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="overdue">13. Какой процент задач попадает в категорию просроченных?</label>
+                <div class="custom-select" data-id="overdue">
+                    <div class="custom-select-trigger" data-value="">Выберите процент</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="10">10%</li>
+                        <li class="custom-option" data-value="20">20%</li>
+                        <li class="custom-option" data-value="30">30%</li>
+                        <li class="custom-option" data-value="40">40%</li>
+                        <li class="custom-option" data-value="50">50%</li>
+                        <li class="custom-option" data-value="60">60%</li>
+                        <li class="custom-option" data-value="70">70%</li>
+                        <li class="custom-option" data-value="80">80%</li>
+                        <li class="custom-option" data-value="90">90%</li>
+                        <li class="custom-option" data-value="100">100%</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="meeting_protocol">14. Ведете ли вы протокол совещания?</label>
+                <div class="custom-select" data-id="meeting_protocol">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="protocol_to_task">15. Как пункты протокола превращаются в задачи для сотрудников?</label>
+                <div class="custom-select" data-id="protocol_to_task">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="секретарь рассылает в протокол">Секретарь рассылает в протокол</li>
+                        <li class="custom-option" data-value="сразу на совещании заносим в автоматизированный задачник">Сразу на совещании заносим в автоматизированный задачник</li>
+                        <li class="custom-option" data-value="рассылаем по электронной почте">Рассылаем по электронной почте</li>
+                        <li class="custom-option" data-value="сотрудники сами записывают на совещании">Сотрудники сами записывают на совещании</li>
+                        <li class="custom-option" data-value="никак">Никак</li>
+                    </ul>
+                </div>
+            </div>            
+            
+            <!-- БЛОК №2. Люди -->
+            <h3>БЛОК №2. Люди</h3>
+
+            <div class="custom-select-wrapper">
+                <label for="job_portrait">16. Есть ли у вас четкий портрет каждой должности?</label>
+                <div class="custom-select" data-id="job_portrait">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="instructions">17. Есть ли у ваших сотрудников должностные инструкции?</label>
+                <div class="custom-select" data-id="instructions">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="full_efficiency">18. Через какое время вы можете сказать, что сотрудник начинает работать на 100%?</label>
+                <div class="custom-select" data-id="full_efficiency">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="менее 1 месяца">Менее 1 месяца</li>
+                        <li class="custom-option" data-value="через месяц">Через месяц</li>
+                        <li class="custom-option" data-value="через 2 месяца">Через 2 месяца</li>
+                        <li class="custom-option" data-value="более трех месяцев">Более трёх месяцев</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="mentorship">19. Есть ли на предприятии система наставничества?</label>
+                <div class="custom-select" data-id="mentorship">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="training">20. Есть ли на предприятии система обучения сотрудников?</label>
+                <div class="custom-select" data-id="training">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- БЛОК №3. Система стимулирования -->
+            <h3>БЛОК №3. Система стимулирования</h3>
+
+            <div class="custom-select-wrapper">
+                <label for="payment">21. Есть ли на предприятии положение об оплате труда?</label>
+                <div class="custom-select" data-id="payment">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="stimulation_methods">22. Есть ли еще какие-то методы стимулирования (помимо оплаты труда) на предприятии?</label>
+                <div class="custom-select" data-id="stimulation_methods">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="visual_stimulation">23. Визуализирована ли ваша система стимулирования?</label>
+                <div class="custom-select" data-id="visual_stimulation">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="corporate_culture">24. Описана ли в каком-либо документе ваша организационная/корпоративная культура?</label>
+                <div class="custom-select" data-id="corporate_culture">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="roles">25. Четко ли ваши сотрудники представляют свой функционал, цель и задачи компании, перспективы карьерного роста?</label>
+                <div class="custom-select" data-id="roles">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- БЛОК №4. Бизнес-процессы -->
+            <h3>БЛОК №4. Бизнес-процессы</h3>
+
+            <div class="custom-select-wrapper">
+                <label for="business_processes">26. Описаны ли бизнес-процессы в вашей компании?</label>
+                <div class="custom-select" data-id="business_processes">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="responsible_employee">27. Есть ли на предприятии сотрудник, отвечающий за описание и реорганизацию бизнес-процессов?</label>
+                <div class="custom-select" data-id="responsible_employee">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="software_use">28. Используется ли специальное ПО для реорганизации бизнес-процессов?</label>
+                <div class="custom-select" data-id="software_use">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="regulations">29. Есть ли у вас на предприятии система регламентов?</label>
+                <div class="custom-select" data-id="regulations">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="quality_control">30. Осуществляете ли контроль качества исполнения бизнес-процессов?</label>
+                <div class="custom-select" data-id="quality_control">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- БЛОК №5. Организационная структура -->
+            <h3>БЛОК №5. Организационная структура</h3>
+
+            <div class="custom-select-wrapper">
+                <label for="org_structure">31. Назовите тип организационной структуры в вашей компании.</label>
+                <div class="custom-select" data-id="org_structure">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="линейно-функциональная">Линейно-функциональная</li>
+                        <li class="custom-option" data-value="дивизиональная">Дивизиональная</li>
+                        <li class="custom-option" data-value="матричная">Матричная</li>
+                        <li class="custom-option" data-value="проектная">Проектная</li>
+                        <li class="custom-option" data-value="другая">Другая</li>
+                        <li class="custom-option" data-value="затрудняюсь ответить">Затрудняюсь ответить</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="structure_visual">32. Организационная структура визуализирована?</label>
+                <div class="custom-select" data-id="structure_visual">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="hierarchy">33. Сотрудник может ознакомиться с оргструктурой и понять свое место в ней?</label>
+                <div class="custom-select" data-id="hierarchy">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="roles_knowledge">34. Сотрудник может узнать функционал других сотрудников?</label>
+                <div class="custom-select" data-id="roles_knowledge">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="custom-select-wrapper">
+                <label for="cross_tasks">35. Сотрудники разных подразделений могут ставить задачи друг другу?</label>
+                <div class="custom-select" data-id="cross_tasks">
+                    <div class="custom-select-trigger" data-value="">Выберите ответ</div>
+                    <ul class="custom-options">
+                        <li class="custom-option" data-value="да">Да</li>
+                        <li class="custom-option" data-value="нет">Нет</li>
+                    </ul>
+                </div>
+            </div>            
+            
+            <!-- ЗАВЕРШАЮЩИЕ ВОПРОСЫ -->
+            <h3>ЗАВЕРШАЮЩИЕ ВОПРОСЫ</h3>
+            <fieldset>
+                <legend>Вопросы 36-45</legend>
+                <label for="q36">36. Какие управленческие проблемы вы видите в своей деятельности?</label>
+
+                <div>
+                    <p>1. Я трачу слишком много времени на операционную деятельность</p>
+                    <label>
+                        <input type="radio" name="q36_1" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_1" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>2. Сотрудники плохо исполняют поручения</p>
+                    <label>
+                        <input type="radio" name="q36_2" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_2" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>3. У нас большая "текучка" кадров</p>
+                    <label>
+                        <input type="radio" name="q36_3" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_3" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>4. Мы приобрели программное обеспечение для решения наших управленческих задач, но оно не работает</p>
+                    <label>
+                        <input type="radio" name="q36_4" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_4" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>5. Я работаю круглосуточно, а мои топ-менеджеры и сотрудники нет</p>
+                    <label>
+                        <input type="radio" name="q36_5" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_5" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>6. Я не успеваю заниматься развитием компании</p>
+                    <label>
+                        <input type="radio" name="q36_6" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_6" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>7. У меня ненормированный рабочий день</p>
+                    <label>
+                        <input type="radio" name="q36_7" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_7" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>8. Я вынужден по 10 раз напоминать про свои поручения, и часть из них все равно не исполняется</p>
+                    <label>
+                        <input type="radio" name="q36_8" value="да"> Да
+                    </label>
+                    <label>
+                        <input type="radio" name="q36_8" value="нет"> Нет
+                    </label>
+                </div>
+            
+                <div>
+                    <p>9. Свой вариант</p>
+                    <textarea id="q36_9" name="q36_9" placeholder="Введите ваш вариант"></textarea>
+                </div>
+
+
+                <label for="q37">37. Перечислите, пожалуйста, наименования используемых вами программных продуктов:</label>
+                <textarea id="q37" name="q37" placeholder="Введите ответ"></textarea>
+
+                <label for="q38">38. Кто в вашей компании принимает решение о внедрении нового программного продукта?</label>
+                <textarea id="q38" name="q38" placeholder="Введите ответ"></textarea>
+
+                <label for="q39">39. Занимаетесь ли вы операционным управлением в своей компании?</label>
+                <textarea id="q39" name="q39" placeholder="Введите ответ"></textarea>
+
+                <label for="q40">40. Кто на период вашего отсутствия исполняет ваши обязанности?</label>
+                <textarea id="q40" name="q40" placeholder="Введите ответ"></textarea>
+
+                <label for="q41">41. Насколько вам нравится заниматься операционной деятельностью? (1 - совсем не нравится, 10 - обожаю):</label>
+                <input type="number" id="q41" name="q41" min="1" max="10">
+
+                <label for="q42">42. Сколько часов в день занимает у вас операционная деятельность?</label>
+                <textarea id="q42" name="q42" placeholder="Введите ответ"></textarea>
+
+                <label for="q43">43. Какие задачи вы считаете наиболее важными для себя?</label>
+                <textarea id="q43" name="q43" placeholder="Введите ответ"></textarea>
+
+                <label for="q44">44. Укажите, пожалуйста, удобный для вас контакт для связи:</label>
+                <textarea id="q44" name="q44" placeholder="Введите ответ"></textarea>
+
+                <label for="q45">45. Укажите, пожалуйста, адрес электронной почты для отправки результатов тестирования:</label>
+                <textarea id="q45" name="q45" placeholder="Введите ответ"></textarea>
+            </fieldset>
+            <button type="submit">Отправить</button>
+        </form>
+
+        <div id="results" class="results" style="display: none;">
+            <h3>Результаты по каждому блоку</h3>
+            <p id="block1-result"></p>
+            <p id="block2-result"></p>
+            <p id="block3-result"></p>
+            <p id="block4-result"></p>
+            <p id="block5-result"></p>
+        </div>
+        
+        <!-- Канвас для радарного графика -->
+        <div id="chart-container" style="display: none;">
+            <canvas id="radarChart"></canvas>
+        </div>
+
+        <!-- Вывод рекомендаций -->
+        <div id="recommendations" class="recommendations" style="display: none;">
+            <h3>Рекомендации:</h3>
+            <ul id="recommendation-list"></ul>
+        </div>        
+    </div>
+    <div class="recommendation-block">
+        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+        <div class="button-container">
+            <button class="nav-button" onclick="window.location.href='/'">Задачи</button>
+            <button class="nav-button" onclick="window.location.href='/personnel'">Персонал</button>
+            <button class="nav-button" onclick="window.location.href='/business'">Бизнес цели</button>
+            <button class="nav-button" onclick="window.location.href='/survey'">Опросник</button>
+        </div>
+    </div>
+    
+</body>
+</html>
