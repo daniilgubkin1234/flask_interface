@@ -1,0 +1,330 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+   
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.survey-container {
+    background-color: #ffffff;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+h3 {
+    color: #444;
+    margin-top: 30px;
+    border-bottom: 2px solid #2A63C2;
+    padding-bottom: 5px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+    width: 100%; /* Полная ширина контейнера */
+    max-width: 100%; /* Убедиться, что ширина не превышает контейнер */
+    padding: 10px; /* Внутренний отступ */
+    border: 1px solid #cccccc; /* Стандартный цвет рамки */
+    border-radius: 4px; /* Скругленные углы */
+    box-sizing: border-box; /* Учитываем padding в ширину */
+    font-size: 16px; /* Размер текста */
+    margin-bottom: 15px; /* Отступ снизу */
+    resize: vertical; /* Разрешить изменение размера только по вертикали */
+    transition: border-color 0.3s, box-shadow 0.3s; /* Плавный переход */
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+    border-color: #2A63C2; /* Цвет рамки при фокусе */
+    box-shadow: 0 0 5px rgba(42, 99, 194, 0.5); /* Тень при фокусе */
+    outline: none; /* Убираем стандартное выделение */
+}
+
+input[type="radio"] {
+    margin-right: 10px;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+fieldset {
+    margin-bottom: 20px;
+    border: 2px solid #2A63C2;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+legend {
+    font-weight: bold;
+    font-size: 18px;
+    color: #2A63C2;
+}
+
+/* Контейнер кастомного списка */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    box-sizing: border-box;
+    width: 100%; /* Устанавливаем ширину */
+}
+
+.custom-select-trigger[data-value=""] {
+    color: #cccccc; /* Бледный цвет для начального текста */
+    font-style: italic; /* Курсивный стиль для плейсхолдера */
+}
+
+.custom-select-trigger:not([data-value=""]) {
+    color: #333333; /* Стандартный цвет для текста после выбора */
+    font-style: normal; /* Убираем курсив */
+}
+
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: calc(100% - 4px); /* Устанавливаем ширину с учетом границ */
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    z-index: 1000;
+    display: none; /* Скрыто по умолчанию */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 4px 4px;
+    transition: all 0.3s ease;
+    margin: 1px;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.custom-option {
+    padding: 10px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    list-style: none;
+    text-align: left;
+    width: 100%; /* Гарантируем, что выпадающий список занимает всю ширину */
+    transition: background 0.2s;
+}
+
+.custom-option:hover {
+    background: #f0f0f0;
+}
+
+/* Активное состояние */
+.custom-select.open .custom-options {
+    display: block;
+}
+
+.custom-option.selected {
+    font-weight: bold;
+    color: #88BEFF;
+    background-color: #e0e0e0;
+}
+
+button[type="submit"] {
+    background-color: #88BEFF;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+button[type="submit"]:hover {
+    background-color: #66A3FF;
+}
+
+.results {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #e8f4ff;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.results h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.results p {
+    font-size: 16px;
+    color: #444;
+    margin: 5px 0;
+}
+
+#chart-container {
+    margin-top: 40px;
+    text-align: center;
+}
+
+/* Добавляем стиль для canvas */
+canvas#radarChart {
+    width: 400px;
+    height: 400px;
+}
+
+#recommendations {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+#recommendations h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#recommendation-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#recommendation-list li {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #ffffff;
+    border-left: 4px solid #88BEFF;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    font-size: 16px;
+    line-height: 1.5;
+    color: #444;
+}
+
+#recommendation-list li:last-child {
+    margin-bottom: 0;
+}
+
+.recommendation-block {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 30px 0;
+}
+
+.recommendation-block h3 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Контейнер для кнопок */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Улучшенные кнопки */
+.nav-button {
+    background: #2A63C2;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+
+@media (max-width: 600px) {
+    .survey-container {
+        width: 100%;
+        padding: 10px;
+        margin: 0;
+        border-radius: 0px;
+    }
+
+    .survey-container > * {
+        max-width: 100%;
+    }
+
+    h2 {
+        font-size: 1.5em;
+    }
+
+    form {
+        gap: 10px;
+    }
+
+    button[type="submit"] {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 1024px) and (min-width: 601px) {
+    .survey-container {
+        max-width: 700px;
+    }
+}
+
+.t-container {
+    display: flex;
+    justify-content: center;
+}

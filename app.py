@@ -16,6 +16,7 @@ mongo = PyMongo(app)
 tasks_collection = mongo.db.tasks
 employees_collection = mongo.db.employees
 business_goal_collection = mongo.db.business_goal
+survey_collection = mongo.db.surveys
 @app.route("/")
 def index():
     """ Главная страница с таблицей задач """
@@ -105,6 +106,41 @@ def add_business_goal():
 
     mongo.db.business_goal.insert_one(data)
     return jsonify({"message": "Бизнес-цель добавлена успешно!"}), 201
+
+
+@app.route("/survey")
+def survey():
+    """Отображение страницы с опросником"""
+    return render_template("survey_ai.html")
+
+@app.route("/submit_survey", methods=["POST"])
+def submit_survey():
+    """Обработка и сохранение результатов опроса"""
+    data = request.json
+    if not data:
+        return jsonify({"error": "Нет данных для сохранения"}), 400
+
+    # Подготовка данных для сохранения
+    survey_result = {
+        "user_answers": data
+    }
+
+    # Сохранение данных в MongoDB
+    result = mongo.db.surveys.insert_one(survey_result)
+
+    return jsonify({
+        "message": "Опрос успешно сохранен!",
+        "survey_id": str(result.inserted_id)
+    }), 201
+
+@app.route("/get_survey_results/<survey_id>", methods=["GET"])
+def get_survey_results(survey_id):
+    """Получение данных опроса по ID"""
+    survey = mongo.db.surveys.find_one({"_id": ObjectId(survey_id)})
+    if survey:
+        survey["_id"] = str(survey["_id"])
+        return jsonify(survey)
+    return jsonify({"error": "Опрос не найден"}), 404
 
 
 if __name__ == "__main__":
