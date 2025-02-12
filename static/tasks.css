@@ -35,6 +35,7 @@ legend {
     font-weight: bold;
     color: #2A63C2;
     padding: 0 10px;
+    font-size: 20px;
 }
 
 label {
@@ -146,16 +147,6 @@ button:hover {
     background-color: #1F4B8F;
 }
 
-.edit-btn, .delete-btn{
-    background-color: #2A63C2;
-    color: white;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-right: 5px;
-}
 
 .edit-btn:hover, .delete-btn:hover{
     background-color: #1F4B8F;
@@ -229,13 +220,20 @@ button:hover {
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed; /* Фиксированная ширина колонок */
+   
 }
-
+td {
+    word-wrap: break-word; /* Перенос длинных слов */
+    overflow-wrap: break-word; /* Альтернативный способ переноса */
+    white-space: normal; /* Разрешаем перенос строк */
+}
 th, td {
     border: 1px solid #ccc;
     padding: 10px;
     text-align: left;
     font-size: 14px;
+    
 }
 
 th {
@@ -274,11 +272,15 @@ tr:hover {
 
 /* Стрелки сортировки */
 .sort-btn {
-    font-size: 12px;
-    color: #fff;
+    background-color: #2A63C2;
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    user-select: none;
-    transition: color 0.3s;
+    transition: background-color 0.3s;
+    margin-top: 20px;
 }
 
 .sort-btn.active {
@@ -288,6 +290,8 @@ tr:hover {
 .sort-btn:hover {
     color: #e0e0e0; /* Подсветка при наведении */
 }
+
+
 
 .filter-wrapper {
     display: flex;
@@ -342,4 +346,11 @@ tr:hover {
 .nav-button:hover {
     background: #0056b3;
     transform: scale(1.05);
+}
+
+.task-actions {
+    text-align: center;
+  
+    gap: 10px; /* Отступы между кнопками */
+    flex-wrap: wrap;
 }

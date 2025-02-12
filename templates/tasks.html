@@ -92,10 +92,10 @@
                 <td>{{ task.resources }}</td>
                 <td>{{ task.coexecutors }}</td>
                 <td>{{ task.comments }}</td>
-                <td>
-                    <button class="edit-task btn btn-primary" data-id="{{ task.id }}">Редактировать</button>
+                <td class="task-actions">
+                    <button class="edit-task btn btn-primary" data-id="{{ task.id }}">Редактироватьwewew</button>
                     <button class="delete-task btn btn-danger" data-id="{{ task.id }}">Удалить</button>
-
+                    <button class="copy-task btn btn-secondary" data-id="{{ task.id }}">Копировать</button>
                 </td>
             </tr>
             {% endfor %}

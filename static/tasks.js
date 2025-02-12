@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     loadTasks(); 
-
+     
+    
     function loadTasks() {
         fetch("/get_tasks")
             .then(response => response.json())
@@ -22,9 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${task.resources || ""}</td>
                         <td>${task.coexecutors || ""}</td>
                         <td>${task.comments || ""}</td>
-                        <td>
+                        <td class="task-actions">
                             <button class="edit-task btn btn-primary" data-id="${task.task}">Редактировать</button>
                             <button class="delete-task btn btn-danger" data-id="${task.task}">Удалить</button>
+                            <button class="copy-task btn btn-secondary" data-id="${task.task}">Копировать в буффер</button>
                         </td>
                     `;
 
@@ -126,9 +128,45 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             alert(data.message);
-            loadTasks(); // 🟢 Важно! Теперь кнопки "Редактировать" и "Удалить" снова работают
+            loadTasks(); // 
             document.getElementById("task-form").reset();
         })
         .catch(error => console.error("Ошибка добавления задачи:", error));
     });
+
+    const tableBody = document.querySelector("#tasks-table tbody");
+
+    // Добавляем обработчик на кнопки "Копировать"
+    tableBody.addEventListener("click", (event) => {
+        if (event.target.classList.contains("copy-task")) {
+            const row = event.target.closest("tr");
+            copyTaskToClipboard(row);
+        }
+    });
+
+    function copyTaskToClipboard(row) {
+        const columns = row.querySelectorAll("td");
+        const taskData = {
+            "Номер": columns[0].textContent.trim(),
+            "Задача": columns[1].textContent.trim(),
+            "Мероприятие": columns[2].textContent.trim(),
+            "Работа": columns[3].textContent.trim(),
+            "Ответственный": columns[4].textContent.trim(),
+            "Срок": columns[5].textContent.trim(),
+            "Результат": columns[6].textContent.trim(),
+            "Ресурсы": columns[7].textContent.trim(),
+            "Соисполнители": columns[8].textContent.trim(),
+            "Комментарии": columns[9].textContent.trim()
+        };
+
+        // Формируем текст для копирования
+        const taskText = Object.entries(taskData)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join("\n");
+
+        // Копируем в буфер обмена
+        navigator.clipboard.writeText(taskText)
+            .then(() => alert("Задача успешно скопирована в буфер обмена!"))
+            .catch((err) => console.error("Ошибка копирования:", err));
+    }
 });
