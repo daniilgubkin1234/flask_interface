@@ -17,10 +17,12 @@ tasks_collection = mongo.db.tasks
 employees_collection = mongo.db.employees
 business_goal_collection = mongo.db.business_goal
 survey_collection = mongo.db.surveys
+adaptation_plans_collection=mongo.db.adaptation_plans
+meeting_protocol_collection=mongo.db.meeting_protocols
 @app.route("/")
 def index():
     """ Главная страница с таблицей задач """
-    return render_template("tasks.html")
+    return render_template("survey_ai.html")
 
 # Получение всех задач
 @app.route("/get_tasks", methods=["GET"])
@@ -108,10 +110,10 @@ def add_business_goal():
     return jsonify({"message": "Бизнес-цель добавлена успешно!"}), 201
 
 
-@app.route("/survey")
+@app.route("/tasks")
 def survey():
     """Отображение страницы с опросником"""
-    return render_template("survey_ai.html")
+    return render_template("tasks.html")
 
 @app.route("/submit_survey", methods=["POST"])
 def submit_survey():
@@ -141,6 +143,42 @@ def get_survey_results(survey_id):
         survey["_id"] = str(survey["_id"])
         return jsonify(survey)
     return jsonify({"error": "Опрос не найден"}), 404
+
+@app.route("/adaptation_plan")
+def adaptation_plan():
+    return render_template("adaptation_plan.html")
+
+@app.route("/submit_adaptation_plan", methods=["POST"])
+def submit_adaptation_plan():
+    data = request.json
+    print("Полученные данные:", data)
+    if not data:
+        return jsonify({"error": "Нет данных для сохранения"}), 400
+
+    result = mongo.db.adaptation_plans.insert_one(data)
+
+    return jsonify({
+        "message": "Адаптационный план успешно сохранен!",
+        "plan_id": str(result.inserted_id)
+    }), 201
+
+@app.route("/meeting_protocol")
+def meeting_protocol():
+    return render_template("meeting_protocol.html")
+
+@app.route("/save_meeting_protocol", methods=["POST"])
+def save_meeting_protocol():
+    data = request.json
+    print("Полученные данные:", data)
+    if not data:
+        return jsonify({"error": "Нет данных для сохранения"}), 400
+
+    result = mongo.db.meeting_protocols.insert_one(data)
+
+    return jsonify({
+        "message": "Протокол успешно сохранен!",
+        "plan_id": str(result.inserted_id)
+    }), 201
 
 
 if __name__ == "__main__":

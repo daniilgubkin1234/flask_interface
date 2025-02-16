@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Протокол совещания</title>
+    <link rel="stylesheet" href="templates_style.css">
+    <script defer src="{{ url_for('static', filename='meeting_protocol.js') }}"></script>\
+    <script defer src="{{ url_for('static', filename='meeting_protocol_submit.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='meeting_protocol.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Протокол совещания</h2>
+        <form id="protocolForm" action="#">
+
+            <!-- Дата совещания -->
+            <fieldset>
+                <legend>Дата совещания</legend>
+                <label for="meetingDate">Дата совещания:</label>
+                <input type="date" id="meetingDate" name="meetingDate" required>
+            </fieldset>
+
+            <!-- Участники -->
+            <fieldset>
+                <legend>Участники</legend>
+                <div id="participantsSection">
+                    <div class="participant">
+                        <label for="participant_1">Участник 1:</label>
+                        <input type="text" id="participant_1" name="participant_1" placeholder="Введите имя участника" required>
+                    </div>
+                    <button type="button" id="addParticipant" class="primary-button">+ Добавить участника</button>
+                </div>
+            </fieldset>
+
+            <!-- Результаты обсуждения -->
+            <fieldset>
+                <legend>Результаты обсуждения</legend>
+                <div id="discussionResultsSection">
+                    <div class="discussion-result">
+                        <label for="discussionResult_1">Результат 1:</label>
+                        <textarea id="discussionResult_1" name="discussionResult_1" rows="3" placeholder="Введите результат обсуждения" required></textarea>
+                    </div>
+                    <button type="button" id="addDiscussionResult">+ Добавить результат</button>
+                </div>
+            </fieldset>
+
+            <!-- Таблица следующих шагов -->
+            <fieldset>
+                <legend>Следующие шаги</legend>
+                <table id="nextStepsTable">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Задача</th>
+                            <th>Исполнитель</th>
+                            <th>Срок</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><textarea name="task_1" rows="2" placeholder="Введите задачу" required></textarea></td>
+                            <td><input type="text" name="executor_1" placeholder="Введите исполнителя" required></td>
+                            <td><input type="date" name="deadline_1" required></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" id="addNextStep">+ Добавить шаг</button>
+            </fieldset>
+
+            <!-- Отправить -->
+            <button type="submit" class="submit-button">Отправить</button>
+        </form>
+    </div>
+</body>
+</html>
