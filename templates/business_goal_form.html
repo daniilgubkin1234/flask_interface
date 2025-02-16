@@ -43,7 +43,7 @@
                 <label for="taxes">Уплата налогов, руб./год:</label>
                 <input type="text" id="taxes" name="taxes" placeholder="Введите сумму">
 
-                <label for="treePlanting">Сажаю деревья?</label>
+                <label for="treePlanting">Что еще выполняется?</label>
                 <input type="text" id="treePlanting" name="treePlanting" placeholder="Введите ответ">
             </fieldset>
 
@@ -87,10 +87,10 @@
     <div class="recommendation-block">
         <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
         <div class="button-container">
-            <button class="nav-button" onclick="window.location.href='/'">Задачи</button>
+            <button class="nav-button" onclick="window.location.href='/'">Диагностика</button>
+            <button class="nav-button" onclick="window.location.href='/tasks'">Задачник</button>
             <button class="nav-button" onclick="window.location.href='/personnel'">Персонал</button>
-            <button class="nav-button" onclick="window.location.href='/business'">Бизнес цели</button>
-            <button class="nav-button" onclick="window.location.href='/survey'">Опросник</button>
+            <button class="nav-button" onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
         </div>
     </div>
     <script defer src="{{ url_for('static', filename='business_goal_form.js') }}"></script>

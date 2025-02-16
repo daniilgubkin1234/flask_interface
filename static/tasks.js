@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     tableBody.appendChild(row);
                 });
 
-                addEventListeners(); // 🟢 ВАЖНО: Добавляем обработчики кнопок после каждой загрузки задач
+                addEventListeners(); // 
             })
             .catch(error => console.error("Ошибка загрузки задач:", error));
     }
