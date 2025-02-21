@@ -19,6 +19,7 @@ business_goal_collection = mongo.db.business_goal
 survey_collection = mongo.db.surveys
 adaptation_plans_collection=mongo.db.adaptation_plans
 meeting_protocol_collection=mongo.db.meeting_protocols
+stimulation_system_collection=mongo.db.stimulation_system
 @app.route("/")
 def index():
     """ Главная страница с таблицей задач """
@@ -180,6 +181,19 @@ def save_meeting_protocol():
         "plan_id": str(result.inserted_id)
     }), 201
 
+@app.route("/stimulation_system")
+def stimulation_page():
+    return render_template("stimulation_system.html")
+
+@app.route("/save_stimulation_system", methods=["POST"])
+def save_stimulation():
+    data = request.json
+    if not data:
+        return jsonify({"error": "Нет данных для сохранения"}), 400
+
+    mongo.db.stimulation_system.insert_one(data)
+    return jsonify({"message": "Данные успешно сохранены!"}), 201
 
 if __name__ == "__main__":
     app.run(debug=True)
+
