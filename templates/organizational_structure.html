@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Организационная структура</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='organizational_structure.css') }}">
+    <script src="{{ url_for('static', filename='organizational_structure.js') }}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Организационная структура</h2>
+        <table id="orgTable">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Должность</th>
+                    <th>Кому подчиняется</th>
+                    <th>Кто подчиняется</th>
+                    <th>Основной функционал</th>
+                    <th>Кто замещает в случае отсутствия</th>
+                    <th>Способ постановки задач сотрудникам других подразделений</th>
+                    <th>Корпоративные документы, регламентирующие деятельность</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><input type="text" class="position"></td>
+                    <td>
+                        <select class="supervisor">
+                            <option value="">Выберите</option>
+                            <option value="custom">Другой ответ</option>
+                        </select>
+                        <input type="text" class="custom-supervisor" style="display: none;">
+                    </td>
+                    <td>
+                        <select class="subordinates">
+                            <option value="">Выберите</option>
+                            <option value="custom">Другой ответ</option>
+                        </select>
+                        <input type="text" class="custom-subordinates" style="display: none;">
+                    </td>
+                    <td><input type="text" class="functional"></td>
+                    <td>
+                        <select class="replacement">
+                            <option value="">Выберите</option>
+                            <option value="custom">Другой ответ</option>
+                        </select>
+                        <input type="text" class="custom-replacement" style="display: none;">
+                    </td>
+                    <td><input type="text" class="task-method"></td>
+                    <td><input type="text" class="documents"></td>
+                    <td><button class="deleteRow">Удалить</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="buttons-container">
+            <button id="addRow">Добавить строку</button>
+            <button id="submitData">Отправить</button>
+        </div>
+    </div>
+</body>
+</html>

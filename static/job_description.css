@@ -1,0 +1,189 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F0F0F0;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #FFFFFF;
+    padding: 40px;
+    margin: 40px auto;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+}
+
+h2 {
+    text-align: center;
+    color: #2A63C2;
+    margin-bottom: 30px;
+}
+
+fieldset {
+    border: 2px solid #2A63C2;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+legend {
+    font-weight: bold;
+    color: #2A63C2;
+    padding: 0 10px;
+}
+
+label {
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-top: 15px;
+}
+
+input, textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+input:focus,
+textarea:focus {
+    border-color: #2A63C2;
+    outline: none;
+    box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
+}
+
+button {
+    background-color: #2A63C2;
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #1F4B8F;
+}
+
+
+/* Стили для кнопок добавления */
+#addActivity, #addDuty {
+    background-color: #2A63C2;
+    color: white;
+    padding: 10px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: block;
+    width: auto;
+}
+
+#addActivity:hover, #addDuty:hover {
+    background-color: #1F4B8F;
+}
+
+
+/* Дополнительные стили для динамических полей */
+#mainActivities, #jobDuties {
+    margin-top: 10px;
+}
+
+/* Фикс для динамических полей */
+.dynamic-field {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Исправлен пробел в значении */
+    width: 100%;
+}
+
+/* Поле ввода занимает всю доступную ширину */
+.dynamic-field input {
+    min-width: 0;
+    width: calc(100% - 40px); /* Теперь учитываем ширину кнопки */
+}
+
+/* Кнопка удаления */
+.remove-btn {
+    background-color: #FF4B4B;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Фикс: запрещает уменьшение кнопки */
+    margin-left: 5px; /* Добавлен отступ, чтобы кнопка не сдвигала input */
+}
+
+.remove-btn:hover {
+    background-color: #D73838;
+    transform: scale(1.1);
+}
+
+.remove-btn:active {
+    background-color: #B92C2C;
+    transform: scale(0.95);
+}
+
+/* Блок рекомендации */
+.recommendation-block {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 30px 0;
+}
+
+.recommendation-block h3 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Контейнер для кнопок */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.nav-button {
+    background: #2A63C2;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}

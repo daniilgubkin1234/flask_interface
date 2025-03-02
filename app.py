@@ -20,6 +20,7 @@ survey_collection = mongo.db.surveys
 adaptation_plans_collection=mongo.db.adaptation_plans
 meeting_protocol_collection=mongo.db.meeting_protocols
 stimulation_system_collection=mongo.db.stimulation_system
+job_description_collection=mongo.db.job_descriptions
 @app.route("/")
 def index():
     """ Главная страница с таблицей задач """
@@ -193,6 +194,46 @@ def save_stimulation():
 
     mongo.db.stimulation_system.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
+
+@app.route("/job_description")
+def job_description():
+    """Отображение страницы должностной инструкции"""
+    return render_template("job_description.html")
+
+
+@app.route("/submit_job_description", methods=["POST"])
+def submit_job_description():
+    """Сохранение должностной инструкции в базу данных"""
+    data = request.json
+    if not data:
+        return jsonify({"error": "Нет данных для сохранения"}), 400
+
+    result = mongo.db.job_descriptions.insert_one(data)
+
+    return jsonify({
+        "message": "Должностная инструкция успешно сохранена!",
+        "doc_id": str(result.inserted_id)
+    }), 201
+
+
+@app.route("/get_job_description/<doc_id>", methods=["GET"])
+def get_job_description(doc_id):
+    """Получение данных должностной инструкции по ID"""
+    job_description = mongo.db.job_descriptions.find_one({"_id": ObjectId(doc_id)})
+    if job_description:
+        job_description["_id"] = str(job_description["_id"])
+        return jsonify(job_description)
+    return jsonify({"error": "Должностная инструкция не найдена"}), 404
+
+@app.route("/organizational_structure")
+def organizational_structure_page():
+    return render_template("organizational_structure.html")
+
+@app.route('/save_organizational_structure', methods=['POST'])
+def save_organizational_structure():
+    data = request.json
+    mongo.db.organizational_structure.insert_one(data)
+    return jsonify({"message": "Данные успешно сохранены"}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
