@@ -21,6 +21,8 @@ adaptation_plans_collection=mongo.db.adaptation_plans
 meeting_protocol_collection=mongo.db.meeting_protocols
 stimulation_system_collection=mongo.db.stimulation_system
 job_description_collection=mongo.db.job_descriptions
+business_processes_collection=mongo.db.business_processes
+three_plus_twenty_collection=mongo.db.three_plus_twenty
 @app.route("/")
 def index():
     """ Главная страница с таблицей задач """
@@ -234,6 +236,40 @@ def save_organizational_structure():
     data = request.json
     mongo.db.organizational_structure.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены"}), 200
+
+@app.route("/business_processes")
+def business_processes_page():
+    # Рендерим наш business_processes.html
+    return render_template("business_processes.html")
+
+
+@app.route("/save_business_processes", methods=["POST"])
+def save_business_processes():
+    data = request.json
+    mongo.db.business_processes.insert_one(data)
+
+@app.route("/three_plus_twenty")
+def three_plus_twenty_page():
+    return render_template("three_plus_twenty.html")
+
+@app.route("/save_three_plus_twenty", methods=["POST"])
+def save_three_plus_twenty():
+    data = request.json
+    if not data:
+        return jsonify({"error": "Нет данных"}), 400
+
+    # Пример структуры:
+    # {
+    #   "directions": ["...", "...", "..."],
+    #   "responsibilities": ["...", "...", ... 20 полей ...]
+    # }
+
+    # Сохраняем в Mongo
+    mongo.db.three_plus_twenty.insert_one(data)
+
+    return jsonify({"message": "Данные успешно сохранены!"}), 201
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
