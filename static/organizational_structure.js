@@ -28,22 +28,29 @@ document.addEventListener("DOMContentLoaded", function () {
                 select.appendChild(option);
             });
 
-            // Сохранение выбранного значения, если оно еще актуально
             if (positions.includes(selectedValue) || selectedValue === "custom") {
                 select.value = selectedValue;
             } else {
                 select.value = "";
             }
 
-            toggleCustomInput(select);
+            toggleCustomInput(select, false);
         });
     }
 
-    function toggleCustomInput(select) {
+    function toggleCustomInput(select, shouldFocus = true) {
         let inputField = select.nextElementSibling;
         if (select.value === "custom") {
             inputField.style.display = "block";
-            inputField.focus();
+
+            // Теперь фокус ставится только при выборе, но НЕ мешает вводу в других полях
+            if (shouldFocus) {
+                setTimeout(() => {
+                    if (document.activeElement !== inputField) {
+                        inputField.focus();
+                    }
+                }, 10);
+            }
         } else {
             inputField.style.display = "none";
             inputField.value = "";
@@ -93,11 +100,21 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Показываем поле для ввода сразу при изменении
     table.addEventListener("change", function (event) {
-        if (event.target.classList.contains("supervisor") || 
-            event.target.classList.contains("subordinates") || 
+        if (event.target.classList.contains("supervisor") ||
+            event.target.classList.contains("subordinates") ||
             event.target.classList.contains("replacement")) {
-            toggleCustomInput(event.target);
+            toggleCustomInput(event.target, true);
+        }
+    });
+
+    // Предотвращаем автоматический перенос фокуса при выборе "Другой ответ"
+    table.addEventListener("mousedown", function (event) {
+        if (event.target.classList.contains("supervisor") ||
+            event.target.classList.contains("subordinates") ||
+            event.target.classList.contains("replacement")) {
+            toggleCustomInput(event.target, false);
         }
     });
 
