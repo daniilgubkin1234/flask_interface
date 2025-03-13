@@ -10,110 +10,58 @@
 <body>
     <div class="container">
         <h2>Организационная структура</h2>
-        <table id="orgTable">
-            <thead>
-                <tr>
-                    <th>№</th>
-                    <th>Должность</th>
-                    <th>Кому подчиняется</th>
-                    <th>Кто подчиняется</th>
-                    <th>Основной функционал</th>
-                    <th>Кто замещает в случае отсутствия</th>
-                    <th>Способ постановки задач сотрудникам других подразделений</th>
-                    <th>Корпоративные документы, регламентирующие деятельность</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td><input type="text" class="position"></td>
-                    <td>
-                        <select class="supervisor">
-                            <option value="">Выберите</option>
-                            <option value="custom">Другой ответ</option>
-                        </select>
-                        <input type="text" class="custom-supervisor" style="display: none;">
-                    </td>
-                    <td>
-                        <select class="subordinates">
-                            <option value="">Выберите</option>
-                            <option value="custom">Другой ответ</option>
-                        </select>
-                        <input type="text" class="custom-subordinates" style="display: none;">
-                    </td>
-                    <td><input type="text" class="functional"></td>
-                    <td>
-                        <select class="replacement">
-                            <option value="">Выберите</option>
-                            <option value="custom">Другой ответ</option>
-                        </select>
-                        <input type="text" class="custom-replacement" style="display: none;">
-                    </td>
-                    <td><input type="text" class="task-method"></td>
-                    <td><input type="text" class="documents"></td>
-                    <td><button class="deleteRow">Удалить</button></td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table id="orgTable">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Должность</th>
+                        <th>Кому подчиняется</th>
+                        <th>Кто подчиняется</th>
+                        <th>Основной функционал</th>
+                        <th>Кто замещает в случае отсутствия</th>
+                        <th>Способ постановки задач сотрудникам других подразделений</th>
+                        <th>Корпоративные документы, регламентирующие деятельность</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><input type="text" class="position"></td>
+                        <td>
+                            <select class="supervisor">
+                                <option value="">Выберите</option>
+                                <option value="custom">Другой ответ</option>
+                            </select>
+                            <input type="text" class="custom-supervisor" style="display: none;">
+                        </td>
+                        <td>
+                            <select class="subordinates">
+                                <option value="">Выберите</option>
+                                <option value="custom">Другой ответ</option>
+                            </select>
+                            <input type="text" class="custom-subordinates" style="display: none;">
+                        </td>
+                        <td><input type="text" class="functional"></td>
+                        <td>
+                            <select class="replacement">
+                                <option value="">Выберите</option>
+                                <option value="custom">Другой ответ</option>
+                            </select>
+                            <input type="text" class="custom-replacement" style="display: none;">
+                        </td>
+                        <td><input type="text" class="task-method"></td>
+                        <td><input type="text" class="documents"></td>
+                        <td><button class="deleteRow">Удалить</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <div class="buttons-container">
             <button id="addRow">Добавить строку</button>
             <button id="submitData">Отправить</button>
         </div>
     </div>
-    <!-- Навигационный блок -->
-    <!-- Навигационный блок -->
-    <div class="recommendation-block">
-        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
-
-        <!-- Одна "секция" – под тонкой линией -->
-        <div class="recommendation-section">
-            <h4>Диагностика</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/'">Перейти к диагностике</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Задачи</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/tasks'">Задачник</button>
-                <button onclick="window.location.href='/business'">Бизнес цель</button>
-                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Люди</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-                <button onclick="window.location.href='/personnel'">Персонал</button>
-                <button onclick="window.location.href='/three_plus_twenty'">3+20</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Система стимулирования</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/three_plus_twenty'">3+20</button>
-                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Организационная структура</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Процессы</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business_processes'">Бизнес-процесс</button>
-            </div>
-        </div>
-        </div>
 </body>
 </html>
