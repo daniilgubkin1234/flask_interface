@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Процессы</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='business_processes.css') }}">
+    <script src="{{ url_for('static', filename='business_processes.js') }}" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Бизнес-процессы</h2>
+
+        <div class="table-wrapper">
+            <table id="bpTable">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Название процесса</th>
+                        <th>Участвующие должности</th>
+                        <th>Входящие документы</th>
+                        <th>Исходящие документы</th>
+                        <th>Критерии качества</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Пример одной стартовой строки, далее будем динамически добавлять -->
+                    <tr>
+                        <td>1</td>
+                        <td><input type="text" class="processName"></td>
+                        <td><input type="text" class="participants"></td>
+                        <td><input type="text" class="inputDocs"></td>
+                        <td><input type="text" class="outputDocs"></td>
+                        <td><input type="text" class="qualityCriteria"></td>
+                        <td>
+                            <button class="deleteRow">Удалить</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="buttons-container">
+            <button id="addRow">Добавить строку</button>
+            <button id="submitData">Отправить</button>
+        </div>
+    </div>
+     <!-- Навигационный блок -->
+     <div class="recommendation-block">
+        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+
+        <!-- Одна "секция" – под тонкой линией -->
+        <div class="recommendation-section">
+            <h4>Диагностика</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/'">Перейти к диагностике</button>
+            </div>
+        </div>
+
+        <div class="recommendation-section">
+            <h4>Задачи</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/tasks'">Задачник</button>
+                <button onclick="window.location.href='/business'">Бизнес цель</button>
+                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
+            </div>
+        </div>
+
+        <div class="recommendation-section">
+            <h4>Люди</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
+                <button onclick="window.location.href='/personnel'">Персонал</button>
+                <button onclick="window.location.href='/three_plus_twenty'">3+20</button>
+            </div>
+        </div>
+
+        <div class="recommendation-section">
+            <h4>Система стимулирования</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/three_plus_twenty'">3+20</button>
+                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
+                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
+            </div>
+        </div>
+
+        <div class="recommendation-section">
+            <h4>Организационная структура</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
+            </div>
+        </div>
+
+        <div class="recommendation-section">
+            <h4>Процессы</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/business_processes'">Бизнес-процесс</button>
+            </div>
+        </div>
+        </div>
+</body>
+
+</html>

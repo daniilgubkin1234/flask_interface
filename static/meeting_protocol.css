@@ -167,43 +167,63 @@ button[type="submit"]:hover {
 }
 
 
+/* Блок рекомендаций */
 .recommendation-block {
-    text-align: center;
-    background: #f8f9fa;
+    background-color: #fafafa; /* более светлый фон */
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
     margin: 30px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* легкая тень */
+    text-align: center;
 }
 
 .recommendation-block h3 {
-    font-size: 20px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #2A63C2;
+    text-align: center;
+}
+
+/* Каждая секция (группа ссылок + заголовок) */
+.recommendation-section {
+    border-top: 1px solid #e0e0e0; 
+    padding-top: 15px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Заголовки для внутренних групп (вместо H2) */
+.recommendation-section h4 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
     font-weight: bold;
     color: #333;
-    margin-bottom: 15px;
 }
 
-/* Контейнер для кнопок */
-.button-container {
+/* Ряд кнопок */
+.button-row {
     display: flex;
+    gap: 10px;
+    flex-wrap: wrap; /* если кнопок много, они перенесутся */
     justify-content: center;
-    gap: 15px;
 }
 
-/* Улучшенные кнопки */
-.nav-button {
-    background: #2A63C2;
+/* Кнопки внутри блока рекомендаций.
+   Можно сделать поменьше и компактнее, чем обычные. */
+.recommendation-block .button-row button {
+    background-color: #2A63C2;
     color: white;
+    padding: 12px 20px;
     font-size: 16px;
-    font-weight: bold;
-    padding: 10px 20px;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s;
+    margin-top: 20px;
 }
 
-.nav-button:hover {
-    background: #0056b3;
-    transform: scale(1.05);
+/* Ховер-эффект на кнопках */
+.recommendation-block .button-row button:hover {
+    background-color: #1F4B8F;
 }

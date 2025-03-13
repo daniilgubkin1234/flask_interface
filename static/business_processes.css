@@ -1,3 +1,4 @@
+/* Общий фон и шрифт */
 body {
     font-family: Arial, sans-serif;
     background-color: #F0F0F0;
@@ -5,50 +6,43 @@ body {
     padding: 0;
 }
 
+/* Контейнер-обёртка, как в ваших примерах */
 .container {
     background-color: #FFFFFF;
     padding: 40px;
     margin: 40px auto;
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    max-width: 900px;
+    max-width: 1200px;
+    width: 90%;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Заголовки */
+/* Заголовок h2 */
 h2 {
     text-align: center;
     color: #2A63C2;
     margin-bottom: 30px;
 }
 
-/* Оформление fieldset */
-fieldset {
-    border: 2px solid #2A63C2;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    background: #f9f9f9;
+/* Обёртка для таблицы (чтобы при необходимости прокручивать по горизонтали) */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
 }
 
-/* Заголовок внутри fieldset */
-legend {
-    font-weight: bold;
-    color: #2A63C2;
-    padding: 5px 10px;
-    font-size: 18px;
-}
-
-/* Оформление таблицы */
+/* Стили для таблицы */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    min-width: 1000px; /* Чтобы поля умещались */
 }
 
 th, td {
     border: 1px solid #ccc;
     padding: 10px;
-    text-align: left;
+    text-align: center;
 }
 
 th {
@@ -57,47 +51,70 @@ th {
     font-weight: bold;
 }
 
-/* Оформление input */
-input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
-}
-
-input:focus {
-    border-color: #2A63C2;
-    outline: none;
-    box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
-}
-
-/* Оформление кнопки */
+/* Оформление кнопок */
 button {
-    background-color: #2A63C2;
     color: white;
     padding: 12px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    display: block;
-    margin: 10px;
-    width: 200px;
-}
-.button-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px; /* Регулируй отступ сверху */
 }
 
-.save-btn:hover {
-    background-color: #1F4B8F;
+/* Кнопка удаления строки */
+.deleteRow {
+    background-color: #dc3545;
+    padding: 8px 12px;
 }
-button:hover {
-    background-color: #1F4B8F;
+
+.deleteRow:hover {
+    background-color: #bb2d3b;
 }
+
+/* Блок для двух кнопок снизу */
+.buttons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Чтобы кнопки «липли» к правой стороне */
+    margin-top: 10px;
+}
+
+#addRow {
+    background-color: #0d6efd;
+    margin-top: 10px;
+}
+
+#addRow:hover {
+    background-color: #0b5ed7;
+}
+
+#submitData {
+    background-color: #0d6efd;
+    margin: 15px auto 0;
+    display: block;
+    text-align: center;
+    width: 200px;
+}
+
+#submitData:hover {
+    background-color: #0b5ed7;
+}
+
+/* Поля ввода */
+input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+input:focus {
+    outline: none;
+    border-color: #2A63C2;
+    box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
+}
+
 /* Блок рекомендаций */
 .recommendation-block {
     background-color: #fafafa; /* более светлый фон */
@@ -157,4 +174,13 @@ button:hover {
 /* Ховер-эффект на кнопках */
 .recommendation-block .button-row button:hover {
     background-color: #1F4B8F;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+    table {
+        min-width: 700px;
+    }
 }
