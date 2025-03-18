@@ -69,7 +69,6 @@
                 <label for="task5_summarize_by_employee">Подведение итогов сотрудником:</label>
                 <textarea id="task5_summarize_by_employee" name="task5_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
             </fieldset>
-            <button id="addTaskButton" type="button">+ Добавить задачу</button>
 
             <!-- Задачи 6-7 -->
             <fieldset class="task">
@@ -94,7 +93,6 @@
                 <label for="task7_summarize_by_employee">Подведение итогов сотрудником:</label>
                 <textarea id="task7_summarize_by_employee" name="task7_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
             </fieldset>
-            <button id="addTaskButton" type="button">+ Добавить задачу</button>
 
             <!-- Задачи 8-9 -->
             <fieldset class="task">
@@ -119,7 +117,7 @@
                 <label for="task9_summarize_by_employee">Подведение итогов сотрудником:</label>
                 <textarea id="task9_summarize_by_employee" name="task9_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
             </fieldset>
-            <button id="addTaskButton" type="button">+ Добавить задачу</button>
+            
 
             <!-- Задача 10 -->
             <fieldset class="task">
@@ -133,15 +131,17 @@
                 <label for="task10_summarize_by_employee">Подведение итогов сотрудником:</label>
                 <textarea id="task10_summarize_by_employee" name="task10_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
             </fieldset>
-            <button id="submitButton" type="submit">Отправить</button>
+            
         </div>
+        <button id="addTaskButton" type="button">+ Добавить задачу</button>
+        <button id="submitButton" type="submit">Отправить</button>
+    </div>
+    
     </form>
-    <!-- Навигационный блок -->
+
     <!-- Навигационный блок -->
     <div class="recommendation-block">
         <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
-
-        <!-- Одна "секция" – под тонкой линией -->
         <div class="recommendation-section">
             <h4>Диагностика</h4>
             <div class="button-row">
@@ -152,27 +152,34 @@
         <div class="recommendation-section">
             <h4>Задачи</h4>
             <div class="button-row">
-                <button onclick="window.location.href='/tasks'">Задачник</button>
                 <button onclick="window.location.href='/business'">Бизнес цель</button>
+                <button onclick="window.location.href='/tasks'">Задачи и план работ и мероприятий</button>
                 <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
             </div>
         </div>
 
         <div class="recommendation-section">
-            <h4>Люди</h4>
+            <h4>Персонал</h4>
             <div class="button-row">
+                <button onclick="window.location.href='/personnel'">Портрет сотрудника</button>
+                <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
                 <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-                <button onclick="window.location.href='/personnel'">Персонал</button>
-                <button onclick="window.location.href='/three_plus_twenty'">3+20</button>
+                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
             </div>
         </div>
 
         <div class="recommendation-section">
             <h4>Система стимулирования</h4>
             <div class="button-row">
-                <button onclick="window.location.href='/three_plus_twenty'">3+20</button>
                 <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
+                
+            </div>
+        </div>
+
+        <div class="recommendation-section">
+            <h4>Бизнес-процессы</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
             </div>
         </div>
 
@@ -180,13 +187,6 @@
             <h4>Организационная структура</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Процессы</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business_processes'">Бизнес-процесс</button>
             </div>
         </div>
         </div>

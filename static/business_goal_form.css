@@ -150,6 +150,7 @@ table input[type="date"]:focus {
     cursor: pointer;
     font-size: 16px;
     margin-top: 10px;
+    transition: background-color 0.3s;
 }
 
 .add-task-btn:hover {

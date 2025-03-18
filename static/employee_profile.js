@@ -8,19 +8,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let currentEmployeeId = null;
 
-    // Функция для добавления нового произвольного поля
     addFieldButton.addEventListener("click", function () {
         const fieldContainer = document.createElement("div");
         fieldContainer.classList.add("profile-item");
-
+    
+        // Заголовок поля (подпись)
         const label = document.createElement("label");
+        label.textContent = "Дополнительный пункт:";
+    
+        // Поле ввода
         const input = document.createElement("input");
         input.type = "text";
         input.name = "custom_field";
         input.placeholder = "Введите название и значение";
-
+    
+        // Кнопка удаления
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.textContent = "Удалить";
+        deleteButton.classList.add("delete-field-button");
+    
+        deleteButton.addEventListener("click", () => {
+            fieldContainer.remove();
+        });
+    
+        // Добавляем элементы в контейнер
         fieldContainer.appendChild(label);
         fieldContainer.appendChild(input);
+        fieldContainer.appendChild(deleteButton);
+    
+        // Добавляем в общий контейнер дополнительных полей
         additionalFieldsContainer.appendChild(fieldContainer);
     });
 

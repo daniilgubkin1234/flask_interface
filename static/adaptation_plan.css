@@ -1,10 +1,9 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #F0F0F0;
-    margin: 0;
-    padding: 0;
+    margin: 40px auto;
     
-    min-height: 100vh;
+    
 }
 
 .container {
@@ -15,6 +14,9 @@ body {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     max-width: 800px;
     width: 100%;
+    margin: 40px auto;
+    margin-bottom: 50px;
+    padding-bottom: 40px;
 }
 
 h2 {
@@ -136,8 +138,7 @@ textarea:focus {
     outline: none;
     box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
 }
-/*
-.add-task-btn {
+#addTaskButton{
     background-color: #2A63C2;
     color: white;
     padding: 10px;
@@ -145,13 +146,24 @@ textarea:focus {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    margin: 15px 0;
     transition: background-color 0.3s;
-    margin: 20px 0;
-}*/
-/*
-.add-task-btn:hover {
-    background-color: #1F4B8F;
-}*/
+}
+.delete-task-button {
+    background-color: #dc3545; /* красный цвет кнопки */
+    color: #fff;               /* белый текст */
+    padding: 10px 15px;        /* отступы */
+    border: none;              /* убираем границу */
+    border-radius: 4px;        /* скругление углов */
+    cursor: pointer;           /* курсор при наведении */
+    font-size: 14px;           /* размер шрифта */
+    margin-top: 15px;          /* отступ сверху */
+    transition: background-color 0.3s ease; /* плавный переход цвета */
+}
+
+.delete-task-button:hover {
+    background-color: #c82333; /* цвет при наведении */
+}
 
 button[type="submit"] {
     background-color: #2A63C2;
@@ -173,6 +185,8 @@ button[type="submit"]:hover {
 .stages .stage {
     margin-top: 20px;
 }
+
+
 /* Блок рекомендаций */
 .recommendation-block {
     background-color: #fafafa; /* более светлый фон */
@@ -181,6 +195,7 @@ button[type="submit"]:hover {
     margin: 30px 0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* легкая тень */
     text-align: center;
+    margin-top: 50px;
 }
 
 .recommendation-block h3 {
