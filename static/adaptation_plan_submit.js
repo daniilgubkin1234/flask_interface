@@ -9,23 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Добавляем новую задачу при нажатии кнопки "Добавить задачу"
-    addTaskButton.addEventListener("click", function () {
-        const taskCount = tasksContainer.querySelectorAll(".task").length + 1;
-
-        const newTask = document.createElement("fieldset");
-        newTask.classList.add("task");
-        newTask.innerHTML = `
-            <legend>Задача ${taskCount}</legend>
-            <label>Время выполнения: <input type="text" name="task${taskCount}_time"></label>
-            <label>Ресурсы: <textarea name="task${taskCount}_resources"></textarea></label>
-            <label>Обратная связь наставника: <textarea name="task${taskCount}_mentor"></textarea></label>
-            <label>Обратная связь сотрудника: <textarea name="task${taskCount}_employee"></textarea></label>
-        `;
-
-        tasksContainer.appendChild(newTask);
-    });
-
+    
     // Отправка данных формы
     form.addEventListener("submit", function (event) {
         event.preventDefault();
