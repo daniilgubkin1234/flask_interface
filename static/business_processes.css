@@ -69,6 +69,7 @@ button {
 
 .deleteRow:hover {
     background-color: #bb2d3b;
+    transition: background-color 0.3s;
 }
 
 /* Блок для двух кнопок снизу */
@@ -80,16 +81,17 @@ button {
 }
 
 #addRow {
-    background-color: #0d6efd;
+    background-color: #2A63C2;
     margin-top: 10px;
 }
 
 #addRow:hover {
-    background-color: #0b5ed7;
+    background-color: #1F4B8F;
+    transition: background-color 0.3s;
 }
 
 #submitData {
-    background-color: #0d6efd;
+    background-color: #2A63C2;
     margin: 15px auto 0;
     display: block;
     text-align: center;
@@ -97,7 +99,8 @@ button {
 }
 
 #submitData:hover {
-    background-color: #0b5ed7;
+    background-color: #1F4B8F;
+    transition: background-color 0.3s;
 }
 
 /* Поля ввода */
