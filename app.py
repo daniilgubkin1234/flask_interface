@@ -245,8 +245,13 @@ def business_processes_page():
 
 @app.route("/save_business_processes", methods=["POST"])
 def save_business_processes():
-    data = request.json
-    mongo.db.business_processes.insert_one(data)
+    try:
+        data = request.json
+        mongo.db.business_processes.insert_one(data)
+        return jsonify({"message": "Данные успешно сохранены!"})
+    except Exception as e:
+        print("Ошибка при сохранении:", e)
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/three_plus_twenty")
 def three_plus_twenty_page():
