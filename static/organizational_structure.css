@@ -13,8 +13,8 @@ body {
     margin: 40px auto;
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    max-width: 1200px;
-    width: 90%;
+    max-width: 1300px;
+    width: 100%;
     position: relative;
     overflow: hidden; /* Предотвращает выход элементов за границы */
 }
@@ -30,7 +30,7 @@ h2 {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px; /* Минимальная ширина таблицы */
+    min-width: 1200px; /* Минимальная ширина таблицы */
 }
 
 th, td {
@@ -40,8 +40,20 @@ th, td {
 }
 
 th {
-    background-color: #2A63C2;
-    color: white;
+    background:#2A63C2;
+    color:#fff;
+    padding:10px;
+    border:1px solid #ccc;
+    font-weight:600;
+    font-size:14px;
+
+    /* главное: позволяем перенос строк и рубим длинные слова */
+    white-space:normal;          /* вместо nowrap по-умолчанию */
+    word-break:break-word;       /* длинные слова/теги не раздвинут колонку */
+
+    /* вертикальное центрирование для многострочных заголовков */
+    vertical-align:middle;
+    line-height:1.3;
 }
 
 /* Оформление input и select */
@@ -176,6 +188,150 @@ button {
 .recommendation-block .button-row button:hover {
     background-color: #1F4B8F;
 }
+/* ─────  OrgChart: стили узлов и линий  ───── */
+#orgChart .google-visualization-orgchart-node {
+    border: 2px solid #000 !important;      /* чёрная рамка */
+    border-radius: 0 !important;            /* прямые углы */
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+}
+
+#orgChart .google-visualization-orgchart-lineleft,
+#orgChart .google-visualization-orgchart-lineright,
+#orgChart .google-visualization-orgchart-linemiddle {
+    stroke: #000 !important;                /* чёрные линии */
+}
+
+/* Скрытый «ROOT»-узел, нужен только для выравнивания */
+#orgChart .node:has(div:contains("ROOT")) {
+    display: none !important;
+}
+/* ─── multibox (ячейка "Кто подчиняется") ────────────────────────── */
+.multibox{
+    position:relative;
+    max-width:100%;
+    min-height:38px;
+    padding:6px 36px 6px 10px;          /* место слева/справа */
+    border:1px solid #CED4DA;           /* те же цвета, что и у input */
+    border-radius:4px;
+    background:#fff;
+    font:14px/1.4 "Roboto","Arial",sans-serif;
+    cursor:pointer;
+    overflow:hidden;
+    white-space:normal;
+    text-overflow:ellipsis;
+    word-break:break-word;
+    transition:border-color .15s;
+}
+.multibox:focus,
+.multibox.open {                       /* .open задаётся JS при раскрытии */
+    border-color:#2A63C2;              /* фирменный синий при фокусе */
+    outline:none;
+}
+
+.multibox.placeholder{
+    color:#9a9a9a;
+    font-style:italic;
+}
+
+.multibox::after{                      /* стрелка-chevron */
+    content:'';
+    position:absolute; right:10px; top:50%;
+    width:0; height:0;
+    border:5px solid transparent;
+    border-top-color:#666;
+    transform:translateY(-20%);
+    pointer-events:none;
+    transition:transform .2s;
+}
+.multibox.open::after{
+    transform:translateY(-50%) rotate(180deg);
+}
+
+/* ─── выпадающее меню чек-боксов ─────────────────────────────────── */
+.subs-cell{ position:relative; }
+
+.multibox-list{
+    position:absolute;
+    z-index:1000;
+    top:calc(100% + 4px); right:0;
+    width:100%;
+    max-height:220px;
+    overflow-y:auto;
+    background:#fff;
+    border:1px solid #CED4DA;
+    border-radius:4px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    display:none;                      /* JS ставит block при открытии */
+}
+
+.multibox-list label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:14px;
+    padding:4px 10px;
+    cursor:pointer;
+    user-select:none;
+}
+.multibox-list label:hover{
+    background:#F2F6FF;                /* лёгкий синий hover */
+}
+
+.multibox-list input{
+    accent-color:#2A63C2;              /* чек-боксы того же синего цвета */
+}
+
+#orgTable{
+    table-layout: fixed;       /* << ключевая строчка */
+    width: 100%;
+}
+
+/* делаем заголовок колонки «Кто подчиняется» чуть шире,
+   чтобы адекватно поместился placeholder и 1-2 выбранных тега */
+#orgTable th:nth-child(4){     /* 4-я колонка – «Кто подчиняется» */
+    width: 150px;              /* подберите подходящее число */
+    min-width: 150px;
+}
+#downloadChart{
+    display:inline-block;
+    margin:20px 0 40px 0;
+    padding:10px 28px;
+    background:#2A63C2;
+    color:#fff;
+    font:16px/1 "Roboto","Arial",sans-serif;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+    transition:background 0.2s;
+}
+#downloadChart:hover   { background:#2353a8; }
+#downloadChart:active  { background:#1c448d; }
+#downloadChart:disabled{ background:#9bb3e6; cursor:default; }
+
+.scheme-wrapper{
+    background:#fff;
+    border:1px solid #d4d4d4;
+    border-radius:4px;
+    padding:24px 16px 32px 16px;
+    margin-top:24px;
+}
+
+/* заголовок по центру */
+.scheme-title{
+    text-align:center;
+    margin-bottom:14px;
+    font-size:20px;
+    font-weight:600;
+}
+
+/* кнопка скачать – посередине, как у Submit */
+.scheme-dl{
+    display:block;
+    margin:24px auto 0 auto;   /* центр + отступ сверху */
+}
+
 
 @media (max-width: 768px) {
     .container {

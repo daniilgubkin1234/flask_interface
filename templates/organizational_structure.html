@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Организационная структура</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='organizational_structure.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
     <script src="{{ url_for('static', filename='organizational_structure.js') }}" defer></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+   
 </head>
 <body>
     <div class="container">
@@ -36,12 +39,10 @@
                             </select>
                             <input type="text" class="custom-supervisor" style="display: none;">
                         </td>
-                        <td>
-                            <select class="subordinates">
-                                <option value="">Выберите</option>
-                                <option value="custom">Другой ответ</option>
-                            </select>
-                            <input type="text" class="custom-subordinates" style="display: none;">
+                        <td class="subs-cell">
+                            <div class="multibox placeholder">Выберите</div>
+                            <input type="hidden" class="subordinates" value="[]">
+                            <div class="multibox-list"></div>
                         </td>
                         <td><input type="text" class="functional"></td>
                         <td>
@@ -63,7 +64,13 @@
             <button id="submitData">Отправить</button>
         </div>
     </div>
-
+    
+    <div class="scheme-wrapper">
+        <h3 class="scheme-title">Схема подчинения</h3>
+             <div id="orgChart" style="overflow:auto;"></div>
+             <button id="downloadChart" class="scheme-dl">Скачать схему</button>
+    </div>
+        
     <!-- Навигационный блок -->
     <div class="recommendation-block">
         <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
