@@ -1,151 +1,241 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const table = document.getElementById("orgTable").getElementsByTagName("tbody")[0];
-    const addRowButton = document.getElementById("addRow");
-    const submitButton = document.getElementById("submitData");
+/*******************************************************
+ *  Организационная структура – скрипт страницы
+ *  (без Choices.js, multibox-dropdown для подчинённых)
+ *******************************************************/
+document.addEventListener('DOMContentLoaded', () => {
 
-    function updateRowNumbers() {
-        let rows = table.rows;
-        for (let i = 0; i < rows.length; i++) {
-            rows[i].cells[0].textContent = i + 1;
-        }
-    }
+    /* ────────── DOM ────────── */
+    const tbody   = document.querySelector('#orgTable tbody');
+    const addRow  = document.getElementById('addRow');
+    const submit  = document.getElementById('submitData');
 
-    function updateDropdowns() {
-        let positions = [];
-        document.querySelectorAll(".position").forEach((input, index) => {
-            if (input.value.trim() !== "") {
-                positions.push(`${index + 1}) ${input.value.trim()}`);
-            }
-        });
+    /* ────────── ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ────────── */
 
-        document.querySelectorAll(".supervisor, .subordinates, .replacement").forEach(select => {
-            let selectedValue = select.value;
-            select.innerHTML = `<option value="">Выберите</option><option value="custom">Другой ответ</option>`;
-            positions.forEach(pos => {
-                let option = document.createElement("option");
-                option.value = pos;
-                option.textContent = pos;
-                select.appendChild(option);
+    /** «1) Директор», «2) Менеджер» … */
+    const getPositions = () =>
+        Array.from(document.querySelectorAll('.position'))
+             .map((inp, i) => inp.value.trim() && `${i + 1}) ${inp.value.trim()}`)
+             .filter(Boolean);
+
+    /** Обновить простые <select> supervisor / replacement */
+    function rebuildSimpleSelects() {
+        const options = ['<option value="">Выберите</option>',
+                         ...getPositions().map(p => `<option value="${p}">${p}</option>`)]
+                         .join('');
+        document.querySelectorAll('.supervisor, .replacement').forEach(sel => {
+            const selected = Array.from(sel.selectedOptions).map(o => o.value);
+            sel.innerHTML = options;
+            selected.forEach(v => {
+                const opt = [...sel.options].find(o => o.value === v);
+                if (opt) opt.selected = true;
             });
-
-            if (positions.includes(selectedValue) || selectedValue === "custom") {
-                select.value = selectedValue;
-            } else {
-                select.value = "";
-            }
-
-            toggleCustomInput(select, false);
         });
     }
 
-    function toggleCustomInput(select, shouldFocus = true) {
-        let inputField = select.nextElementSibling;
-        if (select.value === "custom") {
-            inputField.style.display = "block";
+    /** Сформировать чек-боксы для multibox-меню в одной ячейке */
+    function buildMultiboxMenu(cell) {
+        const menu   = cell.querySelector('.multibox-list');
+        const hidden = cell.querySelector('.subordinates');
+        const chosen = JSON.parse(hidden.value || '[]');      // массив строк
+        menu.innerHTML = '';
 
-            // Теперь фокус ставится только при выборе, но НЕ мешает вводу в других полях
-            if (shouldFocus) {
-                setTimeout(() => {
-                    if (document.activeElement !== inputField) {
-                        inputField.focus();
-                    }
-                }, 10);
-            }
+        getPositions().forEach(p => {
+            const id = crypto.randomUUID();
+            menu.insertAdjacentHTML('beforeend', `
+                <label for="${id}">
+                    <input type="checkbox" id="${id}" value="${p}"
+                           ${chosen.includes(p) ? 'checked' : ''}>
+                    ${p}
+                </label>
+            `);
+        });
+        updateMultiboxCaption(cell);
+    }
+
+    /** Обновить текст в multibox-контейнере */
+    function updateMultiboxCaption(cell) {
+        const box  = cell.querySelector('.multibox');
+        const data = JSON.parse(cell.querySelector('.subordinates').value || '[]');
+        if (!data.length) {
+            box.textContent = 'Выберите';
+            box.classList.add('placeholder');
         } else {
-            inputField.style.display = "none";
-            inputField.value = "";
+            box.textContent = data.join(', ');
+            box.classList.remove('placeholder');
         }
     }
 
-    addRowButton.addEventListener("click", function () {
-        const rowCount = table.rows.length + 1;
-        const newRow = table.insertRow();
+    /** Полностью пересобрать multibox-колонку во всех строках */
+    function rebuildMultiboxes() {
+        tbody.querySelectorAll('.subs-cell').forEach(buildMultiboxMenu);
+    }
 
-        newRow.innerHTML = `
-            <td>${rowCount}</td>
-            <td><input type="text" class="position"></td>
-            <td>
-                <select class="supervisor">
-                    <option value="">Выберите</option>
-                    <option value="custom">Другой ответ</option>
-                </select>
-                <input type="text" class="custom-supervisor" style="display: none;">
-            </td>
-            <td>
-                <select class="subordinates">
-                    <option value="">Выберите</option>
-                    <option value="custom">Другой ответ</option>
-                </select>
-                <input type="text" class="custom-subordinates" style="display: none;">
-            </td>
-            <td><input type="text" class="functional"></td>
-            <td>
-                <select class="replacement">
-                    <option value="">Выберите</option>
-                    <option value="custom">Другой ответ</option>
-                </select>
-                <input type="text" class="custom-replacement" style="display: none;">
-            </td>
-            <td><input type="text" class="task-method"></td>
-            <td><input type="text" class="documents"></td>
-            <td><button class="deleteRow">Удалить</button></td>
-        `;
+    /** Пересчитать № строк + обновить селекты и multibox */
+    function renumberAndRefresh() {
+        tbody.querySelectorAll('tr').forEach((tr, i) => tr.cells[0].textContent = i + 1);
+        rebuildSimpleSelects();
+        rebuildMultiboxes();
+    }
 
-        updateDropdowns();
+    /* ────────── ИНИЦИАЛИЗАЦИЯ MULTIBOX ПОВЕДЕНИЯ ────────── */
+    document.addEventListener('click', e => {
+
+        /* клик по самому контейнеру ⇒ открыть/закрыть список */
+        if (e.target.classList.contains('multibox')) {
+            const cell   = e.target.closest('.subs-cell');
+            const list   = cell.querySelector('.multibox-list');
+            const opened = list.style.display === 'block';
+
+            document.querySelectorAll('.multibox-list')
+                    .forEach(l => l.style.display = 'none');
+
+            if (!opened) {
+                buildMultiboxMenu(cell);       // всегда актуальный список
+                list.style.display = 'block';
+            }
+            return;
+        }
+
+        /* клики ВНУТРИ выпадающего меню (чек-боксы) */
+        if (e.target.closest('.multibox-list')) {
+            const cell   = e.target.closest('.subs-cell');
+            const menu   = cell.querySelector('.multibox-list');
+            const hidden = cell.querySelector('.subordinates');
+            const values = [...menu.querySelectorAll('input:checked')].map(i => i.value);
+
+            hidden.value = JSON.stringify(values);
+            updateMultiboxCaption(cell);
+            return;
+        }
+
+        /* клик НАДЕ — закрываем все выпадашки */
+        document.querySelectorAll('.multibox-list')
+                .forEach(l => l.style.display = 'none');
     });
 
-    table.addEventListener("input", function (event) {
-        if (event.target.classList.contains("position")) {
-            updateDropdowns();
+    /* ────────── СОБЫТИЯ ТАБЛИЦЫ ────────── */
+
+    /* добавить строку */
+    addRow.addEventListener('click', () => {
+        const n   = tbody.rows.length + 1;
+        const tpl = tbody.rows[0].cloneNode(true);
+
+        /* очистка значений в клоне */
+        tpl.querySelectorAll('input').forEach(inp => { inp.value = ''; });
+        tpl.querySelectorAll('select').forEach(sel => { sel.innerHTML = ''; });
+        tpl.cells[0].textContent = n;
+
+        tbody.appendChild(tpl);
+        renumberAndRefresh();
+    });
+
+    /* ввод названия должности → обновить списки */
+    tbody.addEventListener('input', e => {
+        if (e.target.classList.contains('position')) renumberAndRefresh();
+    });
+
+    /* удалить строку */
+    tbody.addEventListener('click', e => {
+        if (e.target.classList.contains('deleteRow') && tbody.rows.length > 1) {
+            e.target.closest('tr').remove();
+            renumberAndRefresh();
         }
     });
 
-    // Показываем поле для ввода сразу при изменении
-    table.addEventListener("change", function (event) {
-        if (event.target.classList.contains("supervisor") ||
-            event.target.classList.contains("subordinates") ||
-            event.target.classList.contains("replacement")) {
-            toggleCustomInput(event.target, true);
-        }
-    });
-
-    // Предотвращаем автоматический перенос фокуса при выборе "Другой ответ"
-    table.addEventListener("mousedown", function (event) {
-        if (event.target.classList.contains("supervisor") ||
-            event.target.classList.contains("subordinates") ||
-            event.target.classList.contains("replacement")) {
-            toggleCustomInput(event.target, false);
-        }
-    });
-
-    table.addEventListener("click", function (event) {
-        if (event.target.classList.contains("deleteRow")) {
-            event.target.parentElement.parentElement.remove();
-            updateRowNumbers();
-            updateDropdowns();
-        }
-    });
-
-    submitButton.addEventListener("click", function () {
-        let data = [];
-        document.querySelectorAll("#orgTable tbody tr").forEach(row => {
-            data.push({
-                position: row.querySelector(".position").value,
-                supervisor: row.querySelector(".supervisor").value === "custom" ? row.querySelector(".custom-supervisor").value : row.querySelector(".supervisor").value,
-                subordinates: row.querySelector(".subordinates").value === "custom" ? row.querySelector(".custom-subordinates").value : row.querySelector(".subordinates").value,
-                functional: row.querySelector(".functional").value,
-                replacement: row.querySelector(".replacement").value === "custom" ? row.querySelector(".custom-replacement").value : row.querySelector(".replacement").value,
-                taskMethod: row.querySelector(".task-method").value,
-                documents: row.querySelector(".documents").value
-            });
-        });
+    /* ────────── ОТПРАВКА ДАННЫХ ────────── */
+    submit.addEventListener('click', () => {
+        const dataset = Array.from(tbody.rows).map(tr => ({
+            position    : tr.querySelector('.position').value.trim(),
+            supervisor  : tr.querySelector('.supervisor').value,
+            subordinates: JSON.parse(tr.querySelector('.subordinates').value || '[]'),
+            functional  : tr.querySelector('.functional').value.trim(),
+            replacement : tr.querySelector('.replacement').value,
+            taskMethod  : tr.querySelector('.task-method').value.trim(),
+            documents   : tr.querySelector('.documents').value.trim()
+        }));
 
         fetch('/save_organizational_structure', {
-            method: 'POST',
+            method : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ structure: data })
-        }).then(response => response.json())
-            .then(data => alert("Данные успешно сохранены!"))
-            .catch(error => console.error("Ошибка:", error));
+            body   : JSON.stringify({ structure: dataset })
+        })
+        .then(r => r.json())
+        .then(() => { alert('Данные сохранены!'); drawOrgChart('table'); })
+        .catch(console.error);
+    });
+
+    /* стартовый рендер */
+    renumberAndRefresh();
+});
+
+/* ────────── Google OrgChart (без изменений) ────────── */
+google.charts.load('current', { packages : ['orgchart'] });
+google.charts.setOnLoadCallback(() => drawOrgChart());
+
+function buildChart(rows) {
+    const arr = [];
+    rows.forEach((r, i) => {
+        if (!r.position) return;
+        const id   = `n${i + 1}`;
+        const sup  = r.supervisor;
+        const par  = sup ? `n${sup.split(')')[0]}` : null;
+        arr.push([{ v:id, f:`<div class="node">${r.position}</div>` }, par]);
+    });
+    if (!arr.some(a => a[1] === null))
+        arr.unshift([{ v:'root', f:'<div>ROOT</div>' }, null]);
+    arr.sort((a, b) => (a[1] === null ? -1 : 1));
+    return arr;
+}
+
+function collectRows() {
+    return Array.from(document.querySelectorAll('#orgTable tbody tr')).map(tr => ({
+        position  : tr.querySelector('.position').value.trim(),
+        supervisor: tr.querySelector('.supervisor').value.trim()
+    }));
+}
+
+function drawOrgChart(src = 'api') {
+    (src === 'table'
+        ? Promise.resolve({ structure : collectRows() })
+        : fetch('/get_organizational_structure').then(r => r.json())
+    ).then(json => {
+        const data = buildChart(json.structure || []);
+        if (!data.length) {
+            document.getElementById('orgChart').innerHTML = '<em>Нет данных</em>';
+            return;
+        }
+        const dt = new google.visualization.DataTable();
+        dt.addColumn('string', 'Name');
+        dt.addColumn('string', 'Manager');
+        dt.addRows(data);
+
+        new google.visualization.OrgChart(document.getElementById('orgChart'))
+            .draw(dt, { allowHtml : true, nodeClass : 'node' });
+    }).catch(console.error);
+}
+document.getElementById('downloadChart').addEventListener('click', () => {
+    const wrapper = document.getElementById('orgChart');
+    const chartEl = wrapper.querySelector('.google-visualization-orgchart-table');
+
+    if (!chartEl) {
+        alert('Схема ещё не построена.');
+        return;
+    }
+
+    /* реальные габариты диаграммы */
+    const w = chartEl.scrollWidth;
+    const h = chartEl.scrollHeight;
+
+    html2canvas(chartEl, {
+        scrollX: 0,
+        scrollY: 0,
+        scale  : 2,          // для чёткости
+        width  : w,
+        height : h
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'org_chart.png';
+        link.click();
     });
 });

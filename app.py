@@ -236,7 +236,10 @@ def save_organizational_structure():
     data = request.json
     mongo.db.organizational_structure.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены"}), 200
-
+@app.route('/get_organizational_structure')
+def get_org_structure():
+    doc = mongo.db.org_structure.find_one(sort=[('_id', -1)])  # последняя версия
+    return jsonify(doc if doc else {'structure': []})
 @app.route("/business_processes")
 def business_processes_page():
     # Рендерим наш business_processes.html
