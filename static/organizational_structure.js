@@ -40,7 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
         menu.innerHTML = '';
 
         getPositions().forEach(p => {
-            const id = crypto.randomUUID();
+            const genId = () =>
+            'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+            const id = (crypto.randomUUID ? crypto.randomUUID() : genId());
             menu.insertAdjacentHTML('beforeend', `
                 <label for="${id}">
                     <input type="checkbox" id="${id}" value="${p}"
