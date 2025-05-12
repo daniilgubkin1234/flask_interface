@@ -304,17 +304,24 @@ def get_job_description(doc_id):
 def organizational_structure_page():
     return render_template("organizational_structure.html")
 
+# ---------- Сохранение ----------
 @app.route('/save_organizational_structure', methods=['POST'])
 def save_organizational_structure():
-    data = request.json
+    data = request.json                       # ожидаем {"structure":[…]}
+    if not data or "structure" not in data:
+        return jsonify({"error": "no data"}), 400
+
     mongo.db.organizational_structure.insert_one(data)
-    return jsonify({"message": "Данные успешно сохранены"}), 200
+    return jsonify({"message": "OK"}), 200
+
+
+# ---------- Чтение последней схемы ----------
 @app.route('/get_organizational_structure')
 def get_org_structure():
     doc = mongo.db.organizational_structure.find_one(
-        {},                     # можно добавить фильтр tenant_id
+        {},                       # при желании добавьте tenant_id
         sort=[('_id', -1)],
-        projection={'_id': 0, 'structure': 1}   # <<< убираем _id
+        projection={'_id': 0, 'structure': 1}   # <<< убираем ObjectId
     )
     return jsonify(doc or {'structure': []})
 @app.route("/business_processes")
