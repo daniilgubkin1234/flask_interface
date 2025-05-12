@@ -30,7 +30,7 @@ stimulation_system_collection=mongo.db.stimulation_system
 job_description_collection=mongo.db.job_descriptions
 business_processes_collection=mongo.db.business_processes
 three_plus_twenty_collection=mongo.db.three_plus_twenty
-
+organizational_structure_collection=mongo.db.organizational_structure
 login_manager = LoginManager(app)
 
 @login_manager.user_loader
