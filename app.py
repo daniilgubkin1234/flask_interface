@@ -311,13 +311,12 @@ def save_organizational_structure():
     return jsonify({"message": "Данные успешно сохранены"}), 200
 @app.route('/get_organizational_structure')
 def get_org_structure():
-    doc = mongo.db.organizational_structure.find_one(sort=[('_id', -1)])  # та же коллекция
-    if not doc:
-        return jsonify({'structure': []})
-
-    # Mongo документ может содержать _id / ObjectId → превращаем
-    structure = doc.get('structure', [])
-    return jsonify({'structure': structure})
+    doc = mongo.db.organizational_structure.find_one(
+        {},                     # можно добавить фильтр tenant_id
+        sort=[('_id', -1)],
+        projection={'_id': 0, 'structure': 1}   # <<< убираем _id
+    )
+    return jsonify(doc or {'structure': []})
 @app.route("/business_processes")
 def business_processes_page():
     # Рендерим наш business_processes.html

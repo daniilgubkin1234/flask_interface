@@ -10,7 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const submit  = document.getElementById('submitData');
 
     /* ────────── ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ────────── */
-
+    const genId = () =>
+    'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  
+  const uuid = (crypto.randomUUID ? () => crypto.randomUUID() : genId);  // единая функция
     /** «1) Директор», «2) Менеджер» … */
     const getPositions = () =>
         Array.from(document.querySelectorAll('.position'))
@@ -40,9 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         menu.innerHTML = '';
 
         getPositions().forEach(p => {
-            const genId = () =>
-            'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-            const id = (crypto.randomUUID ? crypto.randomUUID() : genId());
+            const id = uuid();
             menu.insertAdjacentHTML('beforeend', `
                 <label for="${id}">
                     <input type="checkbox" id="${id}" value="${p}"
