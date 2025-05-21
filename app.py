@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 import os
 from bson.objectid import ObjectId
 from flask import g
-from flask_login import LoginManager, login_user
-from models.user import User
-from utils.security import hash_pwd, verify_pwd, make_jwt
-from utils.tenant import tenant_required
+# from flask_login import LoginManager, login_user
+# from models.user import User
+# from utils.security import hash_pwd, verify_pwd, make_jwt
+# from utils.tenant import tenant_required
 
 # Загружаем переменные из .env
 load_dotenv()
@@ -24,15 +24,15 @@ tasks_collection = mongo.db.tasks
 employees_collection = mongo.db.employees
 business_goal_collection = mongo.db.business_goal
 survey_collection = mongo.db.surveys
-adaptation_plans_collection=mongo.db.adaptation_plans
-meeting_protocol_collection=mongo.db.meeting_protocols
-stimulation_system_collection=mongo.db.stimulation_system
-job_description_collection=mongo.db.job_descriptions
-business_processes_collection=mongo.db.business_processes
-three_plus_twenty_collection=mongo.db.three_plus_twenty
-organizational_structure_collection=mongo.db.organizational_structure
-login_manager = LoginManager(app)
-
+adaptation_plans_collection = mongo.db.adaptation_plans
+meeting_protocol_collection = mongo.db.meeting_protocols
+stimulation_system_collection = mongo.db.stimulation_system
+job_description_collection = mongo.db.job_descriptions
+business_processes_collection = mongo.db.business_processes
+three_plus_twenty_collection = mongo.db.three_plus_twenty
+organizational_structure_collection = mongo.db.organizational_structure
+# login_manager = LoginManager(app)
+'''
 @login_manager.user_loader
 def load_user(user_id):
     doc = mongo.db.users.find_one({"_id": ObjectId(user_id)})
@@ -72,10 +72,11 @@ def sign_in():
     login_user(user)                      # для сессионного варианта
     token = make_jwt(user.id, user.tenant_id)
     return {"token": token}
+'''
 
-
+'''
 @app.route("/api/tasks", methods=["GET"])
-@tenant_required                            # ← декоратор перед логикой
+# @tenant_required                            # ← декоратор перед логикой
 def get_tasks():
     tasks = list(
         mongo.db.tasks.find(
@@ -85,21 +86,27 @@ def get_tasks():
     )
     return jsonify(tasks)
 
+
 @app.route("/api/tasks", methods=["POST"])
-@tenant_required
+# @tenant_required
 def add_task():
     data = request.json
     data["tenant_id"] = g.tenant_id         # проставляем владельца
     mongo.db.tasks.insert_one(data)
     return {"message": "OK"}
 
+
 @app.route("/")
 def login_page():
     return render_template("auth.html")
-@app.route("/diagnostic")
-@tenant_required              # защищаем
+'''
+
+
+@app.route("/")
+# @tenant_required              # защищаем
 def diagnostic_page():
     return render_template("survey_ai.html")
+
 
 # Получение всех задач
 """@app.route("/get_tasks", methods=["GET"])
@@ -121,6 +128,8 @@ def add_task():
     return jsonify({"message": "Задача успешно добавлена", "task": data})
 """
 # Обновление задачи
+
+
 @app.route("/edit_task/<task_id>", methods=["PUT"])
 def edit_task(task_id):
     """ Обновляет существующую задачу по task_id """
@@ -132,6 +141,8 @@ def edit_task(task_id):
     return jsonify({"error": "Задача не найдена"}), 404
 
 # Удаление задачи
+
+
 @app.route("/delete_task/<task_id>", methods=["DELETE"])
 def delete_task(task_id):
     """ Удаляет задачу из базы данных """
@@ -146,6 +157,8 @@ def delete_task(task_id):
 @app.route("/personnel")
 def personnel():
     return render_template("employee_profile.html")
+
+
 @app.route("/add_employee", methods=["POST"])
 def add_employee():
     data = request.json
@@ -153,6 +166,7 @@ def add_employee():
         mongo.db.personnel.insert_one(data)
         return jsonify({"message": "Сотрудник добавлен!"}), 201
     return jsonify({"error": "Ошибка при добавлении"}), 400
+
 
 @app.route("/get_employee", methods=["GET"])
 def get_employee():
@@ -163,6 +177,7 @@ def get_employee():
         return jsonify(employee)
     return jsonify({"error": "Сотрудник не найден"}), 404
 
+
 @app.route("/update_employee/<employee_id>", methods=["PUT"])
 def update_employee(employee_id):
     data = request.json
@@ -171,10 +186,12 @@ def update_employee(employee_id):
         return jsonify({"message": "Данные обновлены!"})
     return jsonify({"error": "Ошибка при обновлении"}), 400
 
+
 @app.route("/business")
 def business_goals():
     """Страница бизнес-целей"""
     return render_template("business_goal_form.html")
+
 
 @app.route("/add_business_goal", methods=["POST"])
 def add_business_goal():
@@ -191,6 +208,7 @@ def add_business_goal():
 def survey():
     """Отображение страницы с опросником"""
     return render_template("tasks.html")
+
 
 @app.route("/submit_survey", methods=["POST"])
 def submit_survey():
@@ -212,6 +230,7 @@ def submit_survey():
         "survey_id": str(result.inserted_id)
     }), 201
 
+
 @app.route("/get_survey_results/<survey_id>", methods=["GET"])
 def get_survey_results(survey_id):
     """Получение данных опроса по ID"""
@@ -221,9 +240,11 @@ def get_survey_results(survey_id):
         return jsonify(survey)
     return jsonify({"error": "Опрос не найден"}), 404
 
+
 @app.route("/adaptation_plan")
 def adaptation_plan():
     return render_template("adaptation_plan.html")
+
 
 @app.route("/submit_adaptation_plan", methods=["POST"])
 def submit_adaptation_plan():
@@ -239,9 +260,11 @@ def submit_adaptation_plan():
         "plan_id": str(result.inserted_id)
     }), 201
 
+
 @app.route("/meeting_protocol")
 def meeting_protocol():
     return render_template("meeting_protocol.html")
+
 
 @app.route("/save_meeting_protocol", methods=["POST"])
 def save_meeting_protocol():
@@ -257,9 +280,11 @@ def save_meeting_protocol():
         "plan_id": str(result.inserted_id)
     }), 201
 
+
 @app.route("/stimulation_system")
 def stimulation_page():
     return render_template("stimulation_system.html")
+
 
 @app.route("/save_stimulation_system", methods=["POST"])
 def save_stimulation():
@@ -269,6 +294,7 @@ def save_stimulation():
 
     mongo.db.stimulation_system.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
+
 
 @app.route("/job_description")
 def job_description():
@@ -294,39 +320,47 @@ def submit_job_description():
 @app.route("/get_job_description/<doc_id>", methods=["GET"])
 def get_job_description(doc_id):
     """Получение данных должностной инструкции по ID"""
-    job_description = mongo.db.job_descriptions.find_one({"_id": ObjectId(doc_id)})
+    job_description = mongo.db.job_descriptions.find_one(
+        {"_id": ObjectId(doc_id)})
     if job_description:
         job_description["_id"] = str(job_description["_id"])
         return jsonify(job_description)
     return jsonify({"error": "Должностная инструкция не найдена"}), 404
+
 
 @app.route("/organizational_structure")
 def organizational_structure_page():
     return render_template("organizational_structure.html")
 
 # ---------- Сохранение ----------
+
+
 @app.route('/save_organizational_structure', methods=['POST'])
 def save_organizational_structure():
 
-        data = request.json
-        if not data:
-            return jsonify({"error": "Нет данных для сохранения"}), 400
+    data = request.json
+    if not data:
+        return jsonify({"error": "Нет данных для сохранения"}), 400
 
-        result = mongo.db.organizational_structure.insert_one(data)
+    result = mongo.db.organizational_structure.insert_one(data)
 
-        return jsonify({
-            "message": "Должностная инструкция успешно сохранена!",
-            "doc_id": str(result.inserted_id)
-        }), 201
+    return jsonify({
+        "message": "Должностная инструкция успешно сохранена!",
+        "doc_id": str(result.inserted_id)
+    }), 201
 
 # ---------- Чтение последней схемы ----------
+
+
 @app.route('/get_organizational_structure')
 def get_org_structure(doc_id):
-    organizational_structure = mongo.db.organizational_structure.find_one({"_id": ObjectId(doc_id)})
+    organizational_structure = mongo.db.organizational_structure.find_one(
+        {"_id": ObjectId(doc_id)})
     if organizational_structure:
         organizational_structure["_id"] = str(organizational_structure["_id"])
         return jsonify(organizational_structure)
     return jsonify({"error": "Организационная структура не найдена"}), 404
+
 
 @app.route("/business_processes")
 def business_processes_page():
@@ -344,9 +378,11 @@ def save_business_processes():
         print("Ошибка при сохранении:", e)
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/three_plus_twenty")
 def three_plus_twenty_page():
     return render_template("three_plus_twenty.html")
+
 
 @app.route("/save_three_plus_twenty", methods=["POST"])
 def save_three_plus_twenty():
@@ -366,7 +402,5 @@ def save_three_plus_twenty():
     return jsonify({"message": "Данные успешно сохранены!"}), 201
 
 
-
 if __name__ == "__main__":
     app.run(debug=True)
-
