@@ -307,25 +307,26 @@ def organizational_structure_page():
 # ---------- Сохранение ----------
 @app.route('/save_organizational_structure', methods=['POST'])
 def save_organizational_structure():
-    try:
-        rows = request.get_json()      # ожидаем ПРЯМО массив
-        if not rows or not isinstance(rows, list):
-            return jsonify({"error": "wrong format"}), 400
 
-        mongo.db.organizational_structure.insert_one({"rows": rows})
-        return jsonify({"message": "OK"})
-    except Exception as e:
-        app.logger.exception("save_organizational_structure failed")
-        return jsonify({"error": str(e)}), 500
+        data = request.json
+        if not data:
+            return jsonify({"error": "Нет данных для сохранения"}), 400
+
+        result = mongo.db.organizational_structure.insert_one(data)
+
+        return jsonify({
+            "message": "Должностная инструкция успешно сохранена!",
+            "doc_id": str(result.inserted_id)
+        }), 201
 
 # ---------- Чтение последней схемы ----------
 @app.route('/get_organizational_structure')
-def get_org_structure():
-    doc = mongo.db.organizational_structure.find_one(
-        {}, sort=[('_id', -1)],
-        projection={'_id': 0, 'rows': 1}
-    )
-    return jsonify(doc['rows'] if doc else [])
+def get_org_structure(doc_id):
+    organizational_structure = mongo.db.organizational_structure.find_one({"_id": ObjectId(doc_id)})
+    if organizational_structure:
+        organizational_structure["_id"] = str(organizational_structure["_id"])
+        return jsonify(organizational_structure)
+    return jsonify({"error": "Организационная структура не найдена"}), 404
 
 @app.route("/business_processes")
 def business_processes_page():
