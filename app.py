@@ -307,23 +307,26 @@ def organizational_structure_page():
 # ---------- Сохранение ----------
 @app.route('/save_organizational_structure', methods=['POST'])
 def save_organizational_structure():
-    data = request.json                       # ожидаем {"structure":[…]}
-    if not data or "structure" not in data:
-        return jsonify({"error": "no data"}), 400
+    try:
+        rows = request.get_json()      # ожидаем ПРЯМО массив
+        if not rows or not isinstance(rows, list):
+            return jsonify({"error": "wrong format"}), 400
 
-    mongo.db.organizational_structure.insert_one(data)
-    return jsonify({"message": "OK"}), 200
-
+        mongo.db.organizational_structure.insert_one({"rows": rows})
+        return jsonify({"message": "OK"})
+    except Exception as e:
+        app.logger.exception("save_organizational_structure failed")
+        return jsonify({"error": str(e)}), 500
 
 # ---------- Чтение последней схемы ----------
 @app.route('/get_organizational_structure')
 def get_org_structure():
     doc = mongo.db.organizational_structure.find_one(
-        {},                       # при желании добавьте tenant_id
-        sort=[('_id', -1)],
-        projection={'_id': 0, 'structure': 1}   # <<< убираем ObjectId
+        {}, sort=[('_id', -1)],
+        projection={'_id': 0, 'rows': 1}
     )
-    return jsonify(doc or {'structure': []})
+    return jsonify(doc['rows'] if doc else [])
+
 @app.route("/business_processes")
 def business_processes_page():
     # Рендерим наш business_processes.html

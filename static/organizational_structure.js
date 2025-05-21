@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/save_organizational_structure', {
             method : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body   : JSON.stringify({ structure: dataset })
+            body   : JSON.stringify(dataset)
         })
         .then(r => r.json())
         .then(() => { alert('Данные сохранены!'); drawOrgChart('table'); })
@@ -199,10 +199,10 @@ function collectRows() {
 
 function drawOrgChart(src = 'api') {
     (src === 'table'
-        ? Promise.resolve({ structure : collectRows() })
+        ? Promise.resolve(collectRows())
         : fetch('/get_organizational_structure').then(r => r.json())
-    ).then(json => {
-        const data = buildChart(json.structure || []);
+    ).then(rows => {
+       const data = buildChart(rows);
         if (!data.length) {
             document.getElementById('orgChart').innerHTML = '<em>Нет данных</em>';
             return;
