@@ -260,19 +260,29 @@ def organizational_structure_page():
     return render_template("organizational_structure.html")
 
 
+# ---------- сохранить массив строк таблицы --------------------------
 @app.route('/save_organizational_structure', methods=['POST'])
 def save_organizational_structure():
-    data = request.json
-    mongo.db.organizational_structure.insert_one(data)
-    return jsonify({"message": "Данные успешно сохранены"}), 200
+    """Получает JSON-массив строк и кладёт его в Mongo."""
+    rows = request.get_json(silent=True)        # None, если тело не JSON
+
+    if not isinstance(rows, list):
+        return jsonify({"error": "ожидается JSON-массив"}), 400
+
+    mongo.db.organizational_structure.insert_one({"rows": rows})
+    return jsonify({"message": "OK"}), 200
 
 
+# ---------- отдать последнюю сохранённую версию ---------------------
 @app.route('/get_organizational_structure')
 def get_org_structure():
-    doc = mongo.db.org_structure.find_one(
-        sort=[('_id', -1)])  # последняя версия
-    return jsonify(doc if doc else {'structure': []})
-
+    """Возвращает массив строк (или []), ObjectId удалён проекцией."""
+    doc = mongo.db.organizational_structure.find_one(
+        {},                             # при необходимости добавьте tenant-filter
+        sort=[('_id', -1)],             # самая свежая запись
+        projection={'_id': 0, 'rows': 1}
+    )
+    return jsonify(doc['rows'] if doc else [])
 
 @app.route("/business_processes")
 def business_processes_page():
