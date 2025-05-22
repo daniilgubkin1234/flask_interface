@@ -1,20 +1,13 @@
 from flask import Flask, render_template, request, jsonify
-from flask_pymongo import PyMongo, MongoClient
+from flask_pymongo import PyMongo
 from dotenv import load_dotenv
 import os
 from bson.objectid import ObjectId
-from flask import g
-# from flask_login import LoginManager, login_user
-# from models.user import User
-# from utils.security import hash_pwd, verify_pwd, make_jwt
-# from utils.tenant import tenant_required
-
 # Загружаем переменные из .env
 load_dotenv()
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET")
 # Проверяем, загрузилась ли переменная
 if not app.config["MONGO_URI"]:
     raise ValueError("Ошибка: переменная MONGO_URI не найдена в .env!")
@@ -30,95 +23,29 @@ stimulation_system_collection = mongo.db.stimulation_system
 job_description_collection = mongo.db.job_descriptions
 business_processes_collection = mongo.db.business_processes
 three_plus_twenty_collection = mongo.db.three_plus_twenty
-organizational_structure_collection = mongo.db.organizational_structure
-# login_manager = LoginManager(app)
-'''
-@login_manager.user_loader
-def load_user(user_id):
-    doc = mongo.db.users.find_one({"_id": ObjectId(user_id)})
-    return User(doc) if doc else None
-
-@app.post("/sign_up")
-def sign_up():
-    data = request.json
-    if mongo.users.find_one({"email": data["email"]}):
-        return {"error": "Эта почта уже занята"}, 400
-
-    tenant_id = ObjectId()                      # создаём нового клиента
-    mongo.tenants.insert_one({
-        "_id": tenant_id,
-        "name": data.get("company", "Без названия")
-    })
-
-    user_id = mongo.users.insert_one({
-        "email": data["email"],
-        "password": hash_pwd(data["password"]),
-        "tenant_id": tenant_id,
-        "role": "owner"
-    }).inserted_id
-
-    token = make_jwt(str(user_id), str(tenant_id))
-    return {"token": token}
-
-
-@app.post("/sign_in")
-def sign_in():
-    data = request.json
-    doc = mongo.users.find_one({"email": data["email"]})
-    if not doc or not verify_pwd(data["password"], doc["password"]):
-        return {"error": "Неверный логин или пароль"}, 401
-
-    user = User(doc)
-    login_user(user)                      # для сессионного варианта
-    token = make_jwt(user.id, user.tenant_id)
-    return {"token": token}
-'''
-
-'''
-@app.route("/api/tasks", methods=["GET"])
-# @tenant_required                            # ← декоратор перед логикой
-def get_tasks():
-    tasks = list(
-        mongo.db.tasks.find(
-            {"tenant_id": g.tenant_id},     # фильтр по текущему клиенту
-            {"_id": 0}                      # не отдаём внутренний id
-        )
-    )
-    return jsonify(tasks)
-
-
-@app.route("/api/tasks", methods=["POST"])
-# @tenant_required
-def add_task():
-    data = request.json
-    data["tenant_id"] = g.tenant_id         # проставляем владельца
-    mongo.db.tasks.insert_one(data)
-    return {"message": "OK"}
 
 
 @app.route("/")
-def login_page():
-    return render_template("auth.html")
-'''
-
-
-@app.route("/")
-# @tenant_required              # защищаем
-def diagnostic_page():
+def index():
+    """ Главная страница с таблицей задач """
     return render_template("survey_ai.html")
 
-
 # Получение всех задач
-"""@app.route("/get_tasks", methods=["GET"])
-def get_tasks():
 
-    tasks = list(tasks_collection.find({}, {"_id": 0}))  # Получаем все задачи без Mongo `_id`
+
+@app.route("/get_tasks", methods=["GET"])
+def get_tasks():
+    """ Возвращает все задачи в формате JSON """
+    tasks = list(tasks_collection.find({}, {"_id": 0})
+                 )  # Получаем все задачи без Mongo `_id`
     return jsonify(tasks)
 
 # Добавление новой задачи
+
+
 @app.route("/add_task", methods=["POST"])
 def add_task():
-
+    """ Добавляет новую задачу в базу данных """
     data = request.json
     print("Полученные данные:", data)
     if not data.get("task"):  # Проверяем, есть ли название задачи
@@ -126,7 +53,7 @@ def add_task():
 
     tasks_collection.insert_one(data)  # Сохраняем в MongoDB
     return jsonify({"message": "Задача успешно добавлена", "task": data})
-"""
+
 # Обновление задачи
 
 
@@ -332,34 +259,19 @@ def get_job_description(doc_id):
 def organizational_structure_page():
     return render_template("organizational_structure.html")
 
-# ---------- Сохранение ----------
-
 
 @app.route('/save_organizational_structure', methods=['POST'])
 def save_organizational_structure():
-
     data = request.json
-    if not data:
-        return jsonify({"error": "Нет данных для сохранения"}), 400
-
-    result = mongo.db.organizational_structure.insert_one(data)
-
-    return jsonify({
-        "message": "Должностная инструкция успешно сохранена!",
-        "doc_id": str(result.inserted_id)
-    }), 201
-
-# ---------- Чтение последней схемы ----------
+    mongo.db.organizational_structure.insert_one(data)
+    return jsonify({"message": "Данные успешно сохранены"}), 200
 
 
 @app.route('/get_organizational_structure')
-def get_org_structure(doc_id):
-    organizational_structure = mongo.db.organizational_structure.find_one(
-        {"_id": ObjectId(doc_id)})
-    if organizational_structure:
-        organizational_structure["_id"] = str(organizational_structure["_id"])
-        return jsonify(organizational_structure)
-    return jsonify({"error": "Организационная структура не найдена"}), 404
+def get_org_structure():
+    doc = mongo.db.org_structure.find_one(
+        sort=[('_id', -1)])  # последняя версия
+    return jsonify(doc if doc else {'structure': []})
 
 
 @app.route("/business_processes")
