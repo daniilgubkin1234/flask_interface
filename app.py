@@ -261,16 +261,21 @@ def organizational_structure_page():
 
 
 # ---------- сохранить массив строк таблицы --------------------------
-@app.post("/save_organizational_structure")
+# ---- Организационная структура -------------------------------------------
+@app.route("/save_organizational_structure", methods=["POST"])
 def save_organizational_structure():
-    rows = request.get_json(silent=True)          # ← список строк
-    if not isinstance(rows, list):
-        return {"error": "ожидается JSON-массив"}, 400
+    """Сохраняем оргструктуру одним документом (аналог business-goal)."""
+    data = request.json                       # это уже dict
 
-    # ⬇️  заворачиваем список в словарь
-    mongo.db.organizational_structure.insert_one({"rows": rows})
-    return {"message": "OK"}, 200
+    if not data or "rows" not in data:
+        return jsonify({"error": "Нет данных"}), 400
 
+    # + полезный временной штамп
+    from datetime import datetime
+    data["createdAt"] = datetime.utcnow()
+
+    mongo.db.organizational_structure.insert_one(data)
+    return jsonify({"message": "Оргструктура сохранена!"}), 201
 
 # ---------- отдать последнюю сохранённую версию ---------------------
 @app.route('/get_organizational_structure')
