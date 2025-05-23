@@ -261,16 +261,15 @@ def organizational_structure_page():
 
 
 # ---------- сохранить массив строк таблицы --------------------------
-@app.route('/save_organizational_structure', methods=['POST'])
+@app.post("/save_organizational_structure")
 def save_organizational_structure():
-    """Получает JSON-массив строк и кладёт его в Mongo."""
-    rows = request.get_json(silent=True)        # None, если тело не JSON
-
+    rows = request.get_json(silent=True)          # ← список строк
     if not isinstance(rows, list):
-        return jsonify({"error": "ожидается JSON-массив"}), 400
+        return {"error": "ожидается JSON-массив"}, 400
 
+    # ⬇️  заворачиваем список в словарь
     mongo.db.organizational_structure.insert_one({"rows": rows})
-    return jsonify({"message": "OK"}), 200
+    return {"message": "OK"}, 200
 
 
 # ---------- отдать последнюю сохранённую версию ---------------------
