@@ -203,7 +203,7 @@ document.getElementById('downloadChart').addEventListener('click', () => {
             /* 4. Скачиваем PNG */
             const link = document.createElement('a');
             link.href      = canvas.toDataURL('image/png');
-            link.download  = 'organizational_chart.png';
+            link.download  = 'Организационная структура. Cхема подчинения';
             document.body.appendChild(link);   // для Safari
             link.click();
             link.remove();
