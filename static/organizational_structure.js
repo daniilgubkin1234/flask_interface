@@ -170,23 +170,50 @@ function drawOrgChart(rows) {
     dt.addColumn('string', 'Manager');
     dt.addRows(dataArr);
 
-    new google.visualization.OrgChart(target)
-        .draw(dt, { allowHtml: true, nodeClass: 'node' });
-        window.orgChartInstance = chart;
+    const chart = new google.visualization.OrgChart(target);
+    chart.draw(dt, { allowHtml: true, nodeClass: 'node' });
+
+    window.orgChartInstance = chart;   // ← теперь обработчик «Скачать схему» увидит диаграмму
 }
-/* ====== Загрузка / сохранение схемы ====== */
 document.getElementById('downloadChart').addEventListener('click', () => {
-    if (!window.orgChartInstance) {
-        alert('Сначала постройте схему (кнопка «Отправить»).');
+    const chartBlock = document.getElementById('orgChart');
+
+    if (!chartBlock || !chartBlock.childElementCount) {
+        alert('Сначала нажмите «Отправить», чтобы построить схему.');
         return;
     }
 
-    // Google Charts сам отдаёт PNG полной схемы
-    const uri  = window.orgChartInstance.getImageURI();
-    const link = document.createElement('a');
-    link.href        = uri;
-    link.download    = 'organizational_chart.png';
-    document.body.appendChild(link);   // Safari fix
-    link.click();
-    link.remove();
+    /* 1. Снимаем ограничения прокрутки, чтобы html2canvas «увидел» весь контент */
+    const originalOverflow = chartBlock.style.overflow;
+    const originalWidth    = chartBlock.style.width;
+    const originalHeight   = chartBlock.style.height;
+
+    chartBlock.style.overflow = 'visible';
+    chartBlock.style.width    = chartBlock.scrollWidth  + 'px';
+    chartBlock.style.height   = chartBlock.scrollHeight + 'px';
+
+    /* 2. Делаем скриншот */
+    html2canvas(chartBlock, { backgroundColor: null })
+        .then(canvas => {
+            /* 3. Возвращаем старые размеры */
+            chartBlock.style.overflow = originalOverflow;
+            chartBlock.style.width    = originalWidth;
+            chartBlock.style.height   = originalHeight;
+
+            /* 4. Скачиваем PNG */
+            const link = document.createElement('a');
+            link.href      = canvas.toDataURL('image/png');
+            link.download  = 'organizational_chart.png';
+            document.body.appendChild(link);   // для Safari
+            link.click();
+            link.remove();
+        })
+        .catch(err => {
+            console.error('Не удалось сохранить схему:', err);
+            alert('Ошибка сохранения схемы. Подробности в консоли.');
+            /* возвращаем размеры даже в случае ошибки */
+            chartBlock.style.overflow = originalOverflow;
+            chartBlock.style.width    = originalWidth;
+            chartBlock.style.height   = originalHeight;
+        });
 });
