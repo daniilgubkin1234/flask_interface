@@ -172,4 +172,21 @@ function drawOrgChart(rows) {
 
     new google.visualization.OrgChart(target)
         .draw(dt, { allowHtml: true, nodeClass: 'node' });
+        window.orgChartInstance = chart;
 }
+/* ====== Загрузка / сохранение схемы ====== */
+document.getElementById('downloadChart').addEventListener('click', () => {
+    if (!window.orgChartInstance) {
+        alert('Сначала постройте схему (кнопка «Отправить»).');
+        return;
+    }
+
+    // Google Charts сам отдаёт PNG полной схемы
+    const uri  = window.orgChartInstance.getImageURI();
+    const link = document.createElement('a');
+    link.href        = uri;
+    link.download    = 'organizational_chart.png';
+    document.body.appendChild(link);   // Safari fix
+    link.click();
+    link.remove();
+});
