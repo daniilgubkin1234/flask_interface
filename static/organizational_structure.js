@@ -4,8 +4,8 @@
  ************************************************************/
 
 document.addEventListener('DOMContentLoaded', () => {
-    const tbody   = document.querySelector('#orgTable tbody');
-    const addBtn  = document.getElementById('addRow');
+    const tbody = document.querySelector('#orgTable tbody');
+    const addBtn = document.getElementById('addRow');
     const sendBtn = document.getElementById('submitData');
 
     /* ───────── helpers ───────── */
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function refreshSimpleSelects() {
         const opts = ['<option value="">Выберите</option>',
-                      ...getPositions().map(p => `<option value="${p}">${p}</option>`)].join('');
+            ...getPositions().map(p => `<option value="${p}">${p}</option>`)].join('');
         document.querySelectorAll('.supervisor, .replacement').forEach(sel => {
             const chosen = [...sel.selectedOptions].map(o => o.value);
             sel.innerHTML = opts;
@@ -29,14 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setMultiboxCaption(cell) {
-        const cap  = cell.querySelector('.multibox');
+        const cap = cell.querySelector('.multibox');
         const list = JSON.parse(cell.querySelector('.subordinates').value || '[]');
         cap.textContent = list.length ? list.join(', ') : 'Выберите';
         cap.classList.toggle('placeholder', !list.length);
     }
 
     function buildMultibox(cell) {
-        const menu   = cell.querySelector('.multibox-list');
+        const menu = cell.querySelector('.multibox-list');
         const hidden = cell.querySelector('.subordinates');
         const chosen = JSON.parse(hidden.value || '[]');
 
@@ -75,9 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (e.target.closest('.multibox-list')) {
-            const cell   = e.target.closest('.subs-cell');
+            const cell = e.target.closest('.subs-cell');
             const hidden = cell.querySelector('.subordinates');
-            const vals   = [...cell.querySelectorAll('input:checked')].map(i => i.value);
+            const vals = [...cell.querySelectorAll('input:checked')].map(i => i.value);
             hidden.value = JSON.stringify(vals);
             setMultiboxCaption(cell);
             return;
@@ -109,31 +109,31 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ───────── сбор данных ───────── */
     const collectRows = () =>
         [...tbody.rows].map(tr => ({
-            position    : tr.querySelector('.position').value.trim(),
-            supervisor  : tr.querySelector('.supervisor').value.trim(),
+            position: tr.querySelector('.position').value.trim(),
+            supervisor: tr.querySelector('.supervisor').value.trim(),
             subordinates: JSON.parse(tr.querySelector('.subordinates').value || '[]'),
-            functional  : tr.querySelector('.functional').value.trim(),
-            replacement : tr.querySelector('.replacement').value.trim(),
-            taskMethod  : tr.querySelector('.task-method').value.trim(),
-            documents   : tr.querySelector('.documents').value.trim()
+            functional: tr.querySelector('.functional').value.trim(),
+            replacement: tr.querySelector('.replacement').value.trim(),
+            taskMethod: tr.querySelector('.task-method').value.trim(),
+            documents: tr.querySelector('.documents').value.trim()
         }));
 
     /* ───────── отправка ───────── */
     sendBtn.addEventListener('click', () => {
-        const rows    = collectRows();
+        const rows = collectRows();
         const payload = { rows };                   // <— здесь главное изменение
 
         fetch('/save_organizational_structure', {
-            method : 'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body   : JSON.stringify(payload)
+            body: JSON.stringify(payload)
         })
-        .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-        .then(() => {
-            alert('Данные успешно сохранены!');
-            drawOrgChart(rows);                     // диаграмму строим из локального массива
-        })
-        .catch(err => console.error('Ошибка сохранения:', err));
+            .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+            .then(() => {
+                alert('Данные успешно сохранены!');
+                drawOrgChart(rows);                     // диаграмму строим из локального массива
+            })
+            .catch(err => console.error('Ошибка сохранения:', err));
     });
 
     syncTable();
@@ -141,13 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ====== Google OrgChart ====== */
 google.charts.load('current', { packages: ['orgchart'] });
-google.charts.setOnLoadCallback(() => {});
+google.charts.setOnLoadCallback(() => { });
 
 function buildChart(rows) {
     const list = [];
     rows.forEach((r, idx) => {
         if (!r.position) return;
-        const id  = `n${idx + 1}`;
+        const id = `n${idx + 1}`;
         const sup = r.supervisor ? `n${r.supervisor.split(')')[0]}` : null;
         list.push([{ v: id, f: `<div class="node">${r.position}</div>` }, sup]);
     });
@@ -158,7 +158,7 @@ function buildChart(rows) {
 
 function drawOrgChart(rows) {
     const dataArr = buildChart(rows);
-    const target  = document.getElementById('orgChart');
+    const target = document.getElementById('orgChart');
 
     if (!dataArr.length) {
         target.innerHTML = '<em>Нет данных для построения схемы</em>';
@@ -185,25 +185,25 @@ document.getElementById('downloadChart').addEventListener('click', () => {
 
     /* 1. Снимаем ограничения прокрутки, чтобы html2canvas «увидел» весь контент */
     const originalOverflow = chartBlock.style.overflow;
-    const originalWidth    = chartBlock.style.width;
-    const originalHeight   = chartBlock.style.height;
+    const originalWidth = chartBlock.style.width;
+    const originalHeight = chartBlock.style.height;
 
     chartBlock.style.overflow = 'visible';
-    chartBlock.style.width    = chartBlock.scrollWidth  + 'px';
-    chartBlock.style.height   = chartBlock.scrollHeight + 'px';
+    chartBlock.style.width = chartBlock.scrollWidth + 'px';
+    chartBlock.style.height = chartBlock.scrollHeight + 'px';
 
     /* 2. Делаем скриншот */
     html2canvas(chartBlock, { backgroundColor: null })
         .then(canvas => {
             /* 3. Возвращаем старые размеры */
             chartBlock.style.overflow = originalOverflow;
-            chartBlock.style.width    = originalWidth;
-            chartBlock.style.height   = originalHeight;
+            chartBlock.style.width = originalWidth;
+            chartBlock.style.height = originalHeight;
 
             /* 4. Скачиваем PNG */
             const link = document.createElement('a');
-            link.href      = canvas.toDataURL('image/png');
-            link.download  = 'Организационная структура. Cхема подчинения.png';
+            link.href = canvas.toDataURL('image/png');
+            link.download = 'Организационная структура. Cхема подчинения.png';
             document.body.appendChild(link);   // для Safari
             link.click();
             link.remove();
@@ -213,7 +213,7 @@ document.getElementById('downloadChart').addEventListener('click', () => {
             alert('Ошибка сохранения схемы. Подробности в консоли.');
             /* возвращаем размеры даже в случае ошибки */
             chartBlock.style.overflow = originalOverflow;
-            chartBlock.style.width    = originalWidth;
-            chartBlock.style.height   = originalHeight;
+            chartBlock.style.width = originalWidth;
+            chartBlock.style.height = originalHeight;
         });
 });

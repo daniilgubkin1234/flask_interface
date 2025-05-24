@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Система стимулирования</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='stimulation_system.css') }}">
 </head>
+
 <body>
     <div class="container">
         <h2>Система стимулирования</h2>
@@ -14,13 +16,34 @@
                 <legend>Материальное стимулирование</legend>
                 <table>
                     <tbody>
-                        <tr><td>Оклад</td><td><input type="text" name="salary"></td></tr>
-                        <tr><td>Премия</td><td><input type="text" name="bonus"></td></tr>
-                        <tr><td>Комиссионное вознаграждение</td><td><input type="text" name="commission"></td></tr>
-                        <tr><td>Надбавка за наставничество</td><td><input type="text" name="mentoring_bonus"></td></tr>
-                        <tr><td>Оплата больничного</td><td><input type="text" name="sick_leave"></td></tr>
-                        <tr><td>Оплачиваемый отпуск</td><td><input type="text" name="vacation"></td></tr>
-                        <tr><td>Компенсации</td><td><input type="text" name="compensations"></td></tr>
+                        <tr>
+                            <td>Оклад</td>
+                            <td><input type="text" name="salary"></td>
+                        </tr>
+                        <tr>
+                            <td>Премия</td>
+                            <td><input type="text" name="bonus"></td>
+                        </tr>
+                        <tr>
+                            <td>Комиссионное вознаграждение</td>
+                            <td><input type="text" name="commission"></td>
+                        </tr>
+                        <tr>
+                            <td>Надбавка за наставничество</td>
+                            <td><input type="text" name="mentoring_bonus"></td>
+                        </tr>
+                        <tr>
+                            <td>Оплата больничного</td>
+                            <td><input type="text" name="sick_leave"></td>
+                        </tr>
+                        <tr>
+                            <td>Оплачиваемый отпуск</td>
+                            <td><input type="text" name="vacation"></td>
+                        </tr>
+                        <tr>
+                            <td>Компенсации</td>
+                            <td><input type="text" name="compensations"></td>
+                        </tr>
                     </tbody>
                 </table>
             </fieldset>
@@ -29,10 +52,22 @@
                 <legend>Нематериальное стимулирование</legend>
                 <table>
                     <tbody>
-                        <tr><td>Обучение за счет компании</td><td><input type="text" name="education"></td></tr>
-                        <tr><td>Комфортные условия труда</td><td><input type="text" name="work_conditions"></td></tr>
-                        <tr><td>ДМС</td><td><input type="text" name="health_insurance"></td></tr>
-                        <tr><td>Система стандартов</td><td><input type="text" name="standards"></td></tr>
+                        <tr>
+                            <td>Обучение за счет компании</td>
+                            <td><input type="text" name="education"></td>
+                        </tr>
+                        <tr>
+                            <td>Комфортные условия труда</td>
+                            <td><input type="text" name="work_conditions"></td>
+                        </tr>
+                        <tr>
+                            <td>ДМС</td>
+                            <td><input type="text" name="health_insurance"></td>
+                        </tr>
+                        <tr>
+                            <td>Система стандартов</td>
+                            <td><input type="text" name="standards"></td>
+                        </tr>
                     </tbody>
                 </table>
             </fieldset>
@@ -41,9 +76,18 @@
                 <legend>Работа с внутренней мотивацией</legend>
                 <table>
                     <tbody>
-                        <tr><td>Понимание цели компании</td><td><input type="text" name="company_goals"></td></tr>
-                        <tr><td>Понимание своих задач</td><td><input type="text" name="task_understanding"></td></tr>
-                        <tr><td>Понимание своей роли в компании</td><td><input type="text" name="role_understanding"></td></tr>
+                        <tr>
+                            <td>Понимание цели компании</td>
+                            <td><input type="text" name="company_goals"></td>
+                        </tr>
+                        <tr>
+                            <td>Понимание своих задач</td>
+                            <td><input type="text" name="task_understanding"></td>
+                        </tr>
+                        <tr>
+                            <td>Понимание своей роли в компании</td>
+                            <td><input type="text" name="role_understanding"></td>
+                        </tr>
                     </tbody>
                 </table>
             </fieldset>
@@ -52,9 +96,18 @@
                 <legend>Элементы корпоративной культуры</legend>
                 <table>
                     <tbody>
-                        <tr><td>Корпоративные мероприятия</td><td><input type="text" name="corporate_events"></td></tr>
-                        <tr><td>Участие в корпоративном обучении</td><td><input type="text" name="corporate_training"></td></tr>
-                        <tr><td>Личные праздники</td><td><input type="text" name="personal_celebrations"></td></tr>
+                        <tr>
+                            <td>Корпоративные мероприятия</td>
+                            <td><input type="text" name="corporate_events"></td>
+                        </tr>
+                        <tr>
+                            <td>Участие в корпоративном обучении</td>
+                            <td><input type="text" name="corporate_training"></td>
+                        </tr>
+                        <tr>
+                            <td>Личные праздники</td>
+                            <td><input type="text" name="personal_celebrations"></td>
+                        </tr>
                     </tbody>
                 </table>
             </fieldset>
@@ -63,7 +116,10 @@
                 <legend>Система партнерства</legend>
                 <table>
                     <tbody>
-                        <tr><td>Описание четкого алгоритма</td><td><input type="text" name="partnership_algorithm"></td></tr>
+                        <tr>
+                            <td>Описание четкого алгоритма</td>
+                            <td><input type="text" name="partnership_algorithm"></td>
+                        </tr>
                     </tbody>
                 </table>
             </fieldset>
@@ -73,7 +129,7 @@
             </div>
         </form>
     </div>
-      <!-- Навигационный блок -->
+    <!-- Навигационный блок -->
     <div class="recommendation-block">
         <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
         <div class="recommendation-section">
@@ -106,7 +162,7 @@
             <h4>Система стимулирования</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                
+
             </div>
         </div>
 
@@ -114,6 +170,7 @@
             <h4>Бизнес-процессы</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
             </div>
         </div>
 
@@ -124,7 +181,8 @@
             </div>
         </div>
 
-        </div>
+    </div>
     <script src="{{ url_for('static', filename='stimulation_system.js') }}"></script>
 </body>
+
 </html>
