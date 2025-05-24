@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Процессы</title>
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='business_processes.css') }}">
     <script src="{{ url_for('static', filename='business_processes.js') }}" defer></script>
 </head>
@@ -41,13 +41,13 @@
               </tbody>
             </table>
           </div>
-          
+
           <!-- Кнопка для добавления новой строки -->
           <button id="addRow">Добавить строку</button>
-          
+
           <!-- Кнопка для отправки данных -->
           <button id="submitData">Отправить</button>
-          
+
     </div>
     <!-- Навигационный блок -->
     <div class="recommendation-block">
@@ -82,7 +82,7 @@
             <h4>Система стимулирования</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                
+
             </div>
         </div>
 
@@ -90,6 +90,7 @@
             <h4>Бизнес-процессы</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
             </div>
         </div>
 

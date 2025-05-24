@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,135 +9,176 @@
     <script defer src="{{ url_for('static', filename='adaptation_plan.js') }}"></script>
     <script defer src="{{ url_for('static', filename='adaptation_plan_submit.js') }}"></script>
 </head>
+
 <body>
     <form id="adaptationForm">
-    <div class="container">
-        <h2>Адаптационный план</h2>
-        <div id="tasksContainer">
-            <!-- Задачи 1-5 -->
-            <fieldset class="task">
-                <legend>Задача 1: Оформление на работу</legend>
-                <label for="task1_time">Время на подготовку:</label>
-                <input type="text" id="task1_time" name="task1_time" placeholder="Введите время на подготовку" required>
-                <label for="task1_resources">Ресурсы:</label>
-                <textarea id="task1_resources" name="task1_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task1_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task1_summarize_by_mentor" name="task1_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task1_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task1_summarize_by_employee" name="task1_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            <fieldset class="task">
-                <legend>Задача 2: Знакомство с коллективом, офисом, оргтехникой</legend>
-                <label for="task2_time">Время на подготовку:</label>
-                <input type="text" id="task2_time" name="task2_time" placeholder="Введите время на подготовку" required>
-                <label for="task2_resources">Ресурсы:</label>
-                <textarea id="task2_resources" name="task2_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task2_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task2_summarize_by_mentor" name="task2_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task2_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task2_summarize_by_employee" name="task2_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            <fieldset class="task">
-                <legend>Задача 3: Изучение информации о компании</legend>
-                <label for="task3_time">Время на подготовку:</label>
-                <input type="text" id="task3_time" name="task3_time" placeholder="Введите время на подготовку" required>
-                <label for="task3_resources">Ресурсы:</label>
-                <textarea id="task3_resources" name="task3_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task3_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task3_summarize_by_mentor" name="task3_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task3_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task3_summarize_by_employee" name="task3_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            <fieldset class="task">
-                <legend>Задача 4: Изучение стандартов компании</legend>
-                <label for="task4_time">Время на подготовку:</label>
-                <input type="text" id="task4_time" name="task4_time" placeholder="Введите время на подготовку" required>
-                <label for="task4_resources">Ресурсы:</label>
-                <textarea id="task4_resources" name="task4_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task4_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task4_summarize_by_mentor" name="task4_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task4_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task4_summarize_by_employee" name="task4_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            <fieldset class="task">
-                <legend>Задача 5: Участие в планерке</legend>
-                <label for="task5_time">Время на подготовку:</label>
-                <input type="text" id="task5_time" name="task5_time" placeholder="Введите время на подготовку" required>
-                <label for="task5_resources">Ресурсы:</label>
-                <textarea id="task5_resources" name="task5_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task5_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task5_summarize_by_mentor" name="task5_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task5_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task5_summarize_by_employee" name="task5_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
+        <div class="container">
+            <h2>Адаптационный план</h2>
+            <div id="tasksContainer">
+                <!-- Задачи 1-5 -->
+                <fieldset class="task">
+                    <legend>Задача 1: Оформление на работу</legend>
+                    <label for="task1_time">Время на подготовку:</label>
+                    <input type="text" id="task1_time" name="task1_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task1_resources">Ресурсы:</label>
+                    <textarea id="task1_resources" name="task1_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task1_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task1_summarize_by_mentor" name="task1_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task1_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task1_summarize_by_employee" name="task1_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
+                <fieldset class="task">
+                    <legend>Задача 2: Знакомство с коллективом, офисом, оргтехникой</legend>
+                    <label for="task2_time">Время на подготовку:</label>
+                    <input type="text" id="task2_time" name="task2_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task2_resources">Ресурсы:</label>
+                    <textarea id="task2_resources" name="task2_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task2_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task2_summarize_by_mentor" name="task2_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task2_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task2_summarize_by_employee" name="task2_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
+                <fieldset class="task">
+                    <legend>Задача 3: Изучение информации о компании</legend>
+                    <label for="task3_time">Время на подготовку:</label>
+                    <input type="text" id="task3_time" name="task3_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task3_resources">Ресурсы:</label>
+                    <textarea id="task3_resources" name="task3_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task3_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task3_summarize_by_mentor" name="task3_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task3_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task3_summarize_by_employee" name="task3_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
+                <fieldset class="task">
+                    <legend>Задача 4: Изучение стандартов компании</legend>
+                    <label for="task4_time">Время на подготовку:</label>
+                    <input type="text" id="task4_time" name="task4_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task4_resources">Ресурсы:</label>
+                    <textarea id="task4_resources" name="task4_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task4_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task4_summarize_by_mentor" name="task4_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task4_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task4_summarize_by_employee" name="task4_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
+                <fieldset class="task">
+                    <legend>Задача 5: Участие в планерке</legend>
+                    <label for="task5_time">Время на подготовку:</label>
+                    <input type="text" id="task5_time" name="task5_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task5_resources">Ресурсы:</label>
+                    <textarea id="task5_resources" name="task5_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task5_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task5_summarize_by_mentor" name="task5_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task5_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task5_summarize_by_employee" name="task5_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
 
-            <!-- Задачи 6-7 -->
-            <fieldset class="task">
-                <legend>Задача 6: Уточнение адаптационного плана</legend>
-                <label for="task6_time">Время на подготовку:</label>
-                <input type="text" id="task6_time" name="task6_time" placeholder="Введите время на подготовку" required>
-                <label for="task6_resources">Ресурсы:</label>
-                <textarea id="task6_resources" name="task6_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task6_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task6_summarize_by_mentor" name="task6_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task6_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task6_summarize_by_employee" name="task6_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            <fieldset class="task">
-                <legend>Задача 7: Формирование плана работы на неделю</legend>
-                <label for="task7_time">Время на подготовку:</label>
-                <input type="text" id="task7_time" name="task7_time" placeholder="Введите время на подготовку" required>
-                <label for="task7_resources">Ресурсы:</label>
-                <textarea id="task7_resources" name="task7_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task7_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task7_summarize_by_mentor" name="task7_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task7_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task7_summarize_by_employee" name="task7_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
+                <!-- Задачи 6-7 -->
+                <fieldset class="task">
+                    <legend>Задача 6: Уточнение адаптационного плана</legend>
+                    <label for="task6_time">Время на подготовку:</label>
+                    <input type="text" id="task6_time" name="task6_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task6_resources">Ресурсы:</label>
+                    <textarea id="task6_resources" name="task6_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task6_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task6_summarize_by_mentor" name="task6_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task6_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task6_summarize_by_employee" name="task6_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
+                <fieldset class="task">
+                    <legend>Задача 7: Формирование плана работы на неделю</legend>
+                    <label for="task7_time">Время на подготовку:</label>
+                    <input type="text" id="task7_time" name="task7_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task7_resources">Ресурсы:</label>
+                    <textarea id="task7_resources" name="task7_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task7_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task7_summarize_by_mentor" name="task7_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task7_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task7_summarize_by_employee" name="task7_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
 
-            <!-- Задачи 8-9 -->
-            <fieldset class="task">
-                <legend>Задача 8: Просмотр видео-семинаров</legend>
-                <label for="task8_time">Время на подготовку:</label>
-                <input type="text" id="task8_time" name="task8_time" placeholder="Введите время на подготовку" required>
-                <label for="task8_resources">Ресурсы:</label>
-                <textarea id="task8_resources" name="task8_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task8_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task8_summarize_by_mentor" name="task8_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task8_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task8_summarize_by_employee" name="task8_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            <fieldset class="task">
-                <legend>Задача 9: Чтение книг из корпоративной библиотеки</legend>
-                <label for="task9_time">Время на подготовку:</label>
-                <input type="text" id="task9_time" name="task9_time" placeholder="Введите время на подготовку" required>
-                <label for="task9_resources">Ресурсы:</label>
-                <textarea id="task9_resources" name="task9_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task9_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task9_summarize_by_mentor" name="task9_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task9_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task9_summarize_by_employee" name="task9_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            
+                <!-- Задачи 8-9 -->
+                <fieldset class="task">
+                    <legend>Задача 8: Просмотр видео-семинаров</legend>
+                    <label for="task8_time">Время на подготовку:</label>
+                    <input type="text" id="task8_time" name="task8_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task8_resources">Ресурсы:</label>
+                    <textarea id="task8_resources" name="task8_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task8_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task8_summarize_by_mentor" name="task8_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task8_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task8_summarize_by_employee" name="task8_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
+                <fieldset class="task">
+                    <legend>Задача 9: Чтение книг из корпоративной библиотеки</legend>
+                    <label for="task9_time">Время на подготовку:</label>
+                    <input type="text" id="task9_time" name="task9_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task9_resources">Ресурсы:</label>
+                    <textarea id="task9_resources" name="task9_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task9_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task9_summarize_by_mentor" name="task9_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task9_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task9_summarize_by_employee" name="task9_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
 
-            <!-- Задача 10 -->
-            <fieldset class="task">
-                <legend>Задача 10: Подведение итогов адаптации</legend>
-                <label for="task10_time">Время на подготовку:</label>
-                <input type="text" id="task10_time" name="task10_time" placeholder="Введите время на подготовку" required>
-                <label for="task10_resources">Ресурсы:</label>
-                <textarea id="task10_resources" name="task10_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
-                <label for="task10_summarize_by_mentor">Подведение итогов наставником:</label>
-                <textarea id="task10_summarize_by_mentor" name="task10_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-                <label for="task10_summarize_by_employee">Подведение итогов сотрудником:</label>
-                <textarea id="task10_summarize_by_employee" name="task10_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-            </fieldset>
-            
+
+                <!-- Задача 10 -->
+                <fieldset class="task">
+                    <legend>Задача 10: Подведение итогов адаптации</legend>
+                    <label for="task10_time">Время на подготовку:</label>
+                    <input type="text" id="task10_time" name="task10_time" placeholder="Введите время на подготовку"
+                        required>
+                    <label for="task10_resources">Ресурсы:</label>
+                    <textarea id="task10_resources" name="task10_resources" rows="2" placeholder="Введите ресурсы"
+                        required></textarea>
+                    <label for="task10_summarize_by_mentor">Подведение итогов наставником:</label>
+                    <textarea id="task10_summarize_by_mentor" name="task10_summarize_by_mentor" rows="2"
+                        placeholder="Введите подведение итогов наставником"></textarea>
+                    <label for="task10_summarize_by_employee">Подведение итогов сотрудником:</label>
+                    <textarea id="task10_summarize_by_employee" name="task10_summarize_by_employee" rows="2"
+                        placeholder="Введите подведение итогов сотрудником"></textarea>
+                </fieldset>
+
+            </div>
+            <button id="addTaskButton" type="button">+ Добавить задачу</button>
+            <button id="submitButton" type="submit">Отправить</button>
         </div>
-        <button id="addTaskButton" type="button">+ Добавить задачу</button>
-        <button id="submitButton" type="submit">Отправить</button>
-    </div>
-    
+
     </form>
 
     <!-- Навигационный блок -->
@@ -172,7 +214,7 @@
             <h4>Система стимулирования</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                
+
             </div>
         </div>
 
@@ -180,6 +222,7 @@
             <h4>Бизнес-процессы</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
             </div>
         </div>
 
@@ -189,8 +232,8 @@
                 <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
             </div>
         </div>
-        </div>
-    
-</body>
-</html>
+    </div>
 
+</body>
+
+</html>
