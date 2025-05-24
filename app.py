@@ -278,6 +278,8 @@ def save_organizational_structure():
     return jsonify({"message": "Оргструктура сохранена!"}), 201
 
 # ---------- отдать последнюю сохранённую версию ---------------------
+
+
 @app.route('/get_organizational_structure')
 def get_org_structure():
     """Возвращает массив строк (или []), ObjectId удалён проекцией."""
@@ -287,6 +289,7 @@ def get_org_structure():
         projection={'_id': 0, 'rows': 1}
     )
     return jsonify(doc['rows'] if doc else [])
+
 
 @app.route("/business_processes")
 def business_processes_page():
@@ -326,6 +329,12 @@ def save_three_plus_twenty():
     mongo.db.three_plus_twenty.insert_one(data)
 
     return jsonify({"message": "Данные успешно сохранены!"}), 201
+
+
+@app.route('/regulations_list')
+def regulations_list():
+    # просто рендерим шаблон с уже встроенной таблицей
+    return render_template('regulations_list.html')
 
 
 if __name__ == "__main__":
