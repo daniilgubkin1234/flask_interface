@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [...tbody.rows].map(tr => ({
             position: tr.querySelector('.position').value.trim(),
             supervisor: tr.querySelector('.supervisor').value.trim(),
+            staffCount: row.querySelector('.staff-count').value,
             subordinates: JSON.parse(tr.querySelector('.subordinates').value || '[]'),
             functional: tr.querySelector('.functional').value.trim(),
             replacement: tr.querySelector('.replacement').value.trim(),

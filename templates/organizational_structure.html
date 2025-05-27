@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <script src="https://www.gstatic.com/charts/loader.js"></script>
 
 </head>
+
 <body>
     <div class="container">
         <h2>Организационная структура</h2>
@@ -20,6 +22,7 @@
                         <th>№</th>
                         <th>Должность</th>
                         <th>Кому подчиняется</th>
+                        <th>Кол-во сотрудников</th>
                         <th>Кто подчиняется</th>
                         <th>Основной функционал</th>
                         <th>Кто замещает в случае отсутствия</th>
@@ -38,6 +41,9 @@
                                 <option value="custom">Другой ответ</option>
                             </select>
                             <input type="text" class="custom-supervisor" style="display: none;">
+                        </td>
+                        <td>
+                            <input type="number" min="0" class="staff-count" placeholder="0" />
                         </td>
                         <td class="subs-cell">
                             <div class="multibox placeholder">Выберите</div>
@@ -67,8 +73,8 @@
 
     <div class="scheme-wrapper">
         <h3 class="scheme-title">Схема подчинения</h3>
-             <div id="orgChart" style="overflow:auto;"></div>
-             <button id="downloadChart" class="scheme-dl">Скачать схему</button>
+        <div id="orgChart" style="overflow:auto;"></div>
+        <button id="downloadChart" class="scheme-dl">Скачать схему</button>
     </div>
 
     <!-- Навигационный блок -->
@@ -123,6 +129,7 @@
             </div>
         </div>
 
-        </div>
+    </div>
 </body>
+
 </html>
