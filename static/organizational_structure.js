@@ -107,17 +107,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /* ───────── сбор данных ───────── */
-    const collectRows = () =>
-        [...tbody.rows].map(tr => ({
-            position: tr.querySelector('.position').value.trim(),
-            supervisor: tr.querySelector('.supervisor').value.trim(),
-            staffCount: row.querySelector('.staff-count').value,
-            subordinates: JSON.parse(tr.querySelector('.subordinates').value || '[]'),
-            functional: tr.querySelector('.functional').value.trim(),
-            replacement: tr.querySelector('.replacement').value.trim(),
-            taskMethod: tr.querySelector('.task-method').value.trim(),
-            documents: tr.querySelector('.documents').value.trim()
-        }));
+    // --- 1) Собираем строки из таблицы, включая staffCount и чистый supervisorIndex ---
+    function collectRows() {
+        return [...tbody.rows].map((tr, idx) => {
+            // rawSupervisorValue, например "2) Руководитель"
+            const rawSup = tr.querySelector('.supervisor').value.trim();
+            // вытащим только число до ")"
+            const supervisorIndex = rawSup
+                ? parseInt(rawSup.split(')')[0], 10)  // 1-based
+                : null;                                 // корень, если пусто
+
+            return {
+                position: tr.querySelector('.position').value.trim(),
+                supervisorIndex: supervisorIndex,       // число или null
+                staffCount: Math.max(1, parseInt(tr.querySelector('.staff-count').value, 10) || 1)
+            };
+        });
+    }
 
     /* ───────── отправка ───────── */
     sendBtn.addEventListener('click', () => {
@@ -142,40 +148,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ====== Google OrgChart ====== */
 google.charts.load('current', { packages: ['orgchart'] });
-google.charts.setOnLoadCallback(() => { });
 
-function buildChart(rows) {
+// --- 2) Строим массив для Google OrgChart без лишнего ROOT,
+//     причём при staffCount>1 цепляем дополнительными узлами под первым ---
+function buildChartData(rows) {
     const list = [];
+
     rows.forEach((r, idx) => {
         if (!r.position) return;
-        const id = `n${idx + 1}`;
-        const sup = r.supervisor ? `n${r.supervisor.split(')')[0]}` : null;
-        list.push([{ v: id, f: `<div class="node">${r.position}</div>` }, sup]);
+        const baseNum = idx + 1;            // 1-based ID
+        const firstId = `n${baseNum}_1`;    // например "n3_1"
+
+        // чей parent?
+        const parentId = r.supervisorIndex
+            ? `n${r.supervisorIndex}_1`       // первый узел supervisor-а
+            : '';                              // пустая строка — Google считает корнем
+
+        // 1) всегда первый «экземпляр» под parentId
+        list.push([
+            { v: firstId, f: `<div class="node">${r.position}</div>` },
+            parentId
+        ]);
+
+        // 2) если их несколько — цепочкой друг под другом
+        for (let i = 2; i <= r.staffCount; i++) {
+            const prevId = `n${baseNum}_${i - 1}`;
+            const currId = `n${baseNum}_${i}`;
+            list.push([
+                { v: currId, f: `<div class="node">${r.position}</div>` },
+                prevId
+            ]);
+        }
     });
-    if (!list.some(r => r[1] === null)) list.unshift([{ v: 'root', f: 'ROOT' }, null]);
-    list.sort((a, b) => (a[1] === null ? -1 : 1));
+
     return list;
 }
 
+// --- 3) Основная функция рисования схемы ---
 function drawOrgChart(rows) {
-    const dataArr = buildChart(rows);
-    const target = document.getElementById('orgChart');
+    const dataTable = new google.visualization.DataTable();
+    dataTable.addColumn('string', 'Name');
+    dataTable.addColumn('string', 'Manager');
+    dataTable.addColumn('string', 'ToolTip');
 
-    if (!dataArr.length) {
-        target.innerHTML = '<em>Нет данных для построения схемы</em>';
-        return;
-    }
+    buildChartData(rows).forEach(([node, parent]) => {
+        dataTable.addRow([node, parent, '']);
+    });
 
-    const dt = new google.visualization.DataTable();
-    dt.addColumn('string', 'Name');
-    dt.addColumn('string', 'Manager');
-    dt.addRows(dataArr);
-
-    const chart = new google.visualization.OrgChart(target);
-    chart.draw(dt, { allowHtml: true, nodeClass: 'node' });
-
-    window.orgChartInstance = chart;   // ← теперь обработчик «Скачать схему» увидит диаграмму
+    const chart = new google.visualization.OrgChart(
+        document.getElementById('orgChart')
+    );
+    chart.draw(dataTable, {
+        allowHtml: true,
+        nodeClass: 'node',
+        collapseEndNodes: false
+    });
 }
+
 document.getElementById('downloadChart').addEventListener('click', () => {
     const chartBlock = document.getElementById('orgChart');
 
