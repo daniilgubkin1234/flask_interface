@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Процессы</title>
-    
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad:false });</script>
     <link rel="stylesheet" href="{{ url_for('static', filename='business_processes.css') }}">
     <script src="{{ url_for('static', filename='business_processes.js') }}" defer></script>
 </head>
@@ -47,8 +48,14 @@
           
           <!-- Кнопка для отправки данных -->
           <button id="submitData">Отправить</button>
-          
+          <button id="buildDiagram">Показать схему</button>
+
+          <div class="diagram-wrapper">
+            <h3>Схема процесса</h3>
+            <div id="bpmnDiagram" class="mermaid">Нажмите «Показать схему»</div>
+          </div>
     </div>
+    
     <!-- Навигационный блок -->
     <div class="recommendation-block">
         <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
