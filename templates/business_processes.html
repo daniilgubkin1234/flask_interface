@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Процессы</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({ startOnLoad:false });</script>
+    <script>mermaid.initialize({ startOnLoad: false });</script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='business_processes.css') }}">
     <script src="{{ url_for('static', filename='business_processes.js') }}" defer></script>
@@ -18,43 +18,43 @@
 
         <div class="table-wrapper">
             <table id="bpTable">
-              <thead>
-                <tr>
-                  <th>Событие</th>
-                  <th>Действие</th>
-                  <th>Соединяющие объекты</th>
-                  <th>Развилка</th>
-                  <th>Кто отвечает</th>
-                  <th>Комментарии, примечания</th>
-                  <th>Действия</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Изначально одна пустая строка -->
-                <tr>
-                  <td><input type="text" class="objectField"></td>
-                  <td><input type="text" class="actionField"></td>
-                  <td><input type="text" class="nextObjectsField"></td>
-                  <td><input type="text" class="sentField"></td>
-                  <td><input type="text" class="sentByField"></td>
-                  <td><input type="text" class="commentsField"></td>
-                  <td><button class="deleteRow">Удалить</button></td>
-                </tr>
-              </tbody>
+                <thead>
+                    <tr>
+                        <th>Событие</th>
+                        <th>Действие</th>
+                        <th>Соединяющие объекты</th>
+                        <th>Развилка</th>
+                        <th>Кто отвечает</th>
+                        <th>Комментарии, примечания</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Изначально одна пустая строка -->
+                    <tr>
+                        <td><input type="text" class="objectField"></td>
+                        <td><input type="text" class="actionField"></td>
+                        <td><input type="text" class="nextObjectsField"></td>
+                        <td><input type="text" class="sentField"></td>
+                        <td><input type="text" class="sentByField"></td>
+                        <td><input type="text" class="commentsField"></td>
+                        <td><button class="deleteRow">Удалить</button></td>
+                    </tr>
+                </tbody>
             </table>
-          </div>
+        </div>
 
-          <!-- Кнопка для добавления новой строки -->
-          <button id="addRow">Добавить строку</button>
+        <!-- Кнопка для добавления новой строки -->
+        <button id="addRow">Добавить строку</button>
 
-          <!-- Кнопка для отправки данных -->
-          <button id="submitData">Отправить</button>
-          <button id="buildDiagram">Показать схему</button>
+        <!-- Кнопка для отправки данных -->
+        <button id="submitData">Отправить</button>
+        <button id="buildDiagram">Показать схему</button>
 
-          <div class="diagram-wrapper">
+        <div class="diagram-wrapper">
             <h3>Схема процесса</h3>
             <div id="bpmnDiagram" class="mermaid">Нажмите «Показать схему»</div>
-          </div>
+        </div>
     </div>
 
     <!-- Навигационный блок -->
@@ -109,7 +109,7 @@
             </div>
         </div>
 
-        </div>
+    </div>
 </body>
 
 </html>
