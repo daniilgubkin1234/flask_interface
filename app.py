@@ -23,6 +23,7 @@ stimulation_system_collection = mongo.db.stimulation_system
 job_description_collection = mongo.db.job_descriptions
 business_processes_collection = mongo.db.business_processes
 three_plus_twenty_collection = mongo.db.three_plus_twenty
+regulations_collection = mongo.db.regulations_list
 
 
 @app.route("/")
@@ -335,6 +336,19 @@ def save_three_plus_twenty():
 def regulations_list():
     # просто рендерим шаблон с уже встроенной таблицей
     return render_template('regulations_list.html')
+
+
+@app.route('/save_regulations_list', methods=['POST'])
+def save_regulations_list():
+    data = request.get_json()
+    if not data or 'regulations' not in data:
+        return jsonify({"success": False, "error": "Нет данных"}), 400
+    try:
+        regulations_collection.insert_one(data)
+        return jsonify({"success": True, "message": "Перечень регламентов сохранён!"}), 201
+    except Exception as e:
+        app.logger.error(f'Ошибка сохранения регламентов: {e}')
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == "__main__":

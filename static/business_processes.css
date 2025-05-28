@@ -179,6 +179,19 @@ input:focus {
     background-color: #1F4B8F;
 }
 
+/* Бизнес процессы - схема */
+
+.diagram-wrapper{
+    margin-top:30px;
+    padding:20px;
+    background:#fafafa;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,.05);
+    overflow-x:auto;
+  }
+  
+
+
 @media (max-width: 768px) {
     .container {
         padding: 20px;
