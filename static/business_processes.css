@@ -90,13 +90,14 @@ button {
     transition: background-color 0.3s;
 }
 
-#submitData {
+#submitData, #buildDiagram {
     background-color: #2A63C2;
     margin: 15px auto 0;
     display: block;
     text-align: center;
     width: 200px;
 }
+
 
 #submitData:hover {
     background-color: #1F4B8F;
