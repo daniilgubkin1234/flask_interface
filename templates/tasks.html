@@ -1,53 +1,56 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список задач</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}">
 </head>
+
 <body>
     <form id="tasks-form">
         <fieldset>
             <legend>Составьте план работ</legend>
-    
+
             <label for="task">Задача:</label>
-            <input id="task" name="task" type="text" list="task-list" placeholder="Введите или выберите задачу" required>
+            <input id="task" name="task" type="text" list="task-list" placeholder="Введите или выберите задачу"
+                required>
             <datalist id="task-list"></datalist>
-    
+
             <label for="event">Мероприятие:</label>
             <input id="event" name="event" type="text" list="event-list" placeholder="Введите или выберите мероприятие">
             <datalist id="event-list"></datalist>
-    
+
             <label for="work">Работа:</label>
             <textarea id="work" name="work" placeholder="Введите описание работы"></textarea>
-    
+
             <label for="responsible">Ответственный:</label>
             <input id="responsible" name="responsible" type="text" placeholder="Введите имя">
-    
+
             <label for="deadline">Срок:</label>
             <input id="deadline" name="deadline" type="date">
-    
+
             <label for="result">Результат:</label>
             <textarea id="result" name="result" placeholder="Введите ожидаемый результат"></textarea>
-    
+
             <label for="resources">Ресурсы:</label>
             <textarea id="resources" name="resources" placeholder="Введите необходимые ресурсы"></textarea>
-    
+
             <label for="coexecutors">Соисполнители:</label>
             <input id="coexecutors" name="coexecutors" type="text" placeholder="Введите соисполнителей">
-    
+
             <label for="comments">Комментарии:</label>
             <textarea id="comments" name="comments" placeholder="Введите комментарии"></textarea>
-    
+
             <button id="submitTask" class="submit-btn">Отправить</button>
             <button id="saveChanges" type="button" style="display: none;">Сохранить изменения</button>
 
         </fieldset>
     </form>
 
-        
-     <div class="filter-wrapper">
+
+    <div class="filter-wrapper">
         <select id="filter-column">
             <option value="all">Все столбцы</option>
             <option value="task">Задача</option>
@@ -101,7 +104,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    
+
     </table>
 
     <!-- Навигационный блок -->
@@ -139,7 +142,7 @@
             <h4>Система стимулирования</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                
+
             </div>
         </div>
 
@@ -147,6 +150,7 @@
             <h4>Бизнес-процессы</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
             </div>
         </div>
 
@@ -157,11 +161,9 @@
             </div>
         </div>
 
-        </div>
+    </div>
 
     <script src="{{ url_for('static', filename='tasks.js') }}"></script>
 </body>
+
 </html>
-
-
-

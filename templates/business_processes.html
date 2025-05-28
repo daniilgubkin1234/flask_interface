@@ -7,6 +7,7 @@
     <title>Процессы</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script>mermaid.initialize({ startOnLoad:false });</script>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='business_processes.css') }}">
     <script src="{{ url_for('static', filename='business_processes.js') }}" defer></script>
 </head>
@@ -42,18 +43,22 @@
               </tbody>
             </table>
           </div>
-          
+
           <!-- Кнопка для добавления новой строки -->
           <button id="addRow">Добавить строку</button>
-          
+
           <!-- Кнопка для отправки данных -->
           <button id="submitData">Отправить</button>
+<<<<<<< HEAD
           <button id="buildDiagram">Показать схему</button>
 
           <div class="diagram-wrapper">
             <h3>Схема процесса</h3>
             <div id="bpmnDiagram" class="mermaid">Нажмите «Показать схему»</div>
           </div>
+=======
+
+>>>>>>> 46e954945eb6aef1c0bb19bdb7d912617183d459
     </div>
     
     <!-- Навигационный блок -->
@@ -89,7 +94,7 @@
             <h4>Система стимулирования</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                
+
             </div>
         </div>
 
@@ -97,6 +102,7 @@
             <h4>Бизнес-процессы</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
             </div>
         </div>
 

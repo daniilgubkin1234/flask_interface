@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,8 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
     <script src="{{ url_for('static', filename='organizational_structure.js') }}" defer></script>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
-   
+
 </head>
+
 <body>
     <div class="container">
         <h2>Организационная структура</h2>
@@ -20,6 +22,7 @@
                         <th>№</th>
                         <th>Должность</th>
                         <th>Кому подчиняется</th>
+                        <th>Кол-во сотрудников</th>
                         <th>Кто подчиняется</th>
                         <th>Основной функционал</th>
                         <th>Кто замещает в случае отсутствия</th>
@@ -38,6 +41,9 @@
                                 <option value="custom">Другой ответ</option>
                             </select>
                             <input type="text" class="custom-supervisor" style="display: none;">
+                        </td>
+                        <td>
+                            <input type="number" min="1" class="staff-count" placeholder="1" />
                         </td>
                         <td class="subs-cell">
                             <div class="multibox placeholder">Выберите</div>
@@ -64,13 +70,13 @@
             <button id="submitData">Отправить</button>
         </div>
     </div>
-    
+
     <div class="scheme-wrapper">
         <h3 class="scheme-title">Схема подчинения</h3>
-             <div id="orgChart" style="overflow:auto;"></div>
-             <button id="downloadChart" class="scheme-dl">Скачать схему</button>
+        <div id="orgChart" style="overflow:auto;"></div>
+        <button id="downloadChart" class="scheme-dl">Скачать схему</button>
     </div>
-        
+
     <!-- Навигационный блок -->
     <div class="recommendation-block">
         <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
@@ -104,7 +110,7 @@
             <h4>Система стимулирования</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-                
+
             </div>
         </div>
 
@@ -112,6 +118,7 @@
             <h4>Бизнес-процессы</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
             </div>
         </div>
 
@@ -122,6 +129,7 @@
             </div>
         </div>
 
-        </div>
+    </div>
 </body>
+
 </html>
