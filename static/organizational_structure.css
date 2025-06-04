@@ -122,110 +122,6 @@ button {
     background-color: #1F4B8F;
 }
 
-
-/* Кнопка "Отправить" по центру и ниже кнопки "Добавить строку" */
-#submitData {
-    background-color: #2A63C2;
-    padding: 12px 20px;
-    width: 200px;
-    margin: 15px auto 0;
-    /* Уменьшен отступ сверху */
-    display: block;
-    text-align: center;
-    transition: background-color 0.3s;
-}
-
-#submitData:hover {
-    background-color: #1F4B8F;
-}
-
-/* Блок рекомендаций */
-.recommendation-block {
-    background-color: #fafafa;
-    /* более светлый фон */
-    padding: 20px;
-    border-radius: 8px;
-    margin: 30px 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    /* легкая тень */
-    text-align: center;
-}
-
-.recommendation-block h3 {
-    margin-bottom: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #2A63C2;
-    text-align: center;
-}
-
-/* Каждая секция (группа ссылок + заголовок) */
-.recommendation-section {
-    border-top: 1px solid #e0e0e0;
-    padding-top: 15px;
-    margin-top: 15px;
-    text-align: center;
-}
-
-/* Заголовки для внутренних групп (вместо H2) */
-.recommendation-section h4 {
-    margin: 0 0 10px 0;
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Ряд кнопок */
-.button-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    /* если кнопок много, они перенесутся */
-    justify-content: center;
-}
-
-/* Кнопки внутри блока рекомендаций.
-   Можно сделать поменьше и компактнее, чем обычные. */
-.recommendation-block .button-row button {
-    background-color: #2A63C2;
-    color: white;
-    padding: 12px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 20px;
-}
-
-/* Ховер-эффект на кнопках */
-.recommendation-block .button-row button:hover {
-    background-color: #1F4B8F;
-}
-
-/* ─────  OrgChart: стили узлов и линий  ───── */
-#orgChart .google-visualization-orgchart-node {
-    border: 2px solid #000 !important;
-    /* чёрная рамка */
-    border-radius: 0 !important;
-    /* прямые углы */
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    padding: 6px 14px !important;
-}
-
-#orgChart .google-visualization-orgchart-lineleft,
-#orgChart .google-visualization-orgchart-lineright,
-#orgChart .google-visualization-orgchart-linemiddle {
-    stroke: #000 !important;
-    /* чёрные линии */
-}
-
-/* Скрытый «ROOT»-узел, нужен только для выравнивания */
-#orgChart .node:has(div:contains("ROOT")) {
-    display: none !important;
-}
-
 /* ─── multibox (ячейка "Кто подчиняется") ────────────────────────── */
 .multibox {
     position: relative;
@@ -334,13 +230,77 @@ button {
     min-width: 150px;
 }
 
+/* Кнопка "Отправить" по центру и ниже кнопки "Добавить строку" */
+#submitData {
+    background-color: #2A63C2;
+    padding: 12px 20px;
+    width: 200px;
+    margin: 15px auto 0;
+    /* Уменьшен отступ сверху */
+    display: block;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+
+#submitData:hover {
+    background-color: #1F4B8F;
+}
+
+
+
+/* Контейнер схемы */
+.scheme-wrapper {
+    background: #fff;
+    border: 1px solid #d4d4d4;
+    border-radius: 4px;
+    padding: 24px 16px 32px;
+    margin-top: 24px;
+}
+
+/* Заголовок */
+.scheme-title {
+    text-align: center;
+    margin-bottom: 14px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* ─── Стили узлов OrgChart ─── */
+#orgChart .google-visualization-orgchart-node {
+    border: 2px solid #000 !important;
+    /* чёрная рамка */
+    border-radius: 0 !important;
+    /* прямые углы */
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    background: #fff !important;
+}
+
+/* ─── Стили линий ─── */
+#orgChart .google-visualization-orgchart-lineleft,
+#orgChart .google-visualization-orgchart-lineright,
+#orgChart .google-visualization-orgchart-linemiddle {
+    stroke: #000 !important;
+    /* чёрные линии */
+}
+
+/* Скрываем вспомогательный корневой узел ROOT */
+#orgChart text:contains("ROOT"),
+#orgChart .node:has(div:contains("ROOT")) {
+    display: none !important;
+}
+
+/* ─── Кнопка «Скачать схему» ─── */
 #downloadChart {
     display: inline-block;
-    margin: 20px 0 40px 0;
+    margin: 20px 0 40px;
     padding: 10px 28px;
     background: #2A63C2;
     color: #fff;
-    font: 16px/1 "Roboto", "Arial", sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    font-family: "Roboto", Arial, sans-serif;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -353,27 +313,12 @@ button {
 
 #downloadChart:active {
     background: #1c448d;
+    transform: scale(0.98);
 }
 
 #downloadChart:disabled {
     background: #9bb3e6;
     cursor: default;
-}
-
-.scheme-wrapper {
-    background: #fff;
-    border: 1px solid #d4d4d4;
-    border-radius: 4px;
-    padding: 24px 16px 32px 16px;
-    margin-top: 24px;
-}
-
-/* заголовок по центру */
-.scheme-title {
-    text-align: center;
-    margin-bottom: 14px;
-    font-size: 20px;
-    font-weight: 600;
 }
 
 /* кнопка скачать – посередине, как у Submit */
@@ -383,6 +328,69 @@ button {
     /* центр + отступ сверху */
 }
 
+/* Блок рекомендаций */
+.recommendation-block {
+    background-color: #fafafa;
+    /* более светлый фон */
+    padding: 20px;
+    border-radius: 8px;
+    margin: 30px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    /* легкая тень */
+    text-align: center;
+}
+
+.recommendation-block h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #2A63C2;
+    text-align: center;
+}
+
+/* Каждая секция (группа ссылок + заголовок) */
+.recommendation-section {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 15px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Заголовки для внутренних групп (вместо H2) */
+.recommendation-section h4 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Ряд кнопок */
+.button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    /* если кнопок много, они перенесутся */
+    justify-content: center;
+}
+
+/* Кнопки внутри блока рекомендаций.
+   Можно сделать поменьше и компактнее, чем обычные. */
+.recommendation-block .button-row button {
+    background-color: #2A63C2;
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+/* Ховер-эффект на кнопках */
+.recommendation-block .button-row button:hover {
+    background-color: #1F4B8F;
+}
 
 @media (max-width: 768px) {
     .container {
