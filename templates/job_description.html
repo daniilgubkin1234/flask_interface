@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Должностная инструкция</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='job_description.css') }}">
 </head>
+
 <body>
     <div class="container">
         <h2>Должностная инструкция</h2>
@@ -128,7 +130,7 @@
         <div class="recommendation-section">
             <h4>Диагностика</h4>
             <div class="button-row">
-                <button onclick="window.location.href='/'">Перейти к диагностике</button>
+                <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
             </div>
         </div>
 
@@ -174,8 +176,9 @@
             </div>
         </div>
 
-        </div>
+    </div>
 
     <script defer src="{{ url_for('static', filename='job_description.js') }}"></script>
 </body>
+
 </html>
