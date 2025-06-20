@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Заполнить портрет сотрудника</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='templates_style.css') }}">
 </head>
+
 <body>
     <div class="container">
         <h2>Заполнить портрет сотрудника</h2>
@@ -65,39 +67,48 @@
                     </div>
                     <div class="profile-item">
                         <label for="scrupulousness">Скурпулезность:</label>
-                        <input type="text" id="scrupulousness" name="scrupulousness" placeholder="Введите значение" required>
+                        <input type="text" id="scrupulousness" name="scrupulousness" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="systemThinking">Системное мышление:</label>
-                        <input type="text" id="systemThinking" name="systemThinking" placeholder="Введите значение" required>
+                        <input type="text" id="systemThinking" name="systemThinking" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="decisiveness">Решительность:</label>
-                        <input type="text" id="decisiveness" name="decisiveness" placeholder="Введите значение" required>
+                        <input type="text" id="decisiveness" name="decisiveness" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="stressResistance">Стрессоустойчивость:</label>
-                        <input type="text" id="stressResistance" name="stressResistance" placeholder="Введите значение" required>
+                        <input type="text" id="stressResistance" name="stressResistance" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="otherQualities">Иные качества:</label>
-                        <input type="text" id="otherQualities" name="otherQualities" placeholder="Введите значение" required>
+                        <input type="text" id="otherQualities" name="otherQualities" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="independence">Умение самостоятельно принимать решение:</label>
-                        <input type="text" id="independence" name="independence" placeholder="Введите значение" required>
+                        <input type="text" id="independence" name="independence" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="organization">Умение организовать труд подчиненных:</label>
-                        <input type="text" id="organization" name="organization" placeholder="Введите значение" required>
+                        <input type="text" id="organization" name="organization" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="responsibility">Умение брать ответственность:</label>
-                        <input type="text" id="responsibility" name="responsibility" placeholder="Введите значение" required>
+                        <input type="text" id="responsibility" name="responsibility" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="managementStyle">Стиль управления:</label>
-                        <input type="text" id="managementStyle" name="managementStyle" placeholder="Введите значение" required>
+                        <input type="text" id="managementStyle" name="managementStyle" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="leadership">Лидерские качества:</label>
@@ -109,7 +120,8 @@
                     </div>
                     <div class="profile-item">
                         <label for="businessTrips">Возможность и желание командировок:</label>
-                        <input type="text" id="businessTrips" name="businessTrips" placeholder="Введите значение" required>
+                        <input type="text" id="businessTrips" name="businessTrips" placeholder="Введите значение"
+                            required>
                     </div>
                     <div class="profile-item">
                         <label for="car">Наличие автомобиля:</label>
@@ -126,61 +138,62 @@
             <button type="button" id="save-button" style="display: none;">Сохранить изменения</button>
         </form>
     </div>
-<!-- Навигационный блок -->
-<div class="recommendation-block">
-    <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
-    <div class="recommendation-section">
-        <h4>Диагностика</h4>
-        <div class="button-row">
-            <button onclick="window.location.href='/'">Перейти к диагностике</button>
+    <!-- Навигационный блок -->
+    <div class="recommendation-block">
+        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+        <div class="recommendation-section">
+            <h4>Диагностика</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
+            </div>
         </div>
-    </div>
 
-    <div class="recommendation-section">
-        <h4>Задачи</h4>
-        <div class="button-row">
-            <button onclick="window.location.href='/business'">Бизнес цель</button>
-            <button onclick="window.location.href='/tasks'">Задачи и план работ и мероприятий</button>
-            <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
+        <div class="recommendation-section">
+            <h4>Задачи</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/business'">Бизнес цель</button>
+                <button onclick="window.location.href='/tasks'">Задачи и план работ и мероприятий</button>
+                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
+            </div>
         </div>
-    </div>
 
-    <div class="recommendation-section">
-        <h4>Персонал</h4>
-        <div class="button-row">
-            <button onclick="window.location.href='/personnel'">Портрет сотрудника</button>
-            <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
-            <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-            <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
+        <div class="recommendation-section">
+            <h4>Персонал</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/personnel'">Портрет сотрудника</button>
+                <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
+                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
+                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
+            </div>
         </div>
-    </div>
 
-    <div class="recommendation-section">
-        <h4>Система стимулирования</h4>
-        <div class="button-row">
-            <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
+        <div class="recommendation-section">
+            <h4>Система стимулирования</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
 
+            </div>
         </div>
-    </div>
 
-    <div class="recommendation-section">
-        <h4>Бизнес-процессы</h4>
-        <div class="button-row">
-            <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
-            <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
+        <div class="recommendation-section">
+            <h4>Бизнес-процессы</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
+            </div>
         </div>
-    </div>
 
-    <div class="recommendation-section">
-        <h4>Организационная структура</h4>
-        <div class="button-row">
-            <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
+        <div class="recommendation-section">
+            <h4>Организационная структура</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
+            </div>
         </div>
-    </div>
 
     </div>
 
     <script defer src="{{ url_for('static', filename='employee_profile.js') }}"></script>
 
 </body>
+
 </html>

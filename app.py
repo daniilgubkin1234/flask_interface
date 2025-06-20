@@ -28,8 +28,13 @@ regulations_collection = mongo.db.regulations_list
 
 @app.route("/")
 def index():
-    """ Главная страница с таблицей задач """
-    return render_template("survey_ai.html")
+    """ Главная страница """
+    return render_template("index.html")
+
+
+@app.route('/survey_ai')
+def survey_ai():
+    return render_template('survey_ai.html')
 
 # Получение всех задач
 
