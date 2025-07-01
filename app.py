@@ -30,7 +30,7 @@ regulations_collection = mongo.db.regulations_list
 @app.route("/")
 def index():
     """ Главная страница — интерактивная звезда навигации """
-    return render_template("star_navigation.html")
+    return render_template("index.html")
 
 
 @app.route('/survey_ai')
