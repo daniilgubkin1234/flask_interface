@@ -26,10 +26,11 @@ three_plus_twenty_collection = mongo.db.three_plus_twenty
 regulations_collection = mongo.db.regulations_list
 
 
+
 @app.route("/")
 def index():
-    """ Главная страница """
-    return render_template("index.html")
+    """ Главная страница — интерактивная звезда навигации """
+    return render_template("star_navigation.html")
 
 
 @app.route('/survey_ai')
