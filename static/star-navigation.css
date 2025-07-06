@@ -7,67 +7,126 @@
     box-sizing: border-box;
 }
 
+/* 2. Отключаем выделение текста внутри звезды */
+.star-nav-wrapper,
+.star-ray-group,
+.star-center-group,
+.star-ray-group text,
+.star-center-group text {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* 3. Фон страницы и подавление скроллов */
+html,
 body {
-    background: #f5f5f5;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    position: relative;
+    background: #f5f5f5;
     font-family: sans-serif;
 }
 
-/* 2. Центрируем обёртку со звездой по середине экрана */
-.star-nav-wrapper {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+/* 4. Flex-контейнер для заголовка и звезды */
+.page-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 20px;
 }
 
-/* 3. Фиксированный размер контейнера для SVG */
-#star-container {
+/* 5. Левая колонка – заголовок */
+.star-title {
+    flex: 0 0 auto;
+    margin-right: 40px;
+}
+
+.star-title h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.1;
+    color: #0086D7;
+    font-weight: 700;
+    text-align: left;
+}
+
+/* 6. Правая колонка – контейнер звезды */
+.star-nav-wrapper {
+    flex: 0 0 auto;
+    position: relative;
     width: 1200px;
     height: 1200px;
 }
 
-/* 4. Подгон SVG под контейнер */
+/* 7. Встраиваем SVG под размер контейнера */
+#star-container {
+    width: 100%;
+    height: 100%;
+}
+
 #star-container svg {
     display: block;
     width: 100%;
     height: 100%;
 }
 
-/* 5. Группы лучей и центра: общие трансформации */
+/* 8. Общие трансформации для групп и курсор */
 .star-ray-group,
 .star-center-group {
     transform-box: fill-box;
-    /* берём габариты содержимого */
     transform-origin: center;
-    /* точка трансформации — центр группы */
     transition: transform 0.1s ease, fill 0.3s ease;
 }
 
-/* 6. Hover: лёгкая подсветка всего сегмента */
+.star-ray,
+.star-center {
+    cursor: pointer;
+    transition: fill 0.3s ease;
+    stroke: none !important;
+}
+
+/* 9. Hover: светлый синий для наводки */
 .star-ray-group:hover .star-ray,
 .star-center-group:hover .star-center {
-    filter: brightness(1.2);
+    fill: #005488 !important;
+    /* DodgerBlue */
 }
 
-/* 7. Активный (открытый) сегмент: меняем цвет */
-.star-ray-group.active .star-ray,
-.star-center-group.active .star-center {
-    fill: #e33 !important;
-}
-
-/* 8. Нажатие (pressed): сжимаем всю группу вместе с текстом */
+/* 10. Эффект нажатия */
 .star-ray-group.pressed,
 .star-center-group.pressed {
     transform: scale(0.9);
 }
 
-/* 9. Стили для выпадающих меню */
+/* 11. Active: насыщенный синий + анимированная обводка */
+.star-ray-group.active .star-ray,
+.star-center-group.active .star-center {
+    fill: #0a1a4d !important;
+    /* Темный фон для "неона" */
+    stroke: url(#run-gradient) !important;
+    stroke-width: 2px !important;
+    stroke-opacity: 1 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    transition: filter 0.3s;
+}
+
+/* 12. Анимация штриховой обводки */
+@keyframes runLine {
+    from {
+        stroke-dashoffset: 0;
+    }
+
+    to {
+        stroke-dashoffset: -200;
+    }
+}
+
+/* 13. Стили выпадающих меню */
 .star-menu {
     position: absolute;
-    /* внутри star-nav-wrapper */
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -87,9 +146,9 @@ body {
     visibility: visible;
 }
 
-/* 10. Кнопки внутри меню */
+/* 14. Кнопки в меню */
 .star-menu button {
-    background-color: #4169e1;
+    background-color: #0086D7;
     color: #fff;
     border: none;
     padding: 6px 12px;

@@ -5,6 +5,37 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (res) { return res.text(); })
         .then(function (svg) {
             document.getElementById('star-container').innerHTML = svg;
+            const svgElem = document.querySelector('#star-container svg');
+            // === Добавляем неоновый linearGradient с анимацией вращения ===
+            let defs = svgElem.querySelector('defs');
+            if (!defs) {
+                defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                svgElem.insertBefore(defs, svgElem.firstChild);
+            }
+            // Градиент по центру canvas
+            const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+            grad.setAttribute('id', 'run-gradient');
+            grad.setAttribute('x1', '0%');
+            grad.setAttribute('y1', '0%');
+            grad.setAttribute('x2', '100%');
+            grad.setAttribute('y2', '0%');
+            grad.innerHTML = `
+                <stop offset="0%" stop-color="#00f6ff"/>
+                <stop offset="25%" stop-color="#008cff"/>
+                <stop offset="50%" stop-color="#ffffff"/>
+                <stop offset="75%" stop-color="#0050b3"/>
+                <stop offset="100%" stop-color="#00f6ff"/>
+            `;
+            defs.appendChild(grad);
+
+            // Анимация вращения градиента (имитирует неоновую "бегущую" волну)
+            let angle = 0;
+            setInterval(() => {
+                angle = (angle + 2) % 360;
+                // Вращаем относительно центра canvas: (0.5, 0.5) — для процентов
+                grad.setAttribute('gradientTransform', `rotate(${angle} 0.5 0.5)`);
+            }, 30);
+
             initStar();
         })
         .catch(function (err) {
@@ -20,7 +51,6 @@ function initStar() {
         var section = group.dataset.section;
         var menu = document.getElementById('menu-' + section);
 
-        // при клике: только toggle активного состояния и меню
         group.addEventListener('click', function () {
             group.classList.toggle('active');
             if (menu) {
@@ -29,12 +59,9 @@ function initStar() {
             }
         });
 
-        // при нажатии мышью — добавляем класс pressed
         group.addEventListener('mousedown', function () {
             group.classList.add('pressed');
         });
-
-        // при отпускании и при уходе мыши — снимаем pressed
         ['mouseup', 'mouseleave'].forEach(function (evt) {
             group.addEventListener(evt, function () {
                 group.classList.remove('pressed');
@@ -44,8 +71,7 @@ function initStar() {
 }
 
 function positionMenu(group, menu) {
-    var wrapperRect = document.querySelector('.star-nav-wrapper')
-        .getBoundingClientRect();
+    var wrapperRect = document.querySelector('.star-nav-wrapper').getBoundingClientRect();
     var gw = group.getBoundingClientRect();
 
     var top, left;
