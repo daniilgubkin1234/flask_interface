@@ -26,7 +26,6 @@ three_plus_twenty_collection = mongo.db.three_plus_twenty
 regulations_collection = mongo.db.regulations_list
 
 
-
 @app.route("/")
 def index():
     """ Главная страница — интерактивная звезда навигации """
@@ -355,6 +354,11 @@ def save_regulations_list():
     except Exception as e:
         app.logger.error(f'Ошибка сохранения регламентов: {e}')
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/question_answer')
+def question_answer():
+    return render_template('question_answer.html')
 
 
 if __name__ == "__main__":
