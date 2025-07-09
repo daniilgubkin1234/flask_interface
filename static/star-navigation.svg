@@ -9,7 +9,7 @@
    id="svg1"
    xml:space="preserve"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   sodipodi:docname="star-navigation+text.svg"
+   sodipodi:docname="star-navigation.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,14 +24,14 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.0167041"
-     inkscape:cx="582.76543"
-     inkscape:cy="605.87933"
+     inkscape:cx="520.8005"
+     inkscape:cy="579.32293"
      inkscape:window-width="1187"
      inkscape:window-height="1000"
      inkscape:window-x="-7"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
-     inkscape:current-layer="ray-incentive-system" /><defs
+     inkscape:current-layer="layer2" /><defs
      id="defs1" /><g
      inkscape:groupmode="layer"
      id="layer2"
@@ -42,7 +42,7 @@
        class="star-ray-group"
        data-section="structure"><path
          id="ray-structure-path"
-         style="display:inline;opacity:1;fill:#0000ff;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
+         style="display:inline;opacity:1;fill:#0086d7;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
          d="m 164.19932,101.03954 -8.70966,9.20886 10.18222,31.33853 14.09715,7.42316 40.72568,-39.46601 z"
          inkscape:label="ray-structure"
          class="star-ray" /><text
@@ -62,7 +62,7 @@
        class="star-center-group"
        data-section="diagnostics"><path
          sodipodi:type="star"
-         style="display:inline;fill:#0000ff;fill-opacity:1;stroke-width:0.468842;stroke-opacity:0"
+         style="display:inline;fill:#0086d7;fill-opacity:1;stroke-width:0.468842;stroke-opacity:0"
          id="center-diagnostics-path"
          inkscape:flatsided="true"
          sodipodi:sides="5"
@@ -95,7 +95,7 @@
        class="star-ray-group"
        data-section="people"><path
          id="ray-people-path"
-         style="display:inline;opacity:1;fill:#0000ff;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
+         style="display:inline;opacity:1;fill:#0086d7;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
          d="m 105.06826,101.03954 -56.295391,8.50454 40.726039,39.46601 14.096792,-7.42316 10.18257,-31.33853 z"
          inkscape:label="ray-people"
          class="star-ray" /><text
@@ -115,7 +115,7 @@
        class="star-ray-group"
        data-section="strategy"><path
          id="ray-strategy-path"
-         style="display:inline;opacity:1;fill:#0000ff;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
+         style="display:inline;opacity:1;fill:#0086d7;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
          d="m 134.61367,45.868246 -25.51821,50.771626 10.26978,10.961738 h 30.53746 l 10.26977,-10.961738 -25.51855,-50.771626 -0.0201,0.04025 z"
          inkscape:label="ray-strategy"
          class="star-ray" /><text
@@ -135,7 +135,7 @@
        class="star-ray-group"
        data-section="processes"><path
          id="ray-processes-path"
-         style="display:inline;opacity:1;fill:#0000ff;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
+         style="display:inline;opacity:1;fill:#0086d7;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
          d="m 164.1912,147.66746 -26.36375,19.15419 v 17.87227 l 30.68151,16.80078 19.75401,10.81911 -9.19615,-56.86415 z"
          inkscape:label="ray-processes"
          class="star-ray" /><text
@@ -155,7 +155,7 @@
        class="star-ray-group"
        data-section="incentive-system"><path
          id="ray-incentive-system-path"
-         style="display:inline;opacity:1;fill:#0000ff;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
+         style="display:inline;opacity:1;fill:#0086d7;fill-opacity:1;stroke-width:1.21993;stroke-opacity:0"
          d="m 105.07674,147.66746 -14.875975,7.7822 -9.195803,56.86415 19.754008,-10.81911 30.68152,-16.80078 v -17.87227 z"
          inkscape:label="ray-incentive-system"
          class="star-ray" /><text

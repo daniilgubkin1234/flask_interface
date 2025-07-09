@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <script defer src="{{ url_for('static', filename='meeting_protocol_submit.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='meeting_protocol.css') }}">
 </head>
+
 <body>
     <div class="container">
         <h2>Протокол совещания</h2>
@@ -27,7 +29,8 @@
                 <div id="participantsSection">
                     <div class="participant">
                         <label for="participant_1">Участник 1:</label>
-                        <input type="text" id="participant_1" name="participant_1" placeholder="Введите имя участника" required>
+                        <input type="text" id="participant_1" name="participant_1" placeholder="Введите имя участника"
+                            required>
                     </div>
                     <button type="button" id="addParticipant" class="primary-button">+ Добавить участника</button>
                 </div>
@@ -39,7 +42,8 @@
                 <div id="discussionResultsSection">
                     <div class="discussion-result">
                         <label for="discussionResult_1">Результат 1:</label>
-                        <textarea id="discussionResult_1" name="discussionResult_1" rows="3" placeholder="Введите результат обсуждения" required></textarea>
+                        <textarea id="discussionResult_1" name="discussionResult_1" rows="3"
+                            placeholder="Введите результат обсуждения" required></textarea>
                     </div>
                     <button type="button" id="addDiscussionResult">+ Добавить результат</button>
                 </div>
@@ -52,7 +56,7 @@
                     <thead>
                         <tr>
                             <th>№</th>
-                            <th>Задача</th>
+                            <th>Работа</th>
                             <th>Исполнитель</th>
                             <th>Срок</th>
                         </tr>
@@ -126,6 +130,13 @@
             </div>
         </div>
 
+        <div class="recommendation-section">
+            <h4>Дополнительно</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
+            </div>
         </div>
+    </div>
 </body>
+
 </html>

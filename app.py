@@ -130,7 +130,6 @@ def index_public():
     """Публичная страница — например, лендинг с кнопкой 'Войти'."""
     return render_template("public.html")                     # создайте при необходимости
 
-
 @app.route("/")
 @login_required 
 def index():
@@ -469,9 +468,18 @@ def save_regulations_list():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+<<<<<<< HEAD
 # -------------------------------------------------------------------------
 # 20.  Запуск приложения
 # -------------------------------------------------------------------------
+=======
+
+@app.route('/question_answer')
+def question_answer():
+    return render_template('question_answer.html')
+
+
+>>>>>>> 23f9f8125886697f28d618f7ca372e96f2cc632d
 if __name__ == "__main__":
     # OAUTHLIB_INSECURE_TRANSPORT=1 в .env позволяет тестировать на http
     app.run(debug=True)

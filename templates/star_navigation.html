@@ -1,77 +1,89 @@
 {# templates/index.html #}
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
   <title>Интерактивная звезда навигации</title>
   <!-- Ссылка на CSS прямо из flat static/ -->
   <link rel="stylesheet" href="{{ url_for('static', filename='star-navigation.css') }}">
 </head>
+
 <body>
-  <div class="star-nav-wrapper">
-    <!-- Контейнер, куда JS подгрузит SVG -->
-    <div id="star-container"></div>
+  <div class="page-content">
+    <!-- Левая колонка с заголовком -->
+    <div class="star-title">
+      <h1>
+        Система управления<br>
+        предприятием «АСТРА»
+      </h1>
+    </div>
+    <!-- Правая колонка с навигацией -->
+    <div class="star-nav-wrapper">
+      <!-- Контейнер, куда JS подгрузит SVG -->
+      <div id="star-container"></div>
 
-    <!-- Меню для Diagnostics (центр) -->
-    <div id="menu-diagnostics" class="star-menu">
-      <button onclick="window.location.href='/survey_ai'">
-        Перейти к диагностике
-      </button>
+      <!-- Меню для Diagnostics (центр) -->
+      <div id="menu-diagnostics" class="star-menu">
+        <button onclick="window.location.href='/survey_ai'">
+          Перейти к диагностике
+        </button>
+      </div>
+
+      <!-- Меню для Задачи (ray-strategy) -->
+      <div id="menu-strategy" class="star-menu">
+        <button onclick="window.location.href='/business'">Бизнес цель</button>
+        <button onclick="window.location.href='/tasks'">
+          Задачи и план работ и мероприятий
+        </button>
+        <button onclick="window.location.href='/meeting_protocol'">
+          Протокол совещания
+        </button>
+      </div>
+
+      <!-- Меню для Персонал (ray-people) -->
+      <div id="menu-people" class="star-menu">
+        <button onclick="window.location.href='/personnel'">
+          Портрет сотрудника
+        </button>
+        <button onclick="window.location.href='/personnel'">
+          Должностные обязанности
+        </button>
+        <button onclick="window.location.href='/adaptation_plan'">
+          Адаптационный план
+        </button>
+        <button onclick="window.location.href='/job_description'">
+          Должностная инструкция
+        </button>
+      </div>
+
+      <!-- Меню для Система стимулирования (ray-incentive-system) -->
+      <div id="menu-incentive-system" class="star-menu">
+        <button onclick="window.location.href='/stimulation_system'">
+          Система стимулирования
+        </button>
+      </div>
+
+      <!-- Меню для Бизнес-процессы (ray-processes) -->
+      <div id="menu-processes" class="star-menu">
+        <button onclick="window.location.href='/business_processes'">
+          Бизнес-процессы
+        </button>
+        <button onclick="window.location.href='/regulations_list'">
+          Перечень регламентов
+        </button>
+      </div>
+
+      <!-- Меню для Организационная структура (ray-structure) -->
+      <div id="menu-structure" class="star-menu">
+        <button onclick="window.location.href='/organizational_structure'">
+          Организационная структура
+        </button>
+      </div>
     </div>
 
-    <!-- Меню для Задачи (ray-strategy) -->
-    <div id="menu-strategy" class="star-menu">
-      <button onclick="window.location.href='/business'">Бизнес цель</button>
-      <button onclick="window.location.href='/tasks'">
-        Задачи и план работ и мероприятий
-      </button>
-      <button onclick="window.location.href='/meeting_protocol'">
-        Протокол совещания
-      </button>
-    </div>
-
-    <!-- Меню для Персонал (ray-people) -->
-    <div id="menu-people" class="star-menu">
-      <button onclick="window.location.href='/personnel'">
-        Портрет сотрудника
-      </button>
-      <button onclick="window.location.href='/personnel'">
-        Должностные обязанности
-      </button>
-      <button onclick="window.location.href='/adaptation_plan'">
-        Адаптационный план
-      </button>
-      <button onclick="window.location.href='/job_description'">
-        Должностная инструкция
-      </button>
-    </div>
-
-    <!-- Меню для Система стимулирования (ray-incentive-system) -->
-    <div id="menu-incentive-system" class="star-menu">
-      <button onclick="window.location.href='/stimulation_system'">
-        Система стимулирования
-      </button>
-    </div>
-
-    <!-- Меню для Бизнес-процессы (ray-processes) -->
-    <div id="menu-processes" class="star-menu">
-      <button onclick="window.location.href='/business_processes'">
-        Бизнес-процессы
-      </button>
-      <button onclick="window.location.href='/regulations_list'">
-        Перечень регламентов
-      </button>
-    </div>
-
-    <!-- Меню для Организационная структура (ray-structure) -->
-    <div id="menu-structure" class="star-menu">
-      <button onclick="window.location.href='/organizational_structure'">
-        Организационная структура
-      </button>
-    </div>
-  </div>
-
-  <!-- JS тоже из flat static/ -->
-  <script defer src="{{ url_for('static', filename='star-navigation.js') }}"></script>
+    <!-- JS тоже из flat static/ -->
+    <script defer src="{{ url_for('static', filename='star-navigation.js') }}"></script>
 </body>
+
 </html>

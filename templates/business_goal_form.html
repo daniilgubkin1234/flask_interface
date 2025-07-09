@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Бизнес-цель</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='business_goal_form.css') }}">
 </head>
+
 <body>
     <div class="container">
-        <h2>Форма для заполнения бизнес-целей</h2>
+        <h2>Бизнес-цель</h2>
         <form id="businessForm">
 
             <fieldset>
@@ -135,7 +137,14 @@
             </div>
         </div>
 
+        <div class="recommendation-section">
+            <h4>Дополнительно</h4>
+            <div class="button-row">
+                <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
+            </div>
         </div>
+    </div>
     <script defer src="{{ url_for('static', filename='business_goal_form.js') }}"></script>
 </body>
+
 </html>
