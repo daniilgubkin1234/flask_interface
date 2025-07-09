@@ -16,7 +16,7 @@ from functools import wraps                                                  # -
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "dev-secret")       # --- OAuth: добавлено ---
+app.secret_key = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET")# --- OAuth: добавлено ---
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 if not app.config["MONGO_URI"]:
     raise ValueError("Ошибка: переменная MONGO_URI не найдена в .env!")
@@ -28,6 +28,7 @@ mongo = PyMongo(app)
 # -------------------------------------------------------------------------
 login_manager = LoginManager(app)                            # --- OAuth: добавлено ---
 login_manager.login_view = "login"                           # --- OAuth: добавлено ---
+
 
 oauth = OAuth(app)                                           # --- OAuth: добавлено ---
 google = oauth.register(                                     # --- OAuth: добавлено ---
@@ -129,11 +130,20 @@ def index_public():
     """Публичная страница — например, лендинг с кнопкой 'Войти'."""
     return render_template("public.html")                     # создайте при необходимости
 
-@app.route("/")                                               # БЫЛО: index
-@login_required                                              # --- OAuth: добавлено ---
+
+@app.route("/")
+@login_required 
 def index():
-    """Главная страница уже после входа, рендерим опросник."""
-    return render_template("survey_ai.html")
+    """ Главная страница — интерактивная звезда навигации """
+    return render_template("star_navigation.html")
+
+
+@app.route('/survey_ai')
+def survey_ai():
+    return render_template('survey_ai.html')
+
+# Получение всех задач
+
 
 # -------------------------------------------------------------------------
 # 8.  Задачи (теперь привязаны к current_user)
