@@ -38,9 +38,9 @@ google = oauth.register(                                     # --- OAuth: доб
     access_token_url="https://oauth2.googleapis.com/token",
     authorize_url="https://accounts.google.com/o/oauth2/v2/auth",
     api_base_url="https://www.googleapis.com/oauth2/v3/",
-        userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
+    userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
     client_kwargs={"scope": "openid email profile"},
-    jwks_uri = "https://www.googleapis.com/oauth2/v3/certs"
+    jwks_uri = "https://www.googleapis.com/oauth2/v3/certs"                                    
 )
 
 # -------------------------------------------------------------------------
@@ -470,16 +470,7 @@ def save_regulations_list():
         return jsonify({"success": False, "error": str(e)}), 500
 
 # -------------------------------------------------------------------------
-# 20.  Вопрос-ответ*
-# -------------------------------------------------------------------------
-
-@app.route('/question_answer')
-@login_required
-def question_answer():
-    return render_template('question_answer.html')
-
-# -------------------------------------------------------------------------
-# 21.  Запуск приложения
+# 20.  Запуск приложения
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
     # OAUTHLIB_INSECURE_TRANSPORT=1 в .env позволяет тестировать на http
