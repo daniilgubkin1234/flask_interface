@@ -561,5 +561,14 @@ def save_regulations_list():
 # 20.  Запуск приложения *
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
-    # OAUTHLIB_INSECURE_TRANSPORT=1 в .env позволяет тестировать на http
-    app.run(debug=True)
+    # Получаем переменную окружения, например FLASK_ENV или кастомную
+    env = os.getenv("FLASK_ENV", "production")
+
+    if env == "development":
+        # Локальный запуск с HTTPS и localhost, для Google OAuth
+        ssl_context = ("certs/localhost+2.pem", "certs/localhost+2-key.pem")
+        app.run(host="127.0.0.1", port=5000,
+                debug=True, ssl_context=ssl_context)
+    else:
+        # Запуск без SSL, на всех интерфейсах, для облака и GitHub
+        app.run(host="0.0.0.0", port=5000)

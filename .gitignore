@@ -7,3 +7,9 @@ __pycache__/
 
 # локальные файлы окружения
 .env
+
+# тестовый app.py
+app_test.pyc
+
+# папка certs
+/certs/
