@@ -1,0 +1,93 @@
+/* static/css/landing.css */
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #1A73E8 0%, #0F9D58 100%);
+    color: #1C1C1E;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+}
+
+.card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    text-align: center;
+}
+
+.card h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.card p {
+    font-size: 16px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.card ul {
+    text-align: left;
+    margin-bottom: 24px;
+    padding-left: 20px;
+}
+
+.card ul li {
+    margin-bottom: 8px;
+}
+
+/* Группа кнопок */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    /* Расстояние между кнопками */
+}
+
+/* Основная кнопка */
+.main-btn {
+    display: inline-flex;
+    align-items: center;
+    background: #1A73E8;
+    color: #FFFFFF;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.3s;
+}
+
+.main-btn:hover {
+    background: #1666C1;
+}
+
+/* Кнопка-иконка */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 2px solid #1A73E8;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.icon-btn:hover {
+    background: #f1f1f1;
+    border-color: #1666C1;
+}
+
+.icon-btn img {
+    height: 24px;
+    /* По высоте как кнопка */
+    width: auto;
+}

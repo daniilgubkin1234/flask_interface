@@ -134,7 +134,7 @@ def auth_callback():
         users_collection.insert_one(user_doc)
 
     login_user(User(user_doc))
-    return redirect(url_for("index"))
+    return redirect(url_for("star_navigation"))
 
 
 @app.route("/logout")
@@ -148,15 +148,22 @@ def logout():
 # -------------------------------------------------------------------------
 
 
-@app.route("/public")
+@app.route("/index_public")
 def index_public():
     """Публичная страница — например, лендинг с кнопкой 'Войти'."""
-    return render_template("public.html")                     # создайте при необходимости
+    return render_template("index_public.html")
 
 
 @app.route("/")
+def landing():
+    # вместо public.html рендерим landing.html
+    # создайте при необходимости
+    return render_template("landing.html")
+
+
+@app.route("/star_navigation")
 @login_required
-def index():
+def star_navigation():
     """ Главная страница — интерактивная звезда навигации """
     return render_template("star_navigation.html")
 
