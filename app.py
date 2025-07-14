@@ -39,7 +39,8 @@ google = oauth.register(                                     # --- OAuth: доб
     authorize_url="https://accounts.google.com/o/oauth2/v2/auth",
     api_base_url="https://www.googleapis.com/oauth2/v3/",
     userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
-    client_kwargs={"scope": "openid email profile"}
+    client_kwargs={"scope": "openid email profile"},
+    jwks_uri="https://www.googleapis.com/oauth2/v3/certs"
 )
 
 # -------------------------------------------------------------------------
@@ -472,5 +473,14 @@ def save_regulations_list():
 # 20.  Запуск приложения
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
-    # OAUTHLIB_INSECURE_TRANSPORT=1 в .env позволяет тестировать на http
-    app.run(debug=True)
+    # Получаем переменную окружения, например FLASK_ENV или кастомную
+    env = os.getenv("FLASK_ENV", "production")
+
+    if env == "development":
+        # Локальный запуск с HTTPS и localhost, для Google OAuth
+        ssl_context = ("certs/localhost+2.pem", "certs/localhost+2-key.pem")
+        app.run(host="127.0.0.1", port=5000,
+                debug=True, ssl_context=ssl_context)
+    else:
+        # Запуск без SSL, на всех интерфейсах, для облака и GitHub
+        app.run(host="0.0.0.0", port=5000)
