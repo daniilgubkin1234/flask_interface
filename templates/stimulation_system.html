@@ -15,113 +15,172 @@
             <fieldset>
                 <legend>Материальное стимулирование</legend>
                 <table>
-                    <tbody>
+                    <tbody id="material-body">
                         <tr>
                             <td>Оклад</td>
                             <td><input type="text" name="salary"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Премия</td>
                             <td><input type="text" name="bonus"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Комиссионное вознаграждение</td>
                             <td><input type="text" name="commission"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Надбавка за наставничество</td>
                             <td><input type="text" name="mentoring_bonus"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Оплата больничного</td>
                             <td><input type="text" name="sick_leave"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Оплачиваемый отпуск</td>
                             <td><input type="text" name="vacation"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Компенсации</td>
                             <td><input type="text" name="compensations"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+                <button type="button" class="add-row-btn" data-section="material">+ добавить пункт</button>
             </fieldset>
 
             <fieldset>
                 <legend>Нематериальное стимулирование</legend>
                 <table>
-                    <tbody>
+                    <tbody id="nonmaterial-body">
                         <tr>
                             <td>Обучение за счет компании</td>
                             <td><input type="text" name="education"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Комфортные условия труда</td>
                             <td><input type="text" name="work_conditions"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>ДМС</td>
                             <td><input type="text" name="health_insurance"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Система стандартов</td>
                             <td><input type="text" name="standards"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+                <button type="button" class="add-row-btn" data-section="nonmaterial">+ добавить пункт</button>
             </fieldset>
 
             <fieldset>
                 <legend>Работа с внутренней мотивацией</legend>
                 <table>
-                    <tbody>
+                    <tbody id="motivation-body">
                         <tr>
                             <td>Понимание цели компании</td>
                             <td><input type="text" name="company_goals"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Понимание своих задач</td>
                             <td><input type="text" name="task_understanding"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Понимание своей роли в компании</td>
                             <td><input type="text" name="role_understanding"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+                <button type="button" class="add-row-btn" data-section="motivation">+ добавить пункт</button>
             </fieldset>
 
             <fieldset>
                 <legend>Элементы корпоративной культуры</legend>
                 <table>
-                    <tbody>
+                    <tbody id="culture-body">
                         <tr>
                             <td>Корпоративные мероприятия</td>
                             <td><input type="text" name="corporate_events"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Участие в корпоративном обучении</td>
                             <td><input type="text" name="corporate_training"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                         <tr>
                             <td>Личные праздники</td>
                             <td><input type="text" name="personal_celebrations"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+                <button type="button" class="add-row-btn" data-section="culture">+ добавить пункт</button>
             </fieldset>
 
             <fieldset>
                 <legend>Система партнерства</legend>
                 <table>
-                    <tbody>
+                    <tbody id="partnership-body">
                         <tr>
                             <td>Описание четкого алгоритма</td>
                             <td><input type="text" name="partnership_algorithm"></td>
+                            <td>
+                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+                <button type="button" class="add-row-btn" data-section="partnership">+ добавить пункт</button>
             </fieldset>
 
             <div class="button-container">

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Добро пожаловать в АСТРА</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Добро пожаловать в АСТРА</h1>
+            <p>В сервисе используется защищённая авторизация через Google. Это позволяет надежно хранить ваши данные,
+                не требуя от вас придумывать и запоминать новый пароль.</p>
+            <ul>
+                <li>Безопасность: Google защищает доступ к вашим данным.</li>
+                <li>Удобство: вход одним кликом, без дополнительных регистраций.</li>
+                <li>Приватность: АСТРА не хранит ваши пароли, только подтверждённый email.</li>
+            </ul>
+            <div class="button-group">
+                <a href="{{ url_for('login') }}" class="btn main-btn">
+                    Войти через Google
+                </a>
+                <a href="{{ url_for('login') }}" class="btn icon-btn">
+                    <img src="{{ url_for('static', filename='google-icon.svg') }}" alt="Google Login" />
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

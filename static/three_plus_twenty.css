@@ -82,6 +82,7 @@ button[type="submit"].submit-btn:hover {
 }
 
 /* Пример рядов для направлений */
+.position-item
 .direction-item,
 .responsibility-item {
     margin-bottom: 10px;
@@ -106,7 +107,7 @@ button[type="submit"].submit-btn:hover {
 
 /* Каждая секция (группа ссылок + заголовок) */
 .recommendation-section {
-    border-top: 1px solid #e0e0e0; 
+    border-top: 1px solid #e0e0e0;
     padding-top: 15px;
     margin-top: 15px;
     text-align: center;

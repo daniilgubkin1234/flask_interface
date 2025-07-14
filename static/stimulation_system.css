@@ -6,22 +6,20 @@ body {
 }
 
 .container {
-    background-color: #FFFFFF;
+    background: #fff;
     padding: 40px;
     margin: 40px auto;
     border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.10);
     max-width: 900px;
 }
 
-/* Заголовки */
 h2 {
     text-align: center;
     color: #2A63C2;
     margin-bottom: 30px;
 }
 
-/* Оформление fieldset */
 fieldset {
     border: 2px solid #2A63C2;
     border-radius: 8px;
@@ -30,80 +28,142 @@ fieldset {
     background: #f9f9f9;
 }
 
-/* Заголовок внутри fieldset */
 legend {
     font-weight: bold;
     color: #2A63C2;
-    padding: 5px 10px;
     font-size: 18px;
+    padding: 5px 10px;
 }
 
-/* Оформление таблицы */
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
 }
 
-th, td {
+th,
+td {
     border: 1px solid #ccc;
     padding: 10px;
     text-align: left;
+    vertical-align: middle;
 }
 
 th {
-    background-color: #2A63C2;
-    color: white;
+    background: #2A63C2;
+    color: #fff;
     font-weight: bold;
 }
 
-/* Оформление input */
-input {
+td:first-child,
+th:first-child {
+    width: 41%;
+    min-width: 120px;
+    white-space: normal;
+}
+
+td:nth-child(2),
+th:nth-child(2) {
+    width: 52%;
+}
+
+td:last-child,
+th:last-child {
+    width: 56px;
+    text-align: center;
+    padding: 0;
+}
+
+/* Form elements */
+input[type="text"] {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
     box-sizing: border-box;
+    background: #fff;
 }
 
 input:focus {
     border-color: #2A63C2;
     outline: none;
-    box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
+    box-shadow: 0 0 5px rgba(42, 99, 194, 0.15);
 }
 
-/* Оформление кнопки */
+/* Universal button style */
+.btn,
 button {
-    background-color: #2A63C2;
-    color: white;
-    padding: 12px 20px;
+    background: #2A63C2;
+    color: #fff;
+    padding: 10px 20px;
     font-size: 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 20px;
+    transition: background 0.2s, box-shadow 0.2s;
+    margin-top: 15px;
+    display: inline-block;
 }
+
+.btn:hover,
+button:hover {
+    background: #1F4B8F;
+}
+
+.add-row-btn {
+    margin-bottom: 10px;
+}
+
+.delete-row-btn {
+    width: 32px;
+    height: 32px;
+    background: #e53935;
+    border-radius: 6px;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    transition: background 0.2s;
+}
+
+.delete-row-btn::before,
+.delete-row-btn::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 16px;
+    height: 2.5px;
+    background: #fff;
+    border-radius: 2px;
+}
+
+.delete-row-btn::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.delete-row-btn::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.delete-row-btn:hover {
+    background: #b71c1c;
+}
+
+/* Center button container */
 .button-container {
     display: flex;
     justify-content: center;
-    margin-top: 20px; /* Регулируй отступ сверху */
+    margin-top: 20px;
 }
 
-.save-btn:hover {
-    background-color: #1F4B8F;
-}
-button:hover {
-    background-color: #1F4B8F;
-}
-/* Блок рекомендаций */
+/* Recommendation block (navigation) */
 .recommendation-block {
-    background-color: #fafafa; /* более светлый фон */
+    background: #fafafa;
     padding: 20px;
     border-radius: 8px;
     margin: 30px 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* легкая тень */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     text-align: center;
 }
 
@@ -112,18 +172,15 @@ button:hover {
     font-size: 18px;
     font-weight: bold;
     color: #2A63C2;
-    text-align: center;
 }
 
-/* Каждая секция (группа ссылок + заголовок) */
 .recommendation-section {
-    border-top: 1px solid #e0e0e0; 
+    border-top: 1px solid #e0e0e0;
     padding-top: 15px;
     margin-top: 15px;
     text-align: center;
 }
 
-/* Заголовки для внутренних групп (вместо H2) */
 .recommendation-section h4 {
     margin: 0 0 10px 0;
     font-size: 18px;
@@ -131,29 +188,25 @@ button:hover {
     color: #333;
 }
 
-/* Ряд кнопок */
 .button-row {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap; /* если кнопок много, они перенесутся */
+    flex-wrap: wrap;
     justify-content: center;
 }
 
-/* Кнопки внутри блока рекомендаций.
-   Можно сделать поменьше и компактнее, чем обычные. */
 .recommendation-block .button-row button {
-    background-color: #2A63C2;
-    color: white;
+    background: #2A63C2;
+    color: #fff;
     padding: 12px 20px;
     font-size: 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s;
     margin-top: 20px;
+    transition: background 0.2s;
 }
 
-/* Ховер-эффект на кнопках */
 .recommendation-block .button-row button:hover {
-    background-color: #1F4B8F;
+    background: #1F4B8F;
 }

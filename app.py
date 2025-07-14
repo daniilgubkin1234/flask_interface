@@ -1,14 +1,18 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, abort  # --- OAuth: добавлено redirect,url_for,abort ---
+# --- OAuth: добавлено redirect,url_for,abort ---
+from flask import Flask, render_template, request, jsonify, redirect, url_for, abort
 from flask_pymongo import PyMongo
 from dotenv import load_dotenv
 import os
 from bson.objectid import ObjectId
-from datetime import datetime                                   # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+from datetime import datetime
 # ---------- OAuth / Flask-Login ----------
 from flask_login import LoginManager, UserMixin, login_user, \
-                        login_required, logout_user, current_user            # --- OAuth: добавлено ---
-from authlib.integrations.flask_client import OAuth                          # --- OAuth: добавлено ---
-from functools import wraps                                                  # --- OAuth: добавлено ---
+    login_required, logout_user, current_user            # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+from authlib.integrations.flask_client import OAuth
+# --- OAuth: добавлено ---
+from functools import wraps
 
 # -------------------------------------------------------------------------
 # 1.  Загрузка переменных окружения
@@ -16,7 +20,8 @@ from functools import wraps                                                  # -
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET")# --- OAuth: добавлено ---
+app.secret_key = os.getenv("SECRET_KEY") or os.getenv(
+    "FLASK_SECRET")  # --- OAuth: добавлено ---
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 if not app.config["MONGO_URI"]:
     raise ValueError("Ошибка: переменная MONGO_URI не найдена в .env!")
@@ -26,11 +31,14 @@ mongo = PyMongo(app)
 # -------------------------------------------------------------------------
 # 2.  Flask-Login и OAuth настройка
 # -------------------------------------------------------------------------
-login_manager = LoginManager(app)                            # --- OAuth: добавлено ---
-login_manager.login_view = "login"                           # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+login_manager = LoginManager(app)
+# --- OAuth: добавлено ---
+login_manager.login_view = "login"
 
 
-oauth = OAuth(app)                                           # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+oauth = OAuth(app)
 google = oauth.register(                                     # --- OAuth: добавлено ---
     name="google",
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
@@ -46,12 +54,16 @@ google = oauth.register(                                     # --- OAuth: доб
 # -------------------------------------------------------------------------
 # 3.  Класс пользователя и загрузка из базы
 # -------------------------------------------------------------------------
+
+
 class User(UserMixin):                                       # --- OAuth: добавлено ---
     def __init__(self, doc):
         self.id = str(doc["_id"])
         self.doc = doc
 
-@login_manager.user_loader                                    # --- OAuth: добавлено ---
+
+# --- OAuth: добавлено ---
+@login_manager.user_loader
 def load_user(user_id):
     doc = mongo.db.users.find_one({"_id": ObjectId(user_id)})
     return User(doc) if doc else None
@@ -59,7 +71,10 @@ def load_user(user_id):
 # -------------------------------------------------------------------------
 # 4.  Хелпер для проверки ролей (по желанию)
 # -------------------------------------------------------------------------
-def role_required(*roles):                                   # --- OAuth: добавлено ---
+
+
+# --- OAuth: добавлено ---
+def role_required(*roles):
     def wrapper(fn):
         @wraps(fn)
         def decorated_view(*args, **kwargs):
@@ -69,37 +84,41 @@ def role_required(*roles):                                   # --- OAuth: доб
         return decorated_view
     return wrapper
 
+
 # -------------------------------------------------------------------------
 # 5.  Коллекции Mongo
 # -------------------------------------------------------------------------
-tasks_collection               = mongo.db.tasks
-employees_collection           = mongo.db.employees
-business_goal_collection       = mongo.db.business_goal
-survey_collection              = mongo.db.surveys
-adaptation_plans_collection    = mongo.db.adaptation_plans
-meeting_protocol_collection    = mongo.db.meeting_protocols
-stimulation_system_collection  = mongo.db.stimulation_system
-job_description_collection     = mongo.db.job_descriptions
-business_processes_collection  = mongo.db.business_processes
-three_plus_twenty_collection   = mongo.db.three_plus_twenty
-regulations_collection         = mongo.db.regulations_list
-organizational_structure_coll  = mongo.db.organizational_structure
-users_collection               = mongo.db.users                # --- OAuth: добавлено ---
+tasks_collection = mongo.db.tasks
+employees_collection = mongo.db.employees
+business_goal_collection = mongo.db.business_goal
+survey_collection = mongo.db.surveys
+adaptation_plans_collection = mongo.db.adaptation_plans
+meeting_protocol_collection = mongo.db.meeting_protocols
+stimulation_system_collection = mongo.db.stimulation_system
+job_description_collection = mongo.db.job_descriptions
+business_processes_collection = mongo.db.business_processes
+three_plus_twenty_collection = mongo.db.three_plus_twenty
+regulations_collection = mongo.db.regulations_list
+organizational_structure_coll = mongo.db.organizational_structure
+users_collection = mongo.db.users                # --- OAuth: добавлено ---
 
 # -------------------------------------------------------------------------
 # 6.  OAuth-роуты (вход / колбек / выход)
 # -------------------------------------------------------------------------
+
+
 @app.route("/login")
 def login():
     """Стартуем OIDC flow через Google."""
     redirect_uri = url_for("auth_callback", _external=True)
     return google.authorize_redirect(redirect_uri)
 
+
 @app.route("/auth/callback")
 def auth_callback():
     """Обрабатываем ответ от Google и логиним пользователя."""
-    token     = google.authorize_access_token()
-    userinfo  = google.get("userinfo").json()
+    token = google.authorize_access_token()
+    userinfo = google.get("userinfo").json()
 
     # ищем или создаём пользователя
     user_doc = users_collection.find_one({"google_id": userinfo["sub"]})
@@ -115,7 +134,8 @@ def auth_callback():
         users_collection.insert_one(user_doc)
 
     login_user(User(user_doc))
-    return redirect(url_for("index"))
+    return redirect(url_for("star_navigation"))
+
 
 @app.route("/logout")
 @login_required
@@ -126,14 +146,24 @@ def logout():
 # -------------------------------------------------------------------------
 # 7.  Публичная и защищённая главные страницы
 # -------------------------------------------------------------------------
-@app.route("/public")
+
+
+@app.route("/index_public")
 def index_public():
     """Публичная страница — например, лендинг с кнопкой 'Войти'."""
-    return render_template("public.html")                     # создайте при необходимости
+    return render_template("index_public.html")
+
 
 @app.route("/")
-@login_required 
-def index():
+def landing():
+    # вместо public.html рендерим landing.html
+    # создайте при необходимости
+    return render_template("landing.html")
+
+
+@app.route("/star_navigation")
+@login_required
+def star_navigation():
     """ Главная страница — интерактивная звезда навигации """
     return render_template("star_navigation.html")
 
@@ -149,7 +179,8 @@ def survey_ai():
 # 8.  Задачи (теперь привязаны к current_user)
 # -------------------------------------------------------------------------
 @app.route("/get_tasks", methods=["GET"])
-@login_required                                              # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+@login_required
 def get_tasks():
     """Возвращает задачи текущего пользователя."""
     tasks = list(
@@ -160,35 +191,44 @@ def get_tasks():
     )
     return jsonify(tasks)
 
+
 @app.route("/add_task", methods=["POST"])
-@login_required                                              # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+@login_required
 def add_task():
     """Добавляет новую задачу в базу данных."""
     data = request.json or {}
     if not data.get("task"):
         return jsonify({"error": "Название задачи обязательно"}), 400
 
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     tasks_collection.insert_one(data)
     return jsonify({"message": "Задача успешно добавлена", "task": data})
 
+
 @app.route("/edit_task/<task_id>", methods=["PUT"])
-@login_required                                              # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+@login_required
 def edit_task(task_id):
     data = request.json or {}
     result = tasks_collection.update_one(
-        {"task": task_id, "owner_id": ObjectId(current_user.id)},  # --- OAuth: добавлено ---
+        # --- OAuth: добавлено ---
+        {"task": task_id, "owner_id": ObjectId(current_user.id)},
         {"$set": data}
     )
     if result.matched_count:
         return jsonify({"message": "Задача успешно обновлена"})
     return jsonify({"error": "Задача не найдена"}), 404
 
+
 @app.route("/delete_task/<task_id>", methods=["DELETE"])
-@login_required                                              # --- OAuth: добавлено ---
+# --- OAuth: добавлено ---
+@login_required
 def delete_task(task_id):
     result = tasks_collection.delete_one(
-        {"task": task_id, "owner_id": ObjectId(current_user.id)}   # --- OAuth: добавлено ---
+        # --- OAuth: добавлено ---
+        {"task": task_id, "owner_id": ObjectId(current_user.id)}
     )
     if result.deleted_count:
         return jsonify({"message": "Задача успешно удалена"})
@@ -197,32 +237,39 @@ def delete_task(task_id):
 # -------------------------------------------------------------------------
 # 9.  Персонал
 # -------------------------------------------------------------------------
+
+
 @app.route("/personnel")
 @login_required
 def personnel():
     return render_template("employee_profile.html")
+
 
 @app.route("/add_employee", methods=["POST"])
 @login_required
 def add_employee():
     data = request.json
     if data:
-        data["owner_id"] = ObjectId(current_user.id)         # --- OAuth: добавлено ---
+        # --- OAuth: добавлено ---
+        data["owner_id"] = ObjectId(current_user.id)
         employees_collection.insert_one(data)
         return jsonify({"message": "Сотрудник добавлен!"}), 201
     return jsonify({"error": "Ошибка при добавлении"}), 400
+
 
 @app.route("/get_employee", methods=["GET"])
 @login_required
 def get_employee():
     name = request.args.get("name")
     employee = employees_collection.find_one(
-        {"name": name, "owner_id": ObjectId(current_user.id)}      # --- OAuth: добавлено ---
+        # --- OAuth: добавлено ---
+        {"name": name, "owner_id": ObjectId(current_user.id)}
     )
     if employee:
         employee["_id"] = str(employee["_id"])
         return jsonify(employee)
     return jsonify({"error": "Сотрудник не найден"}), 404
+
 
 @app.route("/update_employee/<employee_id>", methods=["PUT"])
 @login_required
@@ -230,7 +277,8 @@ def update_employee(employee_id):
     data = request.json
     if data:
         employees_collection.update_one(
-            {"_id": ObjectId(employee_id), "owner_id": ObjectId(current_user.id)},  # --- OAuth ---
+            {"_id": ObjectId(employee_id), "owner_id": ObjectId(
+                current_user.id)},  # --- OAuth ---
             {"$set": data}
         )
         return jsonify({"message": "Данные обновлены!"})
@@ -239,10 +287,13 @@ def update_employee(employee_id):
 # -------------------------------------------------------------------------
 # 10.  Бизнес-цели
 # -------------------------------------------------------------------------
+
+
 @app.route("/business")
 @login_required
 def business_goals():
     return render_template("business_goal_form.html")
+
 
 @app.route("/add_business_goal", methods=["POST"])
 @login_required
@@ -250,17 +301,21 @@ def add_business_goal():
     data = request.json
     if not data:
         return jsonify({"error": "Нет данных"}), 400
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     business_goal_collection.insert_one(data)
     return jsonify({"message": "Бизнес-цель добавлена успешно!"}), 201
 
 # -------------------------------------------------------------------------
 # 11.  Опросник (tasks.html)
 # -------------------------------------------------------------------------
+
+
 @app.route("/tasks")
 @login_required
 def survey():
     return render_template("tasks.html")
+
 
 @app.route("/submit_survey", methods=["POST"])
 @login_required
@@ -269,7 +324,8 @@ def submit_survey():
     if not data:
         return jsonify({"error": "Нет данных для сохранения"}), 400
     survey_result = {
-        "owner_id": ObjectId(current_user.id),               # --- OAuth: добавлено ---
+        # --- OAuth: добавлено ---
+        "owner_id": ObjectId(current_user.id),
         "user_answers": data
     }
     result = survey_collection.insert_one(survey_result)
@@ -278,11 +334,13 @@ def submit_survey():
         "survey_id": str(result.inserted_id)
     }), 201
 
+
 @app.route("/get_survey_results/<survey_id>", methods=["GET"])
 @login_required
 def get_survey_results(survey_id):
     survey = survey_collection.find_one(
-        {"_id": ObjectId(survey_id), "owner_id": ObjectId(current_user.id)}   # --- OAuth ---
+        {"_id": ObjectId(survey_id), "owner_id": ObjectId(
+            current_user.id)}   # --- OAuth ---
     )
     if survey:
         survey["_id"] = str(survey["_id"])
@@ -293,10 +351,13 @@ def get_survey_results(survey_id):
 # 12.  Адаптационный план
 # (ниже аналогичные изменения: owner_id + @login_required)
 # -------------------------------------------------------------------------
+
+
 @app.route("/adaptation_plan")
 @login_required
 def adaptation_plan():
     return render_template("adaptation_plan.html")
+
 
 @app.route("/submit_adaptation_plan", methods=["POST"])
 @login_required
@@ -304,7 +365,8 @@ def submit_adaptation_plan():
     data = request.json
     if not data:
         return jsonify({"error": "Нет данных для сохранения"}), 400
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     result = adaptation_plans_collection.insert_one(data)
     return jsonify({
         "message": "Адаптационный план успешно сохранен!",
@@ -314,10 +376,13 @@ def submit_adaptation_plan():
 # -------------------------------------------------------------------------
 # 13.  Протокол совещания
 # -------------------------------------------------------------------------
+
+
 @app.route("/meeting_protocol")
 @login_required
 def meeting_protocol():
     return render_template("meeting_protocol.html")
+
 
 @app.route("/save_meeting_protocol", methods=["POST"])
 @login_required
@@ -325,7 +390,8 @@ def save_meeting_protocol():
     data = request.json
     if not data:
         return jsonify({"error": "Нет данных для сохранения"}), 400
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     result = meeting_protocol_collection.insert_one(data)
     return jsonify({
         "message": "Протокол успешно сохранен!",
@@ -335,10 +401,13 @@ def save_meeting_protocol():
 # -------------------------------------------------------------------------
 # 14.  Система стимулирования
 # -------------------------------------------------------------------------
+
+
 @app.route("/stimulation_system")
 @login_required
 def stimulation_page():
     return render_template("stimulation_system.html")
+
 
 @app.route("/save_stimulation_system", methods=["POST"])
 @login_required
@@ -346,17 +415,21 @@ def save_stimulation():
     data = request.json
     if not data:
         return jsonify({"error": "Нет данных для сохранения"}), 400
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     stimulation_system_collection.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
 
 # -------------------------------------------------------------------------
 # 15.  Должностные инструкции
 # -------------------------------------------------------------------------
+
+
 @app.route("/job_description")
 @login_required
 def job_description():
     return render_template("job_description.html")
+
 
 @app.route("/submit_job_description", methods=["POST"])
 @login_required
@@ -364,18 +437,21 @@ def submit_job_description():
     data = request.json
     if not data:
         return jsonify({"error": "Нет данных для сохранения"}), 400
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     result = job_description_collection.insert_one(data)
     return jsonify({
         "message": "Должностная инструкция успешно сохранена!",
         "doc_id": str(result.inserted_id)
     }), 201
 
+
 @app.route("/get_job_description/<doc_id>", methods=["GET"])
 @login_required
 def get_job_description(doc_id):
     job_description = job_description_collection.find_one(
-        {"_id": ObjectId(doc_id), "owner_id": ObjectId(current_user.id)}       # --- OAuth ---
+        {"_id": ObjectId(doc_id), "owner_id": ObjectId(
+            current_user.id)}       # --- OAuth ---
     )
     if job_description:
         job_description["_id"] = str(job_description["_id"])
@@ -385,10 +461,13 @@ def get_job_description(doc_id):
 # -------------------------------------------------------------------------
 # 16.  Организационная структура
 # -------------------------------------------------------------------------
+
+
 @app.route("/organizational_structure")
 @login_required
 def organizational_structure_page():
     return render_template("organizational_structure.html")
+
 
 @app.route("/save_organizational_structure", methods=["POST"])
 @login_required
@@ -397,15 +476,18 @@ def save_organizational_structure():
     if not data or "rows" not in data:
         return jsonify({"error": "Нет данных"}), 400
     data["createdAt"] = datetime.utcnow()
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     organizational_structure_coll.insert_one(data)
     return jsonify({"message": "Оргструктура сохранена!"}), 201
+
 
 @app.route('/get_organizational_structure')
 @login_required
 def get_org_structure():
     doc = organizational_structure_coll.find_one(
-        {"owner_id": ObjectId(current_user.id)},             # --- OAuth: добавлено ---
+        # --- OAuth: добавлено ---
+        {"owner_id": ObjectId(current_user.id)},
         sort=[('_id', -1)],
         projection={'_id': 0, 'rows': 1}
     )
@@ -414,17 +496,21 @@ def get_org_structure():
 # -------------------------------------------------------------------------
 # 17.  Бизнес-процессы
 # -------------------------------------------------------------------------
+
+
 @app.route("/business_processes")
 @login_required
 def business_processes_page():
     return render_template("business_processes.html")
+
 
 @app.route("/save_business_processes", methods=["POST"])
 @login_required
 def save_business_processes():
     try:
         data = request.get_json(force=True)
-        data["owner_id"] = ObjectId(current_user.id)         # --- OAuth: добавлено ---
+        # --- OAuth: добавлено ---
+        data["owner_id"] = ObjectId(current_user.id)
         business_processes_collection.insert_one(data)
         return jsonify({"message": "Данные успешно сохранены!"})
     except Exception as e:
@@ -433,10 +519,13 @@ def save_business_processes():
 # -------------------------------------------------------------------------
 # 18.  «3 + 20»
 # -------------------------------------------------------------------------
+
+
 @app.route("/three_plus_twenty")
 @login_required
 def three_plus_twenty_page():
     return render_template("three_plus_twenty.html")
+
 
 @app.route("/save_three_plus_twenty", methods=["POST"])
 @login_required
@@ -444,17 +533,21 @@ def save_three_plus_twenty():
     data = request.json
     if not data:
         return jsonify({"error": "Нет данных"}), 400
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     three_plus_twenty_collection.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
 
 # -------------------------------------------------------------------------
 # 19.  Перечень регламентов
 # -------------------------------------------------------------------------
+
+
 @app.route('/regulations_list')
 @login_required
 def regulations_list():
     return render_template('regulations_list.html')
+
 
 @app.route('/save_regulations_list', methods=['POST'])
 @login_required
@@ -462,7 +555,8 @@ def save_regulations_list():
     data = request.get_json()
     if not data or 'regulations' not in data:
         return jsonify({"success": False, "error": "Нет данных"}), 400
-    data["owner_id"] = ObjectId(current_user.id)             # --- OAuth: добавлено ---
+    # --- OAuth: добавлено ---
+    data["owner_id"] = ObjectId(current_user.id)
     try:
         regulations_collection.insert_one(data)
         return jsonify({"success": True, "message": "Перечень регламентов сохранён!"}), 201
@@ -470,17 +564,36 @@ def save_regulations_list():
         return jsonify({"success": False, "error": str(e)}), 500
 
 # -------------------------------------------------------------------------
-# 20.  Запуск приложения
+# 20.  Вопрос-ответ
+# -------------------------------------------------------------------------
+
+@app.route('/question_answer')
+@login_required
+def question_answer():
+    return render_template('question_answer.html')
+
+# -------------------------------------------------------------------------
+# 21.  Запуск приложения
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Получаем переменную окружения, например FLASK_ENV или кастомную
-    env = os.getenv("FLASK_ENV", "production")
 
-    if env == "development":
-        # Локальный запуск с HTTPS и localhost, для Google OAuth
-        ssl_context = ("certs/localhost+2.pem", "certs/localhost+2-key.pem")
-        app.run(host="127.0.0.1", port=5000,
-                debug=True, ssl_context=ssl_context)
+    env = os.getenv("FLASK_ENV", "development")
+
+    cert = ("certs/localhost+2.pem", "certs/localhost+2-key.pem")
+
+    if env == "production":
+        app.run(
+            host="127.0.0.1",
+            port=5000,
+            debug=True,
+            use_reloader=False,
+            ssl_context=cert
+        )
     else:
-        # Запуск без SSL, на всех интерфейсах, для облака и GitHub
-        app.run(host="0.0.0.0", port=5000)
+        app.run(
+            host="0.0.0.0",
+            port=443,
+            debug=False,
+            use_reloader=False,
+            ssl_context=cert
+        )

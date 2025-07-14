@@ -4,7 +4,11 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("submit", function (event) {
         event.preventDefault(); // Отключаем стандартную отправку формы
 
-        // Собираем данные: 3 направления, 20 обязанностей
+        // Собираем данные: 1 должность, 3 направления, 20 обязанностей
+        const position = [
+            document.getElementById("position_name").value.trim()
+        ];
+
         const directions = [
             document.getElementById("direction_1").value.trim(),
             document.getElementById("direction_2").value.trim(),
@@ -18,6 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const payload = {
+            position: position,
             directions: directions,
             responsibilities: responsibilities
         };
