@@ -577,11 +577,11 @@ def question_answer():
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    env = os.getenv("FLASK_ENV", "production")
+    env = os.getenv("FLASK_ENV", "development")
 
     cert = ("certs/localhost+2.pem", "certs/localhost+2-key.pem")
 
-    if env == "development":
+    if env == "production":
         app.run(
             host="127.0.0.1",
             port=5000,
