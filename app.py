@@ -576,14 +576,24 @@ def question_answer():
 # 21.  Запуск приложения
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Получаем переменную окружения, например FLASK_ENV или кастомную
+
     env = os.getenv("FLASK_ENV", "production")
 
+    cert = ("certs/localhost+2.pem", "certs/localhost+2-key.pem")
+
     if env == "development":
-        # Локальный запуск с HTTPS и localhost, для Google OAuth
-        ssl_context = ("certs/localhost+2.pem", "certs/localhost+2-key.pem")
-        app.run(host="127.0.0.1", port=5000,
-                debug=True, ssl_context=ssl_context)
+        app.run(
+            host="127.0.0.1",
+            port=5000,
+            debug=True,
+            use_reloader=False,
+            ssl_context=cert
+        )
     else:
-        # Запуск без SSL, на всех интерфейсах, для облака и GitHub
-        app.run(host="0.0.0.0", port=5000)
+        app.run(
+            host="0.0.0.0",
+            port=443,
+            debug=False,
+            use_reloader=False,
+            ssl_context=cert
+        )
