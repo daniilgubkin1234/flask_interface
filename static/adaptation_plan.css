@@ -2,8 +2,8 @@ body {
     font-family: Arial, sans-serif;
     background-color: #F0F0F0;
     margin: 40px auto;
-    
-    
+
+
 }
 
 .container {
@@ -138,7 +138,7 @@ textarea:focus {
     outline: none;
     box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
 }
-#addTaskButton{
+.add-task-btn{
     background-color: #2A63C2;
     color: white;
     padding: 10px;
@@ -149,7 +149,7 @@ textarea:focus {
     margin: 15px 0;
     transition: background-color 0.3s;
 }
-.delete-task-button {
+.delete-task-btn {
     background-color: #dc3545; /* красный цвет кнопки */
     color: #fff;               /* белый текст */
     padding: 10px 15px;        /* отступы */
@@ -161,7 +161,7 @@ textarea:focus {
     transition: background-color 0.3s ease; /* плавный переход цвета */
 }
 
-.delete-task-button:hover {
+.delete-task-btn:hover {
     background-color: #c82333; /* цвет при наведении */
 }
 
@@ -208,7 +208,7 @@ button[type="submit"]:hover {
 
 /* Каждая секция (группа ссылок + заголовок) */
 .recommendation-section {
-    border-top: 1px solid #e0e0e0; 
+    border-top: 1px solid #e0e0e0;
     padding-top: 15px;
     margin-top: 15px;
     text-align: center;

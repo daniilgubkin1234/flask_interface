@@ -7,7 +7,6 @@
     <title>Адаптационный план</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='adaptation_plan.css') }}">
     <script defer src="{{ url_for('static', filename='adaptation_plan.js') }}"></script>
-    <script defer src="{{ url_for('static', filename='adaptation_plan_submit.js') }}"></script>
 </head>
 
 <body>
@@ -30,6 +29,7 @@
                     <label for="task1_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task1_summarize_by_employee" name="task1_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
                 <fieldset class="task">
                     <legend>Задача 2: Знакомство с коллективом, офисом, оргтехникой</legend>
@@ -45,6 +45,7 @@
                     <label for="task2_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task2_summarize_by_employee" name="task2_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
                 <fieldset class="task">
                     <legend>Задача 3: Изучение информации о компании</legend>
@@ -60,6 +61,7 @@
                     <label for="task3_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task3_summarize_by_employee" name="task3_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
                 <fieldset class="task">
                     <legend>Задача 4: Изучение стандартов компании</legend>
@@ -75,6 +77,7 @@
                     <label for="task4_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task4_summarize_by_employee" name="task4_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
                 <fieldset class="task">
                     <legend>Задача 5: Участие в планерке</legend>
@@ -90,7 +93,12 @@
                     <label for="task5_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task5_summarize_by_employee" name="task5_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
+
+                <div class="add-task-wrapper">
+                    <button type="button" class="add-task-btn" data-insert-after="5">+ Добавить задачу</button>
+                </div>
 
                 <!-- Задачи 6-7 -->
                 <fieldset class="task">
@@ -107,6 +115,7 @@
                     <label for="task6_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task6_summarize_by_employee" name="task6_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
                 <fieldset class="task">
                     <legend>Задача 7: Формирование плана работы на неделю</legend>
@@ -122,7 +131,12 @@
                     <label for="task7_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task7_summarize_by_employee" name="task7_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
+
+                <div class="add-task-wrapper">
+                    <button type="button" class="add-task-btn" data-insert-after="7">+ Добавить задачу</button>
+                </div>
 
                 <!-- Задачи 8-9 -->
                 <fieldset class="task">
@@ -139,6 +153,7 @@
                     <label for="task8_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task8_summarize_by_employee" name="task8_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
                 <fieldset class="task">
                     <legend>Задача 9: Чтение книг из корпоративной библиотеки</legend>
@@ -154,8 +169,12 @@
                     <label for="task9_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task9_summarize_by_employee" name="task9_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
 
+                <div class="add-task-wrapper">
+                    <button type="button" class="add-task-btn" data-insert-after="9">+ Добавить задачу</button>
+                </div>
 
                 <!-- Задача 10 -->
                 <fieldset class="task">
@@ -172,10 +191,10 @@
                     <label for="task10_summarize_by_employee">Подведение итогов сотрудником:</label>
                     <textarea id="task10_summarize_by_employee" name="task10_summarize_by_employee" rows="2"
                         placeholder="Введите подведение итогов сотрудником"></textarea>
+                    <button type="button" class="delete-task-btn">Удалить задачу</button>
                 </fieldset>
 
             </div>
-            <button id="addTaskButton" type="button">+ Добавить задачу</button>
             <button id="submitButton" type="submit">Отправить</button>
         </div>
 

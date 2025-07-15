@@ -1,99 +1,144 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const tasksContainer = document.getElementById("tasksContainer");
-    const addTaskButton = document.getElementById("addTaskButton");
+// static/adaptation_plan.js
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('adaptationForm');
+    const tasksContainer = document.getElementById('tasksContainer');
+    const addButtons = document.querySelectorAll('.add-task-btn');
 
-    /**
-     * Создать новую задачу
-     */
-    const createTask = (taskNumber) => {
-        const fieldset = document.createElement("fieldset");
-        fieldset.classList.add("task");
+    // Клонируем первый fieldset как шаблон
+    const templateTask = tasksContainer.querySelector('fieldset.task').cloneNode(true);
 
-        fieldset.innerHTML = `
-            <legend>Задача ${taskNumber}: Новая задача</legend>
+    // Обновляет нумерацию, легенду и атрибуты всех задач
+    function updateTaskNumbers() {
+        const tasks = Array.from(tasksContainer.querySelectorAll('fieldset.task'));
 
-            <label for="task${taskNumber}_time">Время на подготовку:</label>
-            <input type="text" id="task${taskNumber}_time" name="task${taskNumber}_time" placeholder="Введите время на подготовку" required>
+        tasks.forEach((task, idx) => {
+            const num = idx + 1;
+            task.dataset.taskId = num;
 
-            <label for="task${taskNumber}_resources">Ресурсы:</label>
-            <textarea id="task${taskNumber}_resources" name="task${taskNumber}_resources" rows="2" placeholder="Введите ресурсы" required></textarea>
+            // Обработка легенды
+            const legend = task.querySelector('legend');
+            const customInput = task.querySelector('input[name*="_custom_title"]');
 
-            <label for="task${taskNumber}_summarize_by_mentor">Подведение итогов наставником:</label>
-            <textarea id="task${taskNumber}_summarize_by_mentor" name="task${taskNumber}_summarize_by_mentor" rows="2" placeholder="Введите подведение итогов наставником"></textarea>
-
-            <label for="task${taskNumber}_summarize_by_employee">Подведение итогов сотрудником:</label>
-            <textarea id="task${taskNumber}_summarize_by_employee" name="task${taskNumber}_summarize_by_employee" rows="2" placeholder="Введите подведение итогов сотрудником"></textarea>
-
-            <button type="button" class="delete-task-button">Удалить задачу</button>
-        `;
-        return fieldset;
-    };
-
-    /**
-     * Обновление номеров задач
-     */
-    const updateTaskNumbers = () => {
-        const allTasks = tasksContainer.querySelectorAll(".task");
-
-        allTasks.forEach((task, index) => {
-            const legend = task.querySelector("legend");
-
-            if (index === allTasks.length - 1) {
-                // Последняя задача
-                legend.textContent = `Задача ${index + 1}: Подведение итогов адаптации`;
+            let desc;
+            if (customInput) {
+                // для динамических задач
+                if (customInput.value.trim()) {
+                    desc = customInput.value.trim();
+                } else {
+                    desc = 'Новая задача';
+                }
             } else {
-                legend.textContent = `Задача ${index + 1}: Новая задача`;
+                // для стартовых задач
+                const parts = legend.textContent.split(':');
+                desc = parts.slice(1).join(':').trim() || 'Новая задача';
             }
+            legend.textContent = `Задача ${num}: ${desc}`;
 
-            task.querySelectorAll("label, input, textarea").forEach((element) => {
-                if (element.hasAttribute("for")) {
-                    element.setAttribute("for", element.getAttribute("for").replace(/\d+/, index + 1));
-                }
-                if (element.id) {
-                    element.id = element.id.replace(/\d+/, index + 1);
-                }
-                if (element.name) {
-                    element.name = element.name.replace(/\d+/, index + 1);
+            // Обновляем каждый label
+            task.querySelectorAll('label').forEach(label => {
+                if (label.htmlFor) {
+                    label.htmlFor = label.htmlFor.replace(/\d+/, num);
                 }
             });
+
+            // Обновляем каждый input/textarea
+            task.querySelectorAll('input, textarea').forEach(el => {
+                if (el.id) el.id = el.id.replace(/\d+/, num);
+                if (el.name) el.name = el.name.replace(/\d+/, num);
+            });
         });
-    };
+    }
 
-    /**
-     * Добавить задачу перед последней (замыкающей)
-     */
-    const addTaskBeforeFinal = () => {
-        const allTasks = tasksContainer.querySelectorAll(".task");
-    
-        if (allTasks.length === 0) return;
-    
-        const finalTask = allTasks[allTasks.length - 1]; // замыкающая
-        const newTask = createTask(allTasks.length); // номер не важен, после updateTaskNumbers() обновим всё
-    
-        tasksContainer.insertBefore(newTask, finalTask);
-        updateTaskNumbers();
-        
-    };
-    /**
-     * Удалить задачу по клику
-     */
-    const handleDeleteTask = (event) => {
-        if (event.target.classList.contains("delete-task-button")) {
-            const taskFieldset = event.target.closest(".task");
-            const allTasks = tasksContainer.querySelectorAll(".task");
+    // Привязывает нажатия по кнопкам удаления
+    function bindDeleteButtons() {
+        tasksContainer.querySelectorAll('.delete-task-btn').forEach(btn => {
+            btn.onclick = () => {
+                const all = tasksContainer.querySelectorAll('fieldset.task');
+                if (all.length > 1) {
+                    btn.closest('fieldset.task').remove();
+                    updateTaskNumbers();
+                } else {
+                    alert('Нельзя удалить последнюю задачу');
+                }
+            };
+        });
+    }
 
-            if (taskFieldset === allTasks[allTasks.length - 1]) {
-                alert("Нельзя удалить последнюю задачу");
-                return;
+    // Обработчики кнопок «Добавить задачу»
+    addButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const wrapper = btn.closest('.add-task-wrapper');
+            const newTask = templateTask.cloneNode(true);
+
+            // Очищаем все поля
+            newTask.querySelectorAll('input, textarea').forEach(el => el.value = '');
+
+            // Вставляем поле «Название задачи» сразу после легенды
+            const legend = newTask.querySelector('legend');
+            const titleLabel = document.createElement('label');
+            titleLabel.textContent = 'Название задачи:';
+            titleLabel.htmlFor = 'task0_custom_title';
+
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.placeholder = 'Введите название задачи';
+            titleInput.required = true;
+            titleInput.id = 'task0_custom_title';
+            titleInput.name = 'task0_custom_title';
+            titleLabel.appendChild(titleInput);
+            legend.insertAdjacentElement('afterend', titleLabel);
+
+            // Убедимся, что есть кнопка удаления
+            if (!newTask.querySelector('.delete-task-btn')) {
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'delete-task-btn';
+                delBtn.textContent = 'Удалить задачу';
+                newTask.appendChild(delBtn);
             }
 
-            taskFieldset.remove();
+            // Вставляем перед обёрткой кнопки «Добавить»
+            tasksContainer.insertBefore(newTask, wrapper);
+
+            // Сначала перенумеруем, потом привяжем удаление
             updateTaskNumbers();
-        }
-    };
+            bindDeleteButtons();
+        });
+    });
 
-    addTaskButton.addEventListener("click", addTaskBeforeFinal);
-    tasksContainer.addEventListener("click", handleDeleteTask);
-
+    // Инициализация на старте
+    bindDeleteButtons();
     updateTaskNumbers();
+
+    // Обработка сабмита формы
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        const tasks = Array.from(tasksContainer.querySelectorAll('fieldset.task')).map(task => ({
+            title: task.querySelector('legend').textContent,
+            time: task.querySelector('input[name*="_time"]').value.trim(),
+            resources: task.querySelector('textarea[name*="_resources"]').value.trim(),
+            customTitle: task.querySelector('input[name*="_custom_title"]')?.value.trim() || null,
+            feedbackMentor: task.querySelector('textarea[name*="_summarize_by_mentor"]').value.trim(),
+            feedbackEmployee: task.querySelector('textarea[name*="_summarize_by_employee"]').value.trim()
+        }));
+
+        fetch('/submit_adaptation_plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tasks })
+        })
+            .then(res => {
+                if (!res.ok) throw new Error(`Status ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                alert('Адаптационный план успешно сохранён');
+                console.log('Server response:', data);
+            })
+            .catch(err => {
+                console.error('Ошибка при отправке:', err);
+                alert('Произошла ошибка при сохранении плана');
+            });
+    });
 });
