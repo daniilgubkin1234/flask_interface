@@ -4,118 +4,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Процессы</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({ startOnLoad: false });</script>
-
+    <title>Бизнес-процессы</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='business_processes.css') }}">
-    <script src="{{ url_for('static', filename='business_processes.js') }}" defer></script>
+    <script src="https://unpkg.com/bpmn-js/dist/bpmn-modeler.development.js"></script>
+    <script src="{{ url_for('static', filename='business_processes.js') }}"></script>
 </head>
 
 <body>
     <div class="container">
         <h2>Бизнес-процессы</h2>
-
         <div class="table-wrapper">
             <table id="bpTable">
                 <thead>
                     <tr>
-                        <th>Событие</th>
-                        <th>Действие</th>
-                        <th>Соединяющие объекты</th>
-                        <th>Развилка</th>
-                        <th>Кто отвечает</th>
+                        <th>Название шага</th>
+                        <th>Тип шага</th>
+                        <th>Кто отвечает<br><span style="font-weight:normal;font-size:12px">(роль для дорожки/схемы)</span></th>
+                        <th>Следующие шаги (ID через запятую)</th>
+                        <th>Условия для перехода<br><span style="font-weight:normal;font-size:12px">(для развилки: да:N2,нет:N3)</span></th>
                         <th>Комментарии, примечания</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Изначально одна пустая строка -->
                     <tr>
-                        <td><input type="text" class="objectField"></td>
-                        <td><input type="text" class="actionField"></td>
-                        <td><input type="text" class="nextObjectsField"></td>
-                        <td><input type="text" class="sentField"></td>
-                        <td><input type="text" class="sentByField"></td>
+                        <td><input type="text" class="stepNameField"></td>
+                        <td>
+                            <select class="stepTypeField">
+                                <option value="start">Старт</option>
+                                <option value="task" selected>Задача</option>
+                                <option value="gateway">Развилка</option>
+                                <option value="end">Завершение</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="roleField"></td>
+                        <td><input type="text" class="nextField" placeholder="N2,N3..."></td>
+                        <td><input type="text" class="conditionField" placeholder="да:N2,нет:N3"></td>
                         <td><input type="text" class="commentsField"></td>
                         <td><button class="deleteRow">Удалить</button></td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Кнопка для добавления новой строки -->
         <button id="addRow">Добавить строку</button>
-
-        <!-- Кнопка для отправки данных -->
-        <button id="submitData">Отправить</button>
-        <button id="buildDiagram">Показать схему</button>
-
+        <button id="buildDiagram">Построить BPMN</button>
+        <button id="exportBPMN">Экспортировать BPMN XML</button>
+        <button id="toggleMode">Режим: Редактирование</button>
         <div class="diagram-wrapper">
             <h3>Схема процесса</h3>
-            <div id="bpmnDiagram" class="mermaid">Нажмите «Показать схему»</div>
-        </div>
-    </div>
-
-    <!-- Навигационный блок -->
-    <div class="recommendation-block">
-        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
-        <div class="recommendation-section">
-            <h4>Диагностика</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Задачи</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business'">Бизнес цель</button>
-                <button onclick="window.location.href='/tasks'">Задачи и план работ и мероприятий</button>
-                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Персонал</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/personnel'">Портрет сотрудника</button>
-                <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
-                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Система стимулирования</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Бизнес-процессы</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
-                <button onclick="window.location.href='/regulations_list'">Перечень регламентов</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Организационная структура</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Дополнительно</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
-            </div>
+            <div id="bpmnContainer" style="width:100%;height:600px;border:1px solid #888;margin-top:10px"></div>
         </div>
     </div>
 </body>
-
 </html>
