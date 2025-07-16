@@ -36,10 +36,12 @@ h2 {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1000px; /* Чтобы поля умещались */
+    min-width: 1000px;
+    /* Чтобы поля умещались */
 }
 
-th, td {
+th,
+td {
     border: 1px solid #ccc;
     padding: 10px;
     text-align: center;
@@ -72,14 +74,6 @@ button {
     transition: background-color 0.3s;
 }
 
-/* Блок для двух кнопок снизу */
-.buttons-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end; /* Чтобы кнопки «липли» к правой стороне */
-    margin-top: 10px;
-}
-
 #addRow {
     background-color: #2A63C2;
     margin-top: 10px;
@@ -90,7 +84,7 @@ button {
     transition: background-color 0.3s;
 }
 
-#submitData, #buildDiagram {
+#buildDiagram {
     background-color: #2A63C2;
     margin: 15px auto 0;
     display: block;
@@ -98,8 +92,18 @@ button {
     width: 200px;
 }
 
+#exportBPMN,
+#toggleMode {
+    background-color: #2A63C2;
+    margin-top: 10px;
+    text-align: center;
+    width: auto;
+    margin-right: 10px;
+}
 
-#submitData:hover {
+#exportBPMN:hover,
+#toggleMode:hover,
+#buildDiagram:hover {
     background-color: #1F4B8F;
     transition: background-color 0.3s;
 }
@@ -119,13 +123,41 @@ input:focus {
     box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
 }
 
+/* Бизнес процессы - схема */
+
+.diagram-wrapper {
+    margin-top: 30px;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .05);
+    overflow-x: auto;
+}
+
+/* Скрытие баннера */
+.bjs-powered-by {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+
+    table {
+        min-width: 700px;
+    }
+}
+
 /* Блок рекомендаций */
 .recommendation-block {
-    background-color: #fafafa; /* более светлый фон */
+    background-color: #fafafa;
+    /* более светлый фон */
     padding: 20px;
     border-radius: 8px;
     margin: 30px 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* легкая тень */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    /* легкая тень */
     text-align: center;
 }
 
@@ -139,7 +171,7 @@ input:focus {
 
 /* Каждая секция (группа ссылок + заголовок) */
 .recommendation-section {
-    border-top: 1px solid #e0e0e0; 
+    border-top: 1px solid #e0e0e0;
     padding-top: 15px;
     margin-top: 15px;
     text-align: center;
@@ -157,7 +189,8 @@ input:focus {
 .button-row {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap; /* если кнопок много, они перенесутся */
+    flex-wrap: wrap;
+    /* если кнопок много, они перенесутся */
     justify-content: center;
 }
 
@@ -178,26 +211,4 @@ input:focus {
 /* Ховер-эффект на кнопках */
 .recommendation-block .button-row button:hover {
     background-color: #1F4B8F;
-}
-
-/* Бизнес процессы - схема */
-
-.diagram-wrapper{
-    margin-top:30px;
-    padding:20px;
-    background:#fafafa;
-    border-radius:8px;
-    box-shadow:0 0 10px rgba(0,0,0,.05);
-    overflow-x:auto;
-  }
-  
-
-
-@media (max-width: 768px) {
-    .container {
-        padding: 20px;
-    }
-    table {
-        min-width: 700px;
-    }
 }

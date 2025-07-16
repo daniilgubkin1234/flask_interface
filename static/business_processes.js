@@ -1,49 +1,63 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const tableBody = document.querySelector('#bpTable tbody');
+// business_processes.js
+
+document.addEventListener("DOMContentLoaded", function () {
+  const table = document.getElementById('bpTable').getElementsByTagName('tbody')[0];
   const addRowBtn = document.getElementById('addRow');
-  const diagramBtn = document.getElementById('buildDiagram');
+  const buildBtn = document.getElementById('buildDiagram');
   const exportBtn = document.getElementById('exportBPMN');
   const toggleBtn = document.getElementById('toggleMode');
+  const bpmnContainer = document.getElementById('bpmnContainer');
   let bpmnModeler = null;
-  let isEditMode = true;      // true = редактирование, false = только просмотр
-  let currentXML = '';        // последний построенный XML
+  let isViewer = true;
+  let lastXml = "";
 
-  // Добавить строку
-  const addRow = () => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="text" class="stepNameField"></td>
-      <td>
-        <select class="stepTypeField">
-            <option value="start">Старт</option>
-            <option value="task" selected>Задача</option>
-            <option value="gateway">Развилка</option>
-            <option value="end">Завершение</option>
-        </select>
-      </td>
-      <td><input type="text" class="roleField"></td>
-      <td><input type="text" class="nextField" placeholder="N2,N3..."></td>
-      <td><input type="text" class="conditionField" placeholder="да:N2,нет:N3"></td>
-      <td><input type="text" class="commentsField"></td>
-      <td><button class="deleteRow">Удалить</button></td>
-    `;
-    tableBody.appendChild(tr);
+  addRowBtn.onclick = function () {
+    const row = table.rows[0].cloneNode(true);
+    Array.from(row.querySelectorAll('input')).forEach(inp => inp.value = "");
+    table.appendChild(row);
+    row.querySelector('.deleteRow').onclick = function () {
+      if (table.rows.length > 1) row.remove();
+    };
   };
 
-  addRowBtn.addEventListener('click', addRow);
-
-  tableBody.addEventListener('click', e => {
-    if (e.target.classList.contains('deleteRow')) {
-      e.target.closest('tr').remove();
-    }
+  Array.from(document.getElementsByClassName('deleteRow')).forEach(btn => {
+    btn.onclick = function () {
+      if (table.rows.length > 1) btn.closest('tr').remove();
+    };
   });
 
+  toggleBtn.onclick = function () {
+    isViewer = !isViewer;
+    toggleBtn.innerText = isViewer ? "Режим: Просмотр" : "Режим: Редактирование";
+    if (lastXml) renderDiagram(lastXml);
+  };
+
+  exportBtn.onclick = function () {
+    if (!lastXml) return;
+    const blob = new Blob([lastXml], { type: "application/xml" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "diagram.bpmn";
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => link.remove(), 50);
+  };
+
+  buildBtn.onclick = function () {
+    const steps = getTableData();
+    const xml = buildBPMNxml(steps);
+    lastXml = xml;
+    renderDiagram(xml);
+    exportBtn.disabled = false;
+    toggleBtn.disabled = false;
+  };
+
   function getTableData() {
-    const rows = Array.from(document.querySelectorAll('#bpTable tbody tr'));
-    return rows.map((tr, i) => {
-      const tds = tr.querySelectorAll('td');
+    const arr = [];
+    Array.from(table.rows).forEach((tr, i) => {
+      const tds = tr.cells;
       const type = tds[1].querySelector('select').value;
-      return {
+      arr.push({
         id: "N" + (i + 1),
         name: tds[0].querySelector('input').value || ("Шаг " + (i + 1)),
         type: type,
@@ -51,121 +65,152 @@ document.addEventListener('DOMContentLoaded', () => {
         next: tds[3].querySelector('input').value,
         conditions: tds[4].querySelector('input').value,
         comment: tds[5].querySelector('input').value
-      };
+      });
     });
+    return arr;
   }
 
+  // ---------- Новый участок: расчет точек входа/выхода для стрелок ----------
+  function getShapeDims(type) {
+    if (type === "start" || type === "end") return { w: 36, h: 36 };
+    if (type === "gateway") return { w: 50, h: 50 };
+    return { w: 80, h: 60 }; // task, default
+  }
+  function getConnectionPoints(fromId, toId, fromType, toType, nodeCoords) {
+    const from = nodeCoords[fromId];
+    const to = nodeCoords[toId];
+    const dFrom = getShapeDims(fromType);
+    const dTo = getShapeDims(toType);
+    // Слева направо
+    if (from.x < to.x) {
+      // Правая точка from, левая точка to
+      const fromPt = { x: from.x + dFrom.w, y: from.y + dFrom.h / 2 };
+      const toPt = { x: to.x, y: to.y + dTo.h / 2 };
+      return [fromPt, toPt];
+    } else if (from.x > to.x) {
+      // Слева from, справа to
+      const fromPt = { x: from.x, y: from.y + dFrom.h / 2 };
+      const toPt = { x: to.x + dTo.w, y: to.y + dTo.h / 2 };
+      return [fromPt, toPt];
+    } else {
+      // Вертикально: снизу from, сверху to
+      const fromPt = { x: from.x + dFrom.w / 2, y: from.y + dFrom.h };
+      const toPt = { x: to.x + dTo.w / 2, y: to.y };
+      return [fromPt, toPt];
+    }
+  }
+  // ------------------------------------------------------------------------
+
   function buildBPMNxml(steps) {
-    const roles = Array.from(new Set(steps.map(s => s.role))).filter(Boolean);
-    const stepsByRole = {};
-    roles.forEach(role => stepsByRole[role] = []);
-    steps.forEach(s => stepsByRole[s.role].push(s));
+    // Вычислим laneSet (роль = lane)
+    let lanes = [];
+    let laneMap = {};
+    steps.forEach(s => {
+      if (!laneMap[s.role]) {
+        laneMap[s.role] = "Lane_" + (lanes.length + 1);
+        lanes.push({ id: laneMap[s.role], name: s.role, nodes: [] });
+      }
+      lanes.find(l => l.id === laneMap[s.role]).nodes.push(s.id);
+    });
 
-    let nodes = '';
-    let flows = '';
-    let laneSet = '<laneSet id="LaneSet_1">';
-    let shapes = '';    // для BPMNShape
-    let edges = '';     // для BPMNEdge
+    // Расположим элементы "по сетке"
+    let nodeCoords = {};
+    let laneY = 80;
+    let laneH = 220;
+    let maxPerLane = Math.max(...lanes.map(l => l.nodes.length));
+    let laneWidth = 240, gap = 40;
+    const SHAPE_LANE_LEFT_PAD = 50; // Можно регулировать на свой вкус
 
-    // Координаты для авто-выравнивания
-    let yStart = 80, yStep = 140, xStart = 200, laneXStep = 220;
-    let nodeCoords = {}; // id -> {x, y}
-
-    // 1. Lanes (laneSet, и собираем координаты для laneShapes)
-    roles.forEach((role, roleIdx) => {
-      let laneId = 'Lane_' + (roleIdx + 1);
-      laneSet += `<lane id="${laneId}" name="${role}">`;
-      stepsByRole[role].forEach((step, stepIdx) => {
-        laneSet += `<flowNodeRef>${step.id}</flowNodeRef>`;
-        // Определяем координаты
-        let x = xStart + laneXStep * roleIdx;
-        let y = yStart + yStep * stepIdx;
-        nodeCoords[step.id] = { x, y };
-        // Генерация BPMNShape (разные размеры для разных типов)
-        let w = 80, h = 60;
-        if (step.type === 'start' || step.type === 'end') { w = h = 36; }
-        else if (step.type === 'gateway') { w = h = 50; }
-        shapes += `<bpmndi:BPMNShape id="Shape_${step.id}" bpmnElement="${step.id}">
-            <dc:Bounds x="${x}" y="${y}" width="${w}" height="${h}"/>
-          </bpmndi:BPMNShape>`;
-        // Элементы процесса
-        if (step.type === 'start') nodes += `<startEvent id="${step.id}" name="${step.name}"/>`;
-        else if (step.type === 'end') nodes += `<endEvent id="${step.id}" name="${step.name}"/>`;
-        else if (step.type === 'gateway') nodes += `<exclusiveGateway id="${step.id}" name="${step.name}"/>`;
-        else nodes += `<task id="${step.id}" name="${step.name}"/>`;
+    lanes.forEach((lane, i) => {
+      lane.nodes.forEach((nid, j) => {
+        let step = steps.find(x => x.id === nid);
+        let dims = getShapeDims(step.type);
+        nodeCoords[nid] = {
+          x: 60 + i * laneWidth + SHAPE_LANE_LEFT_PAD,
+          y: laneY + (laneH / (lane.nodes.length + 1)) * (j + 1) - dims.h / 2
+        };
       });
-      laneSet += `</lane>`;
-    });
-    laneSet += '</laneSet>';
-
-    // 2. Shapes for lanes (backgrounds!)
-    let laneShapes = '';
-    roles.forEach((role, roleIdx) => {
-      let laneId = 'Lane_' + (roleIdx + 1);
-      const stepsInLane = stepsByRole[role];
-      if (!stepsInLane.length) return;
-      const yVals = stepsInLane.map(st => nodeCoords[st.id].y);
-      const minY = Math.min(...yVals) - 40;
-      const maxY = Math.max(...yVals) + 100;
-      let x = xStart + laneXStep * roleIdx - 40;
-      let y = minY;
-      let width = 180;
-      let height = maxY - minY;
-      laneShapes += `<bpmndi:BPMNShape id="Shape_${laneId}" bpmnElement="${laneId}" isHorizontal="true">
-        <dc:Bounds x="${x}" y="${y}" width="${width}" height="${height}"/>
-      </bpmndi:BPMNShape>`;
     });
 
-    // 3. Генерация flows и BPMNEdge
+
+    // Lanes XML
+    let laneSetXml = `<laneSet id="LaneSet_1">` + lanes.map(lane =>
+      `<lane id="${lane.id}" name="${lane.name}">` +
+      lane.nodes.map(nid => `<flowNodeRef>${nid}</flowNodeRef>`).join('') +
+      `</lane>`
+    ).join('') + `</laneSet>`;
+
+    // BPMN Nodes
+    let nodes = "";
     steps.forEach(step => {
+      if (step.type === "start")
+        nodes += `<startEvent id="${step.id}" name="${step.name}"/>`;
+      else if (step.type === "end")
+        nodes += `<endEvent id="${step.id}" name="${step.name}"/>`;
+      else if (step.type === "gateway")
+        nodes += `<exclusiveGateway id="${step.id}" name="${step.name}"/>`;
+      else
+        nodes += `<task id="${step.id}" name="${step.name}"/>`;
+    });
+
+    // BPMN Sequence Flows
+    let flows = "";
+    let edges = "";
+    steps.forEach(step => {
+      // Для gateway: условия
       if (step.type === 'gateway' && step.conditions && /:/.test(step.conditions)) {
         step.conditions.split(',').map(x => x.trim()).forEach(pair => {
           const [cond, target] = pair.split(':').map(z => z.trim());
           if (cond && target) {
             const flowId = `Flow_${step.id}_${target}`;
-            const flow = `<sequenceFlow id="${flowId}" sourceRef="${step.id}" targetRef="${target}">
+            flows += `<sequenceFlow id="${flowId}" sourceRef="${step.id}" targetRef="${target}">
                             <conditionExpression xsi:type="tFormalExpression"><![CDATA[${cond}]]></conditionExpression>
-                          </sequenceFlow>`;
-            flows += flow;
-            // BPMNEdge
-            if (nodeCoords[step.id] && nodeCoords[target]) {
-              edges += `<bpmndi:BPMNEdge id="Edge_${flowId}" bpmnElement="${flowId}">
-                <di:waypoint x="${nodeCoords[step.id].x+40}" y="${nodeCoords[step.id].y+30}"/>
-                <di:waypoint x="${nodeCoords[target].x+40}" y="${nodeCoords[target].y+30}"/>
-              </bpmndi:BPMNEdge>`;
-            }
+                        </sequenceFlow>`;
+            // Добавим корректный waypoint
+            const [fromPt, toPt] = getConnectionPoints(step.id, target, step.type, steps.find(s => s.id === target).type, nodeCoords);
+            edges += `<bpmndi:BPMNEdge id="Edge_${flowId}" bpmnElement="${flowId}">
+                          <di:waypoint x="${fromPt.x}" y="${fromPt.y}"/>
+                          <di:waypoint x="${toPt.x}" y="${toPt.y}"/>
+                        </bpmndi:BPMNEdge>`;
           }
         });
       }
+      // Для обычных шагов
       else if (step.next) {
-        step.next.split(',').map(x => x.trim()).filter(Boolean).forEach(nxt => {
-          const flowId = `Flow_${step.id}_${nxt}`;
-          const flow = `<sequenceFlow id="${flowId}" sourceRef="${step.id}" targetRef="${nxt}"/>`;
-          flows += flow;
-          // BPMNEdge
-          if (nodeCoords[step.id] && nodeCoords[nxt]) {
+        step.next.split(',').map(x => x.trim()).forEach(nxt => {
+          if (nxt) {
+            const flowId = `Flow_${step.id}_${nxt}`;
+            flows += `<sequenceFlow id="${flowId}" sourceRef="${step.id}" targetRef="${nxt}"/>`;
+            const [fromPt, toPt] = getConnectionPoints(step.id, nxt, step.type, steps.find(s => s.id === nxt).type, nodeCoords);
             edges += `<bpmndi:BPMNEdge id="Edge_${flowId}" bpmnElement="${flowId}">
-              <di:waypoint x="${nodeCoords[step.id].x+40}" y="${nodeCoords[step.id].y+30}"/>
-              <di:waypoint x="${nodeCoords[nxt].x+40}" y="${nodeCoords[nxt].y+30}"/>
-            </bpmndi:BPMNEdge>`;
+                          <di:waypoint x="${fromPt.x}" y="${fromPt.y}"/>
+                          <di:waypoint x="${toPt.x}" y="${toPt.y}"/>
+                        </bpmndi:BPMNEdge>`;
           }
         });
       }
     });
 
-    // collaboration и participant
-    const collaboration = `<collaboration id="Collaboration_1">
-      <participant id="Participant_1" processRef="Process_1"/>
-    </collaboration>`;
+    // Диаграмма (shapes)
+    let shapes = "";
+    steps.forEach(step => {
+      const coords = nodeCoords[step.id];
+      const dims = getShapeDims(step.type);
+      shapes += `<bpmndi:BPMNShape id="Shape_${step.id}" bpmnElement="${step.id}">
+                <dc:Bounds x="${coords.x}" y="${coords.y}" width="${dims.w}" height="${dims.h}"/>
+            </bpmndi:BPMNShape>`;
+    });
 
-    // Plane с lanes, shapes, edges
-    let bpmnPlane = `<bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
-      ${laneShapes}
-      ${shapes}
-      ${edges}
-    </bpmndi:BPMNPlane>`;
+    // lanes/пулы для BPMN
+    let planeLanes = lanes.map((lane, i) => {
+      // lane координаты (на каждый role/lane)
+      return `<bpmndi:BPMNShape id="LaneShape_${lane.id}" bpmnElement="${lane.id}">
+                <dc:Bounds x="${60 + i * laneWidth - 12}" y="${laneY - 40}" width="${laneWidth - 20}" height="${laneH + 60}"/>
+            </bpmndi:BPMNShape>`;
+    }).join('');
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    // Итоговый BPMN XML
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
@@ -174,60 +219,36 @@ document.addEventListener('DOMContentLoaded', () => {
  id="Definitions_1"
  targetNamespace="http://bpmn.io/schema/bpmn">
  <process id="Process_1" isExecutable="false">
-   ${laneSet}
+   ${laneSetXml}
    ${nodes}
    ${flows}
  </process>
- ${collaboration}
+ <collaboration id="Collaboration_1">
+      <participant id="Participant_1" processRef="Process_1"/>
+    </collaboration>
  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-   ${bpmnPlane}
+   <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      ${planeLanes}
+      ${shapes}
+      ${edges}
+    </bpmndi:BPMNPlane>
  </bpmndi:BPMNDiagram>
-</definitions>`;
-
-    console.log('BPMN XML:', xml);
-
-    return xml;
+</definitions>
+`;
   }
 
-  function renderBPMN(xml) {
-    if (bpmnModeler) bpmnModeler.destroy();
-    if (isEditMode) {
-      bpmnModeler = new BpmnJS({ container: '#bpmnContainer' }); // Редактируемый (с черными точками)
-    } else {
-      bpmnModeler = new BpmnJS.Viewer({ container: '#bpmnContainer' }); // Только просмотр (нет жирных точек)
-    }
-    bpmnModeler.importXML(xml);
-    currentXML = xml;
+  function renderDiagram(xml) {
+    bpmnContainer.innerHTML = "";
+    if (bpmnModeler) bpmnModeler.destroy && bpmnModeler.destroy();
+    bpmnModeler = isViewer
+      ? new window.BpmnJS.Viewer({ container: "#bpmnContainer" })
+      : new window.BpmnJS({ container: "#bpmnContainer" });
+    bpmnModeler.importXML(xml).catch(err => {
+      bpmnContainer.innerHTML = `<div style="color: red; font-weight:bold;">Ошибка импорта BPMN:<br>${err}</div>`;
+    });
   }
 
-  // Построить BPMN-схему
-  diagramBtn.onclick = async function () {
-    const steps = getTableData();
-    const xml = buildBPMNxml(steps);
-    renderBPMN(xml);
-  };
-
-  // Кнопка-переключатель
-  toggleBtn.onclick = function () {
-    isEditMode = !isEditMode;
-    this.innerText = isEditMode ? "Режим: Редактирование" : "Режим: Просмотр";
-    renderBPMN(currentXML);
-  };
-
-  // Экспорт BPMN XML
-  exportBtn.onclick = function () {
-    if (bpmnModeler) {
-      bpmnModeler.saveXML({ format: true }).then(({ xml }) => {
-        const blob = new Blob([xml], { type: 'application/xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'diagram.bpmn';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
-      });
-    } else {
-      alert("Сначала постройте BPMN схему!");
-    }
-  };
+  // Инициализация: выключаем экспорт и просмотр до построения схемы
+  exportBtn.disabled = true;
+  toggleBtn.disabled = true;
 });
