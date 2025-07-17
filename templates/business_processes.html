@@ -42,7 +42,12 @@
                             </select>
                         </td>
                         <td><input type="text" class="roleField"></td>
-                        <td><input type="text" class="nextField" placeholder="N2,N3..."></td>
+                        <td>
+                            <select class="nextField">
+                                <option value="">—</option>
+                                <!-- Далее через JS генерируем опции -->
+                            </select>
+                        </td>
                         <td><input type="text" class="conditionField" placeholder="да:N2,нет:N3"></td>
                         <td><input type="text" class="commentsField"></td>
                         <td><button class="deleteRow">Удалить</button></td>

@@ -16,6 +16,35 @@ document.addEventListener("DOMContentLoaded", function () {
       let cell = row.querySelector('.rowNum');
       if (cell) cell.innerText = 'N' + (idx + 1);
     });
+    updateNextStepSelects();
+  }
+
+  function updateNextStepSelects() {
+    const rows = Array.from(table.rows);
+    rows.forEach((row, idx) => {
+      const select = row.querySelector('.nextField');
+      if (!select) return;
+      // Сохраним текущее значение перед обновлением
+      const oldValue = select.value;
+      // Очистим опции и добавим пустую
+      select.innerHTML = '<option value="">—</option>';
+      // Добавим актуальные номера (N1, N2, ...), кроме текущего
+      rows.forEach((otherRow, i2) => {
+        if (i2 !== idx) {
+          const id = 'N' + (i2 + 1);
+          const option = document.createElement('option');
+          option.value = id;
+          option.text = id;
+          select.appendChild(option);
+        }
+      });
+      // Если старое значение ещё существует — восстановим выбор, иначе — очистим
+      if (oldValue && Array.from(select.options).some(o => o.value === oldValue)) {
+        select.value = oldValue;
+      } else {
+        select.value = "";
+      }
+    });
   }
 
   addRowBtn.onclick = function () {
@@ -76,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
         name: tds[1].querySelector('input').value || ("Шаг " + (i + 1)),
         type: type,
         role: tds[3].querySelector('input').value.trim() || 'Без роли',
-        next: tds[4].querySelector('input').value,
+        next: tds[4].querySelector('select').value,
         conditions: tds[5].querySelector('input').value,
         comment: tds[6].querySelector('input').value
       });
