@@ -131,8 +131,27 @@ input:focus {
     background: #fafafa;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, .05);
+    /* только горизонтальный скролл, вертикального — нет! */
     overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    min-width: 0;
 }
+
+#bpmnContainer {
+    /* Ширина и высота будут управляться через JS */
+    min-width: 800px;
+    min-height: 600px;
+    /* высоту убери, если она была фиксированной! */
+    width: auto;
+    height: auto;
+    position: relative;
+    display: block;
+    /* скролл только горизонтальный */
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
 
 /* Скрытие баннера */
 .bjs-powered-by {

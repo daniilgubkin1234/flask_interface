@@ -11,18 +11,32 @@ document.addEventListener("DOMContentLoaded", function () {
   let isViewer = true;
   let lastXml = "";
 
+  function updateRowNumbers() {
+    Array.from(table.rows).forEach((row, idx) => {
+      let cell = row.querySelector('.rowNum');
+      if (cell) cell.innerText = 'N' + (idx + 1);
+    });
+  }
+
   addRowBtn.onclick = function () {
     const row = table.rows[0].cloneNode(true);
     Array.from(row.querySelectorAll('input')).forEach(inp => inp.value = "");
     table.appendChild(row);
     row.querySelector('.deleteRow').onclick = function () {
-      if (table.rows.length > 1) row.remove();
+      if (table.rows.length > 1) {
+        row.remove();
+        updateRowNumbers();
+      }
     };
+    updateRowNumbers();
   };
 
   Array.from(document.getElementsByClassName('deleteRow')).forEach(btn => {
     btn.onclick = function () {
-      if (table.rows.length > 1) btn.closest('tr').remove();
+      if (table.rows.length > 1) {
+        btn.closest('tr').remove();
+        updateRowNumbers();
+      }
     };
   });
 
@@ -56,19 +70,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const arr = [];
     Array.from(table.rows).forEach((tr, i) => {
       const tds = tr.cells;
-      const type = tds[1].querySelector('select').value;
+      const type = tds[2].querySelector('select').value;
       arr.push({
         id: "N" + (i + 1),
-        name: tds[0].querySelector('input').value || ("Шаг " + (i + 1)),
+        name: tds[1].querySelector('input').value || ("Шаг " + (i + 1)),
         type: type,
-        role: tds[2].querySelector('input').value.trim() || 'Без роли',
-        next: tds[3].querySelector('input').value,
-        conditions: tds[4].querySelector('input').value,
-        comment: tds[5].querySelector('input').value
+        role: tds[3].querySelector('input').value.trim() || 'Без роли',
+        next: tds[4].querySelector('input').value,
+        conditions: tds[5].querySelector('input').value,
+        comment: tds[6].querySelector('input').value
       });
     });
     return arr;
   }
+
 
   // ---------- Новый участок: расчет точек входа/выхода для стрелок ----------
   function getShapeDims(type) {
@@ -116,12 +131,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // Расположим элементы "по сетке"
     let nodeCoords = {};
     let laneY = 80;
-    let laneH = 220;
-    let maxPerLane = Math.max(...lanes.map(l => l.nodes.length));
     let laneWidth = 240, gap = 40;
-    const SHAPE_LANE_LEFT_PAD = 50; // Можно регулировать на свой вкус
+    const SHAPE_LANE_LEFT_PAD = 50;
 
     lanes.forEach((lane, i) => {
+      let laneH = Math.max(220, 80 + lane.nodes.length * 100);
       lane.nodes.forEach((nid, j) => {
         let step = steps.find(x => x.id === nid);
         let dims = getShapeDims(step.type);
@@ -130,6 +144,8 @@ document.addEventListener("DOMContentLoaded", function () {
           y: laneY + (laneH / (lane.nodes.length + 1)) * (j + 1) - dims.h / 2
         };
       });
+      lane._topY = laneY;
+      lane._height = laneH;
     });
 
 
@@ -203,11 +219,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // lanes/пулы для BPMN
     let planeLanes = lanes.map((lane, i) => {
-      // lane координаты (на каждый role/lane)
       return `<bpmndi:BPMNShape id="LaneShape_${lane.id}" bpmnElement="${lane.id}">
-                <dc:Bounds x="${60 + i * laneWidth - 12}" y="${laneY - 40}" width="${laneWidth - 20}" height="${laneH + 60}"/>
-            </bpmndi:BPMNShape>`;
+            <dc:Bounds x="${60 + i * laneWidth - 12}" y="${lane._topY - 40}" width="${laneWidth - 20}" height="${lane._height + 60}"/>
+        </bpmndi:BPMNShape>`;
     }).join('');
+
+    window.lastSteps = { lanes, steps };
 
     // Итоговый BPMN XML
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -239,16 +256,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function renderDiagram(xml) {
     bpmnContainer.innerHTML = "";
-    if (bpmnModeler) bpmnModeler.destroy && bpmnModeler.destroy();
-    bpmnModeler = isViewer
-      ? new window.BpmnJS.Viewer({ container: "#bpmnContainer" })
-      : new window.BpmnJS({ container: "#bpmnContainer" });
-    bpmnModeler.importXML(xml).catch(err => {
-      bpmnContainer.innerHTML = `<div style="color: red; font-weight:bold;">Ошибка импорта BPMN:<br>${err}</div>`;
-    });
+    if (bpmnModeler) {
+      try { bpmnModeler.destroy && bpmnModeler.destroy(); } catch (e) { }
+      bpmnModeler = null;
+    }
+    setTimeout(() => {
+      bpmnModeler = isViewer
+        ? new window.BpmnJS.Viewer({ container: "#bpmnContainer" })
+        : new window.BpmnJS({ container: "#bpmnContainer" });
+      bpmnModeler.importXML(xml).then(() => {
+        // ---- Динамическая ширина/высота контейнера и SVG ----
+        // 1. Посчитаем ширину схемы (ролей) и высоту (максимум lane)
+        let numRoles = 1;
+        let maxTasks = 1;
+        if (window.lastSteps) {
+          numRoles = window.lastSteps.lanes?.length || 1;
+          maxTasks = Math.max(...window.lastSteps.lanes.map(l => l.nodes.length), 1);
+        }
+        // Рассчитаем размеры (можно подправить под твой лэйаут)
+        let width = Math.max(1000, numRoles * 260 + 120);
+        let height = Math.max(600, maxTasks * 100 + 200);
+
+        // Применяем к контейнеру
+        bpmnContainer.style.minWidth = width + "px";
+        bpmnContainer.style.width = width + "px";
+        bpmnContainer.style.height = height + "px";
+        bpmnContainer.style.minHeight = height + "px";
+
+        // Попробуем задать размер самому SVG (если есть)
+        setTimeout(() => {
+          const svg = bpmnContainer.querySelector('svg');
+          if (svg) {
+            svg.style.minWidth = width + "px";
+            svg.style.width = width + "px";
+            svg.style.height = height + "px";
+            svg.style.minHeight = height + "px";
+          }
+        }, 30);
+      }).catch(err => {
+        bpmnContainer.innerHTML = `<div style="color: red; font-weight:bold;">Ошибка импорта BPMN:<br>${err}</div>`;
+      });
+    }, 30);
   }
+
 
   // Инициализация: выключаем экспорт и просмотр до построения схемы
   exportBtn.disabled = true;
   toggleBtn.disabled = true;
+  updateRowNumbers();
 });
