@@ -127,31 +127,32 @@ input:focus {
 
 .diagram-wrapper {
     margin-top: 30px;
-    padding: 20px;
+    padding: 0 40px 20px 40px;
+    /* одинаково слева и справа */
     background: #fafafa;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, .05);
-    /* только горизонтальный скролл, вертикального — нет! */
     overflow-x: auto;
     overflow-y: hidden;
     width: 100%;
     min-width: 0;
+    box-sizing: border-box;
 }
 
 #bpmnContainer {
-    /* Ширина и высота будут управляться через JS */
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
     min-width: 800px;
     min-height: 600px;
-    /* высоту убери, если она была фиксированной! */
-    width: auto;
-    height: auto;
+    max-width: 100%;
+    box-sizing: border-box;
     position: relative;
     display: block;
-    /* скролл только горизонтальный */
     overflow-x: auto;
     overflow-y: hidden;
+    background: none;
 }
-
 
 /* Скрытие баннера */
 .bjs-powered-by {

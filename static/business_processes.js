@@ -159,23 +159,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Расположим элементы "по сетке"
     let nodeCoords = {};
-    let laneY = 80;
-    let laneWidth = 240, gap = 40;
-    const SHAPE_LANE_LEFT_PAD = 50;
+
+    // "Повернутая" разметка: lane вертикально, задачи горизонтально
+    let laneX = 60;                  // отступ от левого края контейнера
+    let firstBlockPad = 60;          // дополнительный отступ только для первого блока
+    let laneHeight = 120;            // высота одной lane
+    let gapY = 30;                   // вертикальный отступ между lanes
+    let blockWidth = 120;            // ширина одного блока задачи (можно 140)
+    let blockGap = 8;                // маленький горизонтальный отступ между задачами
 
     lanes.forEach((lane, i) => {
-      let laneH = Math.max(220, 80 + lane.nodes.length * 100);
+      let yLaneTop = 80 + i * (laneHeight + gapY);
       lane.nodes.forEach((nid, j) => {
         let step = steps.find(x => x.id === nid);
         let dims = getShapeDims(step.type);
         nodeCoords[nid] = {
-          x: 60 + i * laneWidth + SHAPE_LANE_LEFT_PAD,
-          y: laneY + (laneH / (lane.nodes.length + 1)) * (j + 1) - dims.h / 2
+          x: laneX + firstBlockPad + j * (blockWidth + blockGap),
+          y: yLaneTop + (laneHeight - dims.h) / 2
         };
       });
-      lane._topY = laneY;
-      lane._height = laneH;
+      lane._topY = yLaneTop;
+      lane._leftX = laneX;
+      lane._width = firstBlockPad + (lane.nodes.length - 1) * (blockWidth + blockGap) + blockWidth;
+      lane._height = laneHeight;
     });
+
+
 
 
     // Lanes XML
@@ -249,9 +258,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // lanes/пулы для BPMN
     let planeLanes = lanes.map((lane, i) => {
       return `<bpmndi:BPMNShape id="LaneShape_${lane.id}" bpmnElement="${lane.id}">
-            <dc:Bounds x="${60 + i * laneWidth - 12}" y="${lane._topY - 40}" width="${laneWidth - 20}" height="${lane._height + 60}"/>
-        </bpmndi:BPMNShape>`;
+        <dc:Bounds x="${lane._leftX - 12}" y="${lane._topY - 12}" width="${lane._width + 60}" height="${lane._height + 24}"/>
+    </bpmndi:BPMNShape>`;
     }).join('');
+
 
     window.lastSteps = { lanes, steps };
 
@@ -303,14 +313,15 @@ document.addEventListener("DOMContentLoaded", function () {
           maxTasks = Math.max(...window.lastSteps.lanes.map(l => l.nodes.length), 1);
         }
         // Рассчитаем размеры (можно подправить под твой лэйаут)
-        let width = Math.max(1000, numRoles * 260 + 120);
-        let height = Math.max(600, maxTasks * 100 + 200);
+        let maxContainerWidth = document.querySelector('.container').clientWidth - 80; // 40 + 40 паддинги
+        let width = Math.min(Math.max(800, maxTasks * 140 + 200), maxContainerWidth);
+        let height = Math.max(600, numRoles * 130 + 200 + 200); // + 200 - отступы снизу
 
-        // Применяем к контейнеру
-        bpmnContainer.style.minWidth = width + "px";
         bpmnContainer.style.width = width + "px";
+        bpmnContainer.style.minWidth = width + "px";
         bpmnContainer.style.height = height + "px";
         bpmnContainer.style.minHeight = height + "px";
+        bpmnContainer.style.margin = "0 auto";
 
         // Попробуем задать размер самому SVG (если есть)
         setTimeout(() => {
