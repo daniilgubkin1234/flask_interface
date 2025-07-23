@@ -515,7 +515,17 @@ def save_business_processes():
         return jsonify({"message": "Данные успешно сохранены!"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+@app.route("/get_business_processes", methods=["GET"])
+@login_required
+def get_business_processes():
+    # Получаем последний документ бизнес-процессов для текущего пользователя
+    doc = business_processes_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],   # последний сохранённый документ
+        projection={"_id": 0, "rows": 1}   # только сами данные
+    )
+    # Если документ найден — вернуть rows, иначе пустой массив
+    return jsonify(doc.get('rows', []) if doc else [])
 # -------------------------------------------------------------------------
 # 18.  «3 + 20»
 # -------------------------------------------------------------------------

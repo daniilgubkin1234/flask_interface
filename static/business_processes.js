@@ -6,11 +6,76 @@ document.addEventListener("DOMContentLoaded", function () {
   const buildBtn = document.getElementById('buildDiagram');
   const exportBtn = document.getElementById('exportBPMN');
   const toggleBtn = document.getElementById('toggleMode');
+  const saveBtn = document.getElementById('saveBP');
   const bpmnContainer = document.getElementById('bpmnContainer');
   let bpmnModeler = null;
   let isViewer = true;
   let lastXml = "";
 
+
+   // --- ДОБАВЛЕНО: кнопка для ручного сохранения бизнес-процессов ---
+   
+ 
+   // --- ДОБАВЛЕНО: автоматическая загрузка бизнес-процессов пользователя при загрузке страницы ---
+   fetch('/get_business_processes')
+     .then(res => res.json())
+     .then(rows => {
+       if (rows && rows.length > 0) {
+         // Очищаем таблицу и наполняем строками из БД
+         while (table.rows.length > 1) table.deleteRow(1);
+         rows.forEach((row, idx) => {
+           let tr = idx === 0 ? table.rows[0] : table.rows[0].cloneNode(true);
+           // Заполняем поля из объекта row — ЧЕТКО ПО КЛАССАМ input/select
+           tr.querySelector('.rowNum').innerText = row.num || ('N' + (idx + 1));
+           tr.querySelector('.stepNameField').value = row.name || "";
+           tr.querySelector('.stepTypeField').value = row.type || "task";
+           tr.querySelector('.roleField').value = row.role || "";
+           tr.querySelector('.nextField').value = row.next || "";
+           tr.querySelector('.conditionField').value = row.conditions || "";
+           tr.querySelector('.commentsField').value = row.comment || "";
+           if (idx !== 0) {
+             table.appendChild(tr);
+             // Кнопка удаления строки для новых строк
+             tr.querySelector('.deleteRow').onclick = function () {
+               if (table.rows.length > 1) {
+                 tr.remove();
+                 updateRowNumbers();
+               }
+             };
+           }
+         });
+         updateRowNumbers();
+       }
+     });
+ 
+   // --- ДОБАВЛЕНО: функция для преобразования таблицы в массив объектов (для сохранения) ---
+   function getTableRowsData() {
+     return Array.from(table.rows).map((tr, idx) => {
+       return {
+         num: tr.querySelector('.rowNum').innerText,
+         name: tr.querySelector('.stepNameField').value,
+         type: tr.querySelector('.stepTypeField').value,
+         role: tr.querySelector('.roleField').value,
+         next: tr.querySelector('.nextField').value,
+         conditions: tr.querySelector('.conditionField').value,
+         comment: tr.querySelector('.commentsField').value
+       };
+     });
+   }
+ 
+   // --- ДОБАВЛЕНО: обработчик на кнопку "Сохранить бизнес-процессы" ---
+   saveBtn.addEventListener('click', function () {
+     const rows = getTableRowsData();
+     fetch('/save_business_processes', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ rows: rows })
+     })
+     .then(res => res.json())
+     .then(data => alert(data.message || "Данные сохранены!"))
+     .catch(e => alert("Ошибка сохранения: " + e));
+   });
+ 
   function updateRowNumbers() {
     Array.from(table.rows).forEach((row, idx) => {
       let cell = row.querySelector('.rowNum');
