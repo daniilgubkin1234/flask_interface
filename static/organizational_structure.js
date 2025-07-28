@@ -1,6 +1,5 @@
 /************************************************************
- *  Организационная структура · v2024-05-rev2
- *  Отправляем одним документом  { rows:[ … ] }
+ *  Организационная структура · автозагрузка + автосохранение
  ************************************************************/
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addBtn = document.getElementById('addRow');
     const sendBtn = document.getElementById('submitData');
 
-    /* ───────── helpers ───────── */
+    // --- helpers (твои) ---
     const uuid = crypto.randomUUID
         ? () => crypto.randomUUID()
         : () => 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -63,51 +62,38 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshAllMultiboxes();
     }
 
-    /* ───────── события ───────── */
-    document.addEventListener('click', e => {
-        if (e.target.classList.contains('multibox')) {
-            const cell = e.target.closest('.subs-cell');
-            const list = cell.querySelector('.multibox-list');
-            const open = list.style.display === 'block';
-            document.querySelectorAll('.multibox-list').forEach(l => l.style.display = 'none');
-            if (!open) { buildMultibox(cell); list.style.display = 'block'; }
-            return;
-        }
+    // --- автозагрузка данных из БД ---
+    fetch('/get_organizational_structure')
+        .then(res => res.json())
+        .then(rows => {
+            if (!rows || !Array.isArray(rows) || !rows.length) return;
 
-        if (e.target.closest('.multibox-list')) {
-            const cell = e.target.closest('.subs-cell');
-            const hidden = cell.querySelector('.subordinates');
-            const vals = [...cell.querySelectorAll('input:checked')].map(i => i.value);
-            hidden.value = JSON.stringify(vals);
-            setMultiboxCaption(cell);
-            return;
-        }
+            // Очищаем все строки кроме первой
+            while (tbody.rows.length > 1) tbody.deleteRow(1);
 
-        document.querySelectorAll('.multibox-list').forEach(l => l.style.display = 'none');
-    });
-
-    addBtn.addEventListener('click', () => {
-        const tpl = tbody.rows[0].cloneNode(true);
-        tpl.querySelectorAll('input').forEach(i => i.value = '');
-        tpl.querySelectorAll('select').forEach(s => s.innerHTML = '');
-        tpl.querySelector('.subordinates').value = '[]';
-        tbody.appendChild(tpl);
-        syncTable();
-    });
-
-    tbody.addEventListener('input', e => {
-        if (e.target.classList.contains('position')) syncTable();
-    });
-
-    tbody.addEventListener('click', e => {
-        if (e.target.classList.contains('deleteRow') && tbody.rows.length > 1) {
-            e.target.closest('tr').remove();
+            // Заполняем строки из базы
+            rows.forEach((row, idx) => {
+                let tr = idx === 0 ? tbody.rows[0] : tbody.rows[0].cloneNode(true);
+                tr.querySelector('.position').value = row.position || '';
+                tr.querySelector('.staff-count').value = row.staffCount || 1;
+                // supervisorIndex: 1-based (или null)
+                syncTable(); // чтобы options появились
+                if (row.supervisorIndex && tr.querySelector('.supervisor')) {
+                    const options = [...tr.querySelector('.supervisor').options];
+                    // Ищем опцию с value="2) Руководитель"
+                    const needed = options.find(opt =>
+                        (opt.value || '').startsWith(`${row.supervisorIndex})`)
+                    );
+                    if (needed) tr.querySelector('.supervisor').value = needed.value;
+                }
+                // --- если есть еще поля (замещение, multibox и т.д.), здесь заполняй их ---
+                if (idx !== 0) tbody.appendChild(tr);
+            });
             syncTable();
-        }
-    });
+            drawOrgChart(rows);
+        });
 
-    /* ───────── сбор данных ───────── */
-    // --- 1) Собираем строки из таблицы, включая staffCount и чистый supervisorIndex ---
+    // --- функция сбора данных ---
     function collectRows() {
         return [...tbody.rows].map((tr, idx) => {
             // rawSupervisorValue, например "2) Руководитель"
@@ -119,28 +105,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return {
                 position: tr.querySelector('.position').value.trim(),
-                supervisorIndex: supervisorIndex,       // число или null
+                supervisorIndex: supervisorIndex,
                 staffCount: Math.max(1, parseInt(tr.querySelector('.staff-count').value, 10) || 1)
+                // ... (если нужно, добавь остальные поля)
             };
         });
     }
 
-    /* ───────── отправка ───────── */
-    sendBtn.addEventListener('click', () => {
+    // --- автосохранение ---
+    function autoSaveOrgStructure() {
         const rows = collectRows();
-        const payload = { rows };                   // <— здесь главное изменение
-
         fetch('/save_organizational_structure', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ rows })
         })
-            .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-            .then(() => {
-                alert('Данные успешно сохранены!');
-                drawOrgChart(rows);                     // диаграмму строим из локального массива
-            })
-            .catch(err => console.error('Ошибка сохранения:', err));
+        .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+        .then(() => {
+            // Можно тут показывать индикатор "Сохранено"
+        })
+        .catch(err => console.error('Ошибка автосохранения:', err));
+    }
+
+    // --- события ---
+    document.addEventListener('click', e => {
+        if (e.target.classList.contains('multibox')) {
+            const cell = e.target.closest('.subs-cell');
+            const list = cell.querySelector('.multibox-list');
+            const open = list.style.display === 'block';
+            document.querySelectorAll('.multibox-list').forEach(l => l.style.display = 'none');
+            if (!open) { buildMultibox(cell); list.style.display = 'block'; }
+            return;
+        }
+        if (e.target.closest('.multibox-list')) {
+            const cell = e.target.closest('.subs-cell');
+            const hidden = cell.querySelector('.subordinates');
+            const vals = [...cell.querySelectorAll('input:checked')].map(i => i.value);
+            hidden.value = JSON.stringify(vals);
+            setMultiboxCaption(cell);
+            autoSaveOrgStructure(); // автосохраняем!
+            return;
+        }
+        document.querySelectorAll('.multibox-list').forEach(l => l.style.display = 'none');
+    });
+
+    addBtn.addEventListener('click', () => {
+        const tpl = tbody.rows[0].cloneNode(true);
+        tpl.querySelectorAll('input').forEach(i => i.value = '');
+        tpl.querySelectorAll('select').forEach(s => s.innerHTML = '');
+        tpl.querySelector('.subordinates').value = '[]';
+        tbody.appendChild(tpl);
+        syncTable();
+        autoSaveOrgStructure();
+    });
+
+    tbody.addEventListener('input', e => {
+        if (e.target.classList.contains('position')) syncTable();
+        autoSaveOrgStructure();
+    });
+
+    tbody.addEventListener('change', autoSaveOrgStructure);
+
+    tbody.addEventListener('click', e => {
+        if (e.target.classList.contains('deleteRow') && tbody.rows.length > 1) {
+            e.target.closest('tr').remove();
+            syncTable();
+            autoSaveOrgStructure();
+        }
+    });
+
+    sendBtn.addEventListener('click', () => {
+        const rows = collectRows();
+        fetch('/save_organizational_structure', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows })
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+        .then(() => {
+            alert('Данные успешно сохранены!');
+            drawOrgChart(rows);
+        })
+        .catch(err => console.error('Ошибка сохранения:', err));
     });
 
     syncTable();
@@ -149,28 +195,19 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ====== Google OrgChart ====== */
 google.charts.load('current', { packages: ['orgchart'] });
 
-// --- 2) Строим массив для Google OrgChart без лишнего ROOT,
-//     причём при staffCount>1 цепляем дополнительными узлами под первым ---
 function buildChartData(rows) {
     const list = [];
-
     rows.forEach((r, idx) => {
         if (!r.position) return;
-        const baseNum = idx + 1;            // 1-based ID
-        const firstId = `n${baseNum}_1`;    // например "n3_1"
-
-        // чей parent?
+        const baseNum = idx + 1;
+        const firstId = `n${baseNum}_1`;
         const parentId = r.supervisorIndex
-            ? `n${r.supervisorIndex}_1`       // первый узел supervisor-а
-            : '';                              // пустая строка — Google считает корнем
-
-        // 1) всегда первый «экземпляр» под parentId
+            ? `n${r.supervisorIndex}_1`
+            : '';
         list.push([
             { v: firstId, f: `<div class="node">${r.position}</div>` },
             parentId
         ]);
-
-        // 2) если их несколько — цепочкой друг под другом
         for (let i = 2; i <= r.staffCount; i++) {
             const prevId = `n${baseNum}_${i - 1}`;
             const currId = `n${baseNum}_${i}`;
@@ -180,21 +217,17 @@ function buildChartData(rows) {
             ]);
         }
     });
-
     return list;
 }
 
-// --- 3) Основная функция рисования схемы ---
 function drawOrgChart(rows) {
     const dataTable = new google.visualization.DataTable();
     dataTable.addColumn('string', 'Name');
     dataTable.addColumn('string', 'Manager');
     dataTable.addColumn('string', 'ToolTip');
-
     buildChartData(rows).forEach(([node, parent]) => {
         dataTable.addRow([node, parent, '']);
     });
-
     const chart = new google.visualization.OrgChart(
         document.getElementById('orgChart')
     );
@@ -207,13 +240,10 @@ function drawOrgChart(rows) {
 
 document.getElementById('downloadChart').addEventListener('click', () => {
     const chartBlock = document.getElementById('orgChart');
-
     if (!chartBlock || !chartBlock.childElementCount) {
         alert('Сначала нажмите «Отправить», чтобы построить схему.');
         return;
     }
-
-    /* 1. Снимаем ограничения прокрутки, чтобы html2canvas «увидел» весь контент */
     const originalOverflow = chartBlock.style.overflow;
     const originalWidth = chartBlock.style.width;
     const originalHeight = chartBlock.style.height;
@@ -222,26 +252,22 @@ document.getElementById('downloadChart').addEventListener('click', () => {
     chartBlock.style.width = chartBlock.scrollWidth + 'px';
     chartBlock.style.height = chartBlock.scrollHeight + 'px';
 
-    /* 2. Делаем скриншот */
     html2canvas(chartBlock, { backgroundColor: null })
         .then(canvas => {
-            /* 3. Возвращаем старые размеры */
             chartBlock.style.overflow = originalOverflow;
             chartBlock.style.width = originalWidth;
             chartBlock.style.height = originalHeight;
 
-            /* 4. Скачиваем PNG */
             const link = document.createElement('a');
             link.href = canvas.toDataURL('image/png');
             link.download = 'Организационная структура. Cхема подчинения.png';
-            document.body.appendChild(link);   // для Safari
+            document.body.appendChild(link);
             link.click();
             link.remove();
         })
         .catch(err => {
             console.error('Не удалось сохранить схему:', err);
             alert('Ошибка сохранения схемы. Подробности в консоли.');
-            /* возвращаем размеры даже в случае ошибки */
             chartBlock.style.overflow = originalOverflow;
             chartBlock.style.width = originalWidth;
             chartBlock.style.height = originalHeight;

@@ -1,4 +1,3 @@
-// static/adaptation_plan.js
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('adaptationForm');
     const tasksContainer = document.getElementById('tasksContainer');
@@ -7,6 +6,55 @@ document.addEventListener('DOMContentLoaded', () => {
     // Клонируем первый fieldset как шаблон
     const templateTask = tasksContainer.querySelector('fieldset.task').cloneNode(true);
 
+    // --- ЗАГРУЗКА данных из базы ---
+    fetch('/get_adaptation_plan')
+        .then(res => res.json())
+        .then(tasks => {
+            if (tasks && tasks.length > 0) {
+                // Очищаем всё кроме первого шаблона
+                while (tasksContainer.querySelectorAll('fieldset.task').length > 1)
+                    tasksContainer.querySelectorAll('fieldset.task')[1].remove();
+
+                tasks.forEach((task, idx) => {
+                    let taskEl = idx === 0 ? tasksContainer.querySelector('fieldset.task') : templateTask.cloneNode(true);
+
+                    // Заполняем значения
+                    taskEl.querySelector('legend').textContent = task.title || `Задача ${idx + 1}`;
+                    taskEl.querySelector('input[name*="_time"]').value = task.time || '';
+                    taskEl.querySelector('textarea[name*="_resources"]').value = task.resources || '';
+                    if (taskEl.querySelector('input[name*="_custom_title"]') && task.customTitle)
+                        taskEl.querySelector('input[name*="_custom_title"]').value = task.customTitle;
+                    taskEl.querySelector('textarea[name*="_summarize_by_mentor"]').value = task.feedbackMentor || '';
+                    taskEl.querySelector('textarea[name*="_summarize_by_employee"]').value = task.feedbackEmployee || '';
+
+                    if (idx !== 0) tasksContainer.insertBefore(taskEl, document.querySelector('.add-task-wrapper'));
+                });
+                updateTaskNumbers();
+                bindDeleteButtons();
+            }
+        });
+
+    // --- ФУНКЦИЯ автосохранения ---
+    function autoSavePlan() {
+        const tasks = Array.from(tasksContainer.querySelectorAll('fieldset.task')).map(task => ({
+            title: task.querySelector('legend').textContent,
+            time: task.querySelector('input[name*="_time"]').value.trim(),
+            resources: task.querySelector('textarea[name*="_resources"]').value.trim(),
+            customTitle: task.querySelector('input[name*="_custom_title"]')?.value.trim() || null,
+            feedbackMentor: task.querySelector('textarea[name*="_summarize_by_mentor"]').value.trim(),
+            feedbackEmployee: task.querySelector('textarea[name*="_summarize_by_employee"]').value.trim()
+        }));
+        fetch('/submit_adaptation_plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tasks })
+        });
+    }
+
+    // Навешиваем автосохранение на все поля задач
+    tasksContainer.addEventListener('input', () => {
+        autoSavePlan();
+    });
     // Обновляет нумерацию, легенду и атрибуты всех задач
     function updateTaskNumbers() {
         const tasks = Array.from(tasksContainer.querySelectorAll('fieldset.task'));

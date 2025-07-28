@@ -6,34 +6,80 @@ document.addEventListener('DOMContentLoaded', function () {
     const block3Result = document.getElementById('block3-result');
     const block4Result = document.getElementById('block4-result');
     const block5Result = document.getElementById('block5-result');
+    const form = document.getElementById('survey-form');
 
+    // --- 1. АВТОЗАГРУЗКА ОТВЕТОВ ---
+    fetch('/get_user_survey')
+        .then(res => res.json())
+        .then(surveyData => {
+            if (!surveyData || Object.keys(surveyData).length === 0) return;
+            // Восстанавливаем все поля
+            document.querySelectorAll("textarea, input[type='text'], input[type='date'], input[type='number']").forEach(el => {
+                if (surveyData[el.name] !== undefined) el.value = surveyData[el.name];
+            });
+            document.querySelectorAll("input[type='radio']").forEach(el => {
+                if (surveyData[el.name] === el.value) el.checked = true;
+            });
+            document.querySelectorAll('.custom-select').forEach(sel => {
+                const id = sel.dataset.id;
+                if (surveyData[id]) {
+                    const trigger = sel.querySelector('.custom-select-trigger');
+                    const option = [...sel.querySelectorAll('.custom-option')].find(opt => opt.dataset.value === surveyData[id]);
+                    if (option) {
+                        trigger.textContent = option.textContent;
+                        trigger.dataset.value = surveyData[id];
+                        option.classList.add('selected');
+                    }
+                }
+            });
+        });
+
+    // --- 2. АВТОСОХРАНЕНИЕ ---
+    function autoSaveSurvey() {
+        let surveyData = {};
+        document.querySelectorAll("textarea, input, .custom-select-trigger").forEach(element => {
+            if (element.tagName === "TEXTAREA" || element.type === "text" || element.type === "date" || element.type === "number") {
+                surveyData[element.name] = element.value.trim();
+            } else if (element.type === "radio" && element.checked) {
+                surveyData[element.name] = element.value;
+            } else if (element.classList.contains("custom-select-trigger")) {
+                surveyData[element.parentElement.dataset.id] = element.dataset.value;
+            }
+        });
+        fetch("/submit_survey", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(surveyData)
+        });
+    }
+
+    // --- ВЕШАЕМ автосохранение на всё ---
+    form.addEventListener("input", autoSaveSurvey);
+    form.addEventListener("change", autoSaveSurvey);
+
+    // --- 3. Вся твоя логика для рекомендаций, графиков и submit ---
     function closeAllSelects() {
         document.querySelectorAll('.custom-select.open').forEach(select => select.classList.remove('open'));
     }
 
-    // Обработка кастомных выпадающих списков
     document.querySelectorAll('.custom-select').forEach(select => {
         const trigger = select.querySelector('.custom-select-trigger');
         const options = select.querySelectorAll('.custom-option');
-
         trigger.addEventListener('click', function () {
             closeAllSelects();
             select.classList.toggle('open');
         });
-
         options.forEach(option => {
             option.addEventListener('click', function () {
                 trigger.textContent = this.textContent;
                 trigger.dataset.value = this.dataset.value;
-                console.log(`Выбрано: ${this.dataset.value}`);
-
                 options.forEach(opt => opt.classList.remove('selected'));
                 this.classList.add('selected');
                 select.classList.remove('open');
+                autoSaveSurvey(); // автосохраняем на кастомных селектах тоже!
             });
         });
     });
-
     document.addEventListener('click', function (e) {
         if (!e.target.closest('.custom-select')) closeAllSelects();
     });
@@ -206,96 +252,67 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
 
     // Обработка отправки формы
-    const form = document.querySelector('form');
-
     form.addEventListener('submit', function (event) {
         event.preventDefault();
-        recommendationsList.innerHTML = ''; // Очищаем предыдущие рекомендации
-
+        recommendationsList.innerHTML = '';
         block1Result.textContent = '';
         block2Result.textContent = '';
         block3Result.textContent = '';
         block4Result.textContent = '';
         block5Result.textContent = '';
-
         const chartContainer = document.getElementById('chart-container');
-        chartContainer.innerHTML = '<canvas id="radarChart"></canvas>'; // Удаляем старую диаграмму
-
+        chartContainer.innerHTML = '<canvas id="radarChart"></canvas>';
         try {
             const allRecommendations = [];
-
-            // Подсчёт баллов для всех блоков
             const block1Sum = calculateBlockScore(block1Questions, allRecommendations);
             const block2Sum = calculateBlockScore(block2Questions, allRecommendations);
             const block3Sum = calculateBlockScore(block3Questions, allRecommendations);
             const block4Sum = calculateBlockScore(block4Questions, allRecommendations);
             const block5Sum = calculateBlockScore(block5Questions, allRecommendations);
-
             const generalRecommendation = `После того, как вы осуществили какие-либо изменения в вашей системе управления компанией, необходимо подумать о том, как вы будете реализовывать эти изменения на практике. Это не всегда простая задача, и вы можете столкнуться с сопротивлением коллектива и даже с саботажем. Рекомендуем подготовить план действий, чтобы минимизировать этот риск.`;
             allRecommendations.push(generalRecommendation);
-
-
-            // Отображение результатов блоков
             block1Result.textContent = `Задачи: ${block1Sum}`;
             block2Result.textContent = `Люди: ${block2Sum}`;
             block3Result.textContent = `Система стимулирования: ${block3Sum}`;
             block4Result.textContent = `Бизнес-процессы: ${block4Sum}`;
             block5Result.textContent = `Организационная структура: ${block5Sum}`;
-            
             const results = document.getElementById('results');
             results.style.display = 'block';
-            recommendations.style.display = 'block'; // Отображаем рекомендации
-            const chartContainer = document.getElementById('chart-container');
+            recommendations.style.display = 'block';
             chartContainer.style.display = 'block';
-
-            // Добавляем рекомендации в список
             allRecommendations.forEach(rec => {
                 const li = document.createElement('li');
-                li.innerHTML = rec; // заменил textContent на innerHTML
+                li.innerHTML = rec;
                 recommendationsList.appendChild(li);
             });
-
-            // Построение диаграммы
             drawRadarChart([block1Sum, block2Sum, block3Sum, block4Sum, block5Sum]);
-
-            // Функция плавной прокрутки
+            // плавная прокрутка к результатам
             function smoothScrollTo(targetY, duration) {
                 const startY = window.scrollY;
                 const distance = targetY - startY;
                 let startTime = null;
-            
                 function animationStep(timestamp) {
                     if (!startTime) startTime = timestamp;
                     const elapsedTime = timestamp - startTime;
-                    const progress = Math.min(elapsedTime / duration, 1); // Убедимся, что прогресс <= 1
-                    const ease = easeInOutQuad(progress); // Используем функцию плавности
+                    const progress = Math.min(elapsedTime / duration, 1);
+                    const ease = easeInOutQuad(progress);
                     window.scrollTo(0, startY + distance * ease);
-            
-                    if (progress < 1) {
-                        requestAnimationFrame(animationStep);
-                    }
+                    if (progress < 1) requestAnimationFrame(animationStep);
                 }
-            
                 requestAnimationFrame(animationStep);
             }
-            
-            // Функция плавности (Ease In-Out)
             function easeInOutQuad(t) {
                 return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
             }
-            
-            // Прокрутка до блока результатов
             const resultsPosition = results.getBoundingClientRect().top + window.scrollY;
-            smoothScrollTo(resultsPosition, 1500); // Прокрутка длится 1000 мс
-
-
+            smoothScrollTo(resultsPosition, 1500);
         } catch (error) {
             console.error('Ошибка обработки формы:', error.message);
-            alert(error.message); // Показываем сообщение об ошибке пользователю
+            alert(error.message);
         }
     });
 
-    // Функция для построения диаграммы
+    // === Функции для диаграммы и подсчёта ===
     function drawRadarChart(data) {
         const ctx = document.getElementById('radarChart').getContext('2d');
         new Chart(ctx, {
@@ -320,13 +337,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Функция подсчёта баллов и добавления рекомендаций
     function calculateBlockScore(questions, recommendations) {
-        
         return questions.reduce((sum, { id, validAnswers, scoreMap, recommendation }) => {
             const trigger = document.querySelector(`.custom-select[data-id="${id}"] .custom-select-trigger`);
             const value = trigger.dataset.value || '';
-            console.log(`ID: ${id}, Value: ${value}, ValidAnswers: ${validAnswers}`);
             if (!validAnswers.includes(value)) {
                 throw new Error(`Некорректный ответ для вопроса с ID: ${id}`);
             }
@@ -335,5 +349,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 0);
     }
 });
-
 

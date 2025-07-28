@@ -171,6 +171,15 @@ def star_navigation():
 @app.route('/survey_ai')
 def survey_ai():
     return render_template('survey_ai.html')
+@app.route("/get_user_survey", methods=["GET"])
+@login_required
+def get_user_survey():
+    doc = survey_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],
+        projection={"_id": 0, "user_answers": 1}
+    )
+    return jsonify(doc["user_answers"] if doc and "user_answers" in doc else {})
 
 # Получение всех задач
 
@@ -261,9 +270,13 @@ def add_employee():
 @login_required
 def get_employee():
     name = request.args.get("name")
+    query = {"owner_id": ObjectId(current_user.id)}
+    if name:
+        query["name"] = name
+    # Если имя не указано — берём последний профиль пользователя
     employee = employees_collection.find_one(
-        # --- OAuth: добавлено ---
-        {"name": name, "owner_id": ObjectId(current_user.id)}
+        query,
+        sort=[("_id", -1)]
     )
     if employee:
         employee["_id"] = str(employee["_id"])
@@ -305,6 +318,15 @@ def add_business_goal():
     data["owner_id"] = ObjectId(current_user.id)
     business_goal_collection.insert_one(data)
     return jsonify({"message": "Бизнес-цель добавлена успешно!"}), 201
+@app.route("/get_business_goal", methods=["GET"])
+@login_required
+def get_business_goal():
+    doc = business_goal_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],
+        projection={"_id": 0}
+    )
+    return jsonify(doc if doc else {})
 
 # -------------------------------------------------------------------------
 # 11.  Опросник (tasks.html)
@@ -372,7 +394,15 @@ def submit_adaptation_plan():
         "message": "Адаптационный план успешно сохранен!",
         "plan_id": str(result.inserted_id)
     }), 201
-
+@app.route("/get_adaptation_plan", methods=["GET"])
+@login_required
+def get_adaptation_plan():
+    doc = adaptation_plans_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],
+        projection={"_id": 0, "tasks": 1}
+    )
+    return jsonify(doc.get("tasks", []) if doc else [])
 # -------------------------------------------------------------------------
 # 13.  Протокол совещания
 # -------------------------------------------------------------------------
@@ -397,6 +427,15 @@ def save_meeting_protocol():
         "message": "Протокол успешно сохранен!",
         "plan_id": str(result.inserted_id)
     }), 201
+@app.route("/get_meeting_protocol", methods=["GET"])
+@login_required
+def get_meeting_protocol():
+    doc = meeting_protocol_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],
+        projection={"_id": 0}
+    )
+    return jsonify(doc if doc else {})
 
 # -------------------------------------------------------------------------
 # 14.  Система стимулирования
@@ -419,6 +458,15 @@ def save_stimulation():
     data["owner_id"] = ObjectId(current_user.id)
     stimulation_system_collection.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
+@app.route("/get_stimulation_system", methods=["GET"])
+@login_required
+def get_stimulation_system():
+    doc = stimulation_system_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],
+        projection={"_id": 0}
+    )
+    return jsonify(doc if doc else {})
 
 # -------------------------------------------------------------------------
 # 15.  Должностные инструкции
@@ -445,7 +493,15 @@ def submit_job_description():
         "doc_id": str(result.inserted_id)
     }), 201
 
-
+@app.route("/get_job_description", methods=["GET"])
+@login_required
+def get_job_description_for_user():
+    doc = job_description_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],
+        projection={"_id": 0}
+    )
+    return jsonify(doc if doc else {})
 @app.route("/get_job_description/<doc_id>", methods=["GET"])
 @login_required
 def get_job_description(doc_id):
@@ -547,7 +603,15 @@ def save_three_plus_twenty():
     data["owner_id"] = ObjectId(current_user.id)
     three_plus_twenty_collection.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
-
+@app.route("/get_three_plus_twenty", methods=["GET"])
+@login_required
+def get_three_plus_twenty():
+    doc = three_plus_twenty_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("_id", -1)],
+        projection={"_id": 0}
+    )
+    return jsonify(doc if doc else {})
 # -------------------------------------------------------------------------
 # 19.  Перечень регламентов
 # -------------------------------------------------------------------------
