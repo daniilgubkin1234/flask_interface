@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
         {
             id: 'strategy',
             validAnswers: ['да', 'нет'],
-            recommendation: `Сразу же сформировать стратегию компании бывает непросто. Рекомендуем начать с формирования бизнес-цели на ближайший финансовый год. Шаблон доступен по <a href="/business" target="_blank">ссылке</a>.`, 
+            recommendation: `Сразу же сформировать стратегию компании бывает непросто. Рекомендуем начать с формирования бизнес-цели на ближайший финансовый год. Шаблон доступен по <a href="/business" target="_blank">ссылке</a>.`,
             scoreMap: { 'да': 1, 'нет': 0 }
         },
         {
@@ -102,9 +102,9 @@ document.addEventListener('DOMContentLoaded', function () {
             id: 'overdue',
             validAnswers: ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'],
             recommendation: `Работа с просроченными задачами занимает очень значительную часть операционной деятельности любого руководителя. Чтобы снизить это время необходимо не только четко ставить задачу, но и указывать ее сроки и результат, который вы хотите достичь, а также регулярно проводить контрольные мероприятия. Легче всего это осуществлять в программном продукте. Шаблон доступен по <a href="/tasks" target="_blank">ссылке</a>.`,
-            
-            scoreMap: { '10': 1, '20': 1, '30': 1, '40': 1, '50': 0, '60': 0, '70': 0, '80': 0,'90': 0, '100': 0 }
-        },        
+
+            scoreMap: { '10': 1, '20': 1, '30': 1, '40': 1, '50': 0, '60': 0, '70': 0, '80': 0, '90': 0, '100': 0 }
+        },
         {
             id: 'meeting_protocol',
             validAnswers: ['да', 'нет'],
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const block3Sum = calculateBlockScore(block3Questions, allRecommendations);
             const block4Sum = calculateBlockScore(block4Questions, allRecommendations);
             const block5Sum = calculateBlockScore(block5Questions, allRecommendations);
-            const generalRecommendation = `После того, как вы осуществили какие-либо изменения в вашей системе управления компанией, необходимо подумать о том, как вы будете реализовывать эти изменения на практике. Это не всегда простая задача, и вы можете столкнуться с сопротивлением коллектива и даже с саботажем. Рекомендуем подготовить план действий, чтобы минимизировать этот риск.`;
+            const generalRecommendation = `После того, как вы спланировали какие-либо изменения в вашей системе управления компанией, необходимо подумать о том, как вы будете реализовывать эти изменения на практике. Это не всегда простая задача, и вы можете столкнуться с сопротивлением коллектива и даже с саботажем. Рекомендуем подготовить план действий, чтобы минимизировать этот риск.`;
             allRecommendations.push(generalRecommendation);
             block1Result.textContent = `Задачи: ${block1Sum}`;
             block2Result.textContent = `Люди: ${block2Sum}`;
@@ -349,4 +349,3 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 0);
     }
 });
-
