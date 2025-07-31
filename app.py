@@ -454,10 +454,14 @@ def save_stimulation():
     data = request.json
     if not data:
         return jsonify({"error": "Нет данных для сохранения"}), 400
-    # --- OAuth: добавлено ---
-    data["owner_id"] = ObjectId(current_user.id)
-    stimulation_system_collection.insert_one(data)
-    return jsonify({"message": "Данные успешно сохранены!"}), 201
+    owner_id = ObjectId(current_user.id)
+    data["owner_id"] = owner_id
+    stimulation_system_collection.update_one(
+        {"owner_id": owner_id},
+        {"$set": data},
+        upsert=True
+    )
+    return jsonify({"message": "Данные успешно сохранены!"}), 200
 @app.route("/get_stimulation_system", methods=["GET"])
 @login_required
 def get_stimulation_system():
