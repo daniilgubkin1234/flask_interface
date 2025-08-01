@@ -451,7 +451,7 @@ def stimulation_page():
 @app.route("/save_stimulation_system", methods=["POST"])
 @login_required
 def save_stimulation():
-    data = request.json
+    data = request.get_json(force=True)
     if not data:
         return jsonify({"error": "Нет данных для сохранения"}), 400
     owner_id = ObjectId(current_user.id)
@@ -462,6 +462,7 @@ def save_stimulation():
         upsert=True
     )
     return jsonify({"message": "Данные успешно сохранены!"}), 200
+
 @app.route("/get_stimulation_system", methods=["GET"])
 @login_required
 def get_stimulation_system():

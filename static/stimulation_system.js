@@ -1,34 +1,48 @@
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("stimulation-form");
 
-    // --- 1. Автозагрузка из БД ---
+    // Количество базовых строк (фиксированных) в каждой секции
+    const BASE_ROWS_COUNT = {
+        material: 7,
+        nonmaterial: 4,
+        motivation: 3,
+        culture: 3,
+        partnership: 1
+    };
+
+    // Сохраняем исходную HTML-структуру
+    const originalRows = {};
+    Object.keys(BASE_ROWS_COUNT).forEach(section => {
+        const tbody = document.getElementById(section + "-body");
+        originalRows[section] = tbody.innerHTML;
+    });
+
+    // --- 1. Загрузка данных из БД ---
     fetch("/get_stimulation_system")
         .then(res => res.json())
         .then(data => {
             if (!data || Object.keys(data).length === 0) return;
 
-            // Восстановление основных (фиксированных) input
-            Object.entries(data).forEach(([key, value]) => {
-                // Ищем по name
-                const el = form.querySelector(`[name="${key}"]`);
-                if (el && typeof value === "string") el.value = value;
+            // Восстановление значений стандартных инпутов
+            form.querySelectorAll('input[name]').forEach(input => {
+                if (data.hasOwnProperty(input.name) && data[input.name] !== undefined && data[input.name] !== null) {
+                    input.value = data[input.name];
+                }
             });
 
-            // Восстановление динамических секций
-            const sections = ["material", "nonmaterial", "motivation", "culture", "partnership"];
-            sections.forEach(section => {
-                if (Array.isArray(data[section])) {
-                    const tbody = document.getElementById(section + "-body");
-                    // Удаляем все, кроме первой строки (или всех, если нет)
-                    while (tbody.rows.length) tbody.deleteRow(0);
-                    data[section].forEach(item => {
+            // Восстановление пользовательских строк (только добавленные вручную!)
+            Object.keys(BASE_ROWS_COUNT).forEach(section => {
+                const items = data[section];
+                const tbody = document.getElementById(section + "-body");
+                if (Array.isArray(items) && items.length > 0) {
+                    tbody.innerHTML = originalRows[section]; // сброс до базовых
+                    items.forEach(item => {
                         const tr = document.createElement("tr");
+                        tr.dataset.original = "false";
                         tr.innerHTML = `
                             <td><input type="text" value="${item.name || ""}" placeholder="Введите название"></td>
                             <td><input type="text" value="${item.value || ""}" placeholder="Введите описание/значение"></td>
-                            <td>
-                                <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
-                            </td>
+                            <td><button type="button" class="delete-row-btn" title="Удалить пункт"></button></td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -38,74 +52,112 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // --- 2. Автосохранение ---
     function autoSaveStimulationSystem() {
-        const stimulationData = {};
+        const data = {};
 
-        // Фиксированные поля (inputs по name вне динамических таблиц)
+        // Сохраняем все значения input[name]
         form.querySelectorAll('input[name]').forEach(input => {
-            // Только если input не внутри таблицы (динамику ниже собираем отдельно)
-            if (!input.closest('tbody')) {
-                stimulationData[input.name] = input.value.trim();
-            }
+            data[input.name] = input.value.trim();
         });
 
-        // Динамические секции
-        ["material", "nonmaterial", "motivation", "culture", "partnership"].forEach(section => {
+        // Сохраняем только пользовательские строки!
+        Object.keys(BASE_ROWS_COUNT).forEach(section => {
             const tbody = document.getElementById(section + "-body");
-            stimulationData[section] = [];
-            Array.from(tbody.rows).forEach(row => {
-                const cells = row.querySelectorAll('input');
-                if (cells.length === 2) {
-                    const name = cells[0].value.trim();
-                    const value = cells[1].value.trim();
-                    if (name || value) {
-                        stimulationData[section].push({ name, value });
-                    }
+            const rows = Array.from(tbody.rows);
+            const sectionData = [];
+            // Только строки после базовых!
+            for (let i = BASE_ROWS_COUNT[section]; i < rows.length; i++) {
+                const row = rows[i];
+                const inputs = row.querySelectorAll("input");
+                const name = inputs[0]?.value.trim();
+                const value = inputs[1]?.value.trim();
+                if (name || value) {
+                    sectionData.push({ name, value });
                 }
-            });
+            }
+            if (sectionData.length > 0) {
+                data[section] = sectionData;
+            }
         });
 
         fetch("/save_stimulation_system", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(stimulationData)
+            body: JSON.stringify(data)
         });
     }
 
-    // --- 3. События для автосохранения ---
     form.addEventListener("input", autoSaveStimulationSystem);
     form.addEventListener("change", autoSaveStimulationSystem);
 
-    // --- 4. Добавление строк ---
-    document.querySelectorAll('.add-row-btn').forEach(function (button) {
-        button.addEventListener('click', function () {
-            const section = button.getAttribute('data-section');
-            const tbody = document.getElementById(section + '-body');
-            const tr = document.createElement('tr');
+    // --- 3. Добавление пользовательской строки ---
+    document.querySelectorAll(".add-row-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const section = btn.dataset.section;
+            const tbody = document.getElementById(section + "-body");
+            const tr = document.createElement("tr");
+            tr.dataset.original = "false";
             tr.innerHTML = `
                 <td><input type="text" placeholder="Введите название"></td>
                 <td><input type="text" placeholder="Введите описание/значение"></td>
-                <td>
-                    <button type="button" class="delete-row-btn" title="Удалить пункт"></button>
-                </td>
+                <td><button type="button" class="delete-row-btn" title="Удалить пункт"></button></td>
             `;
             tbody.appendChild(tr);
-            autoSaveStimulationSystem(); // автосохраняем!
+            autoSaveStimulationSystem();
         });
     });
 
-    // --- 5. Удаление строк ---
-    document.querySelectorAll('table').forEach(function (table) {
-        table.addEventListener('click', function (e) {
-            if (e.target.classList.contains('delete-row-btn')) {
-                e.target.closest('tr').remove();
-                autoSaveStimulationSystem(); // автосохраняем!
+    // --- 4. Удаление пользовательской строки ---
+    document.querySelectorAll("table").forEach(table => {
+        table.addEventListener("click", e => {
+            if (e.target.classList.contains("delete-row-btn")) {
+                const tr = e.target.closest("tr");
+                const tbody = tr.closest("tbody");
+                const section = tbody.id.replace('-body', '');
+                const baseCount = BASE_ROWS_COUNT[section];
+                const rowIndex = Array.from(tbody.rows).indexOf(tr);
+                if (rowIndex < baseCount) return; // нельзя удалять базовые
+                tr.remove();
+                autoSaveStimulationSystem();
             }
         });
     });
 
-    // --- 6. Submit (alert, данные уже автосохранены) ---
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
+    // --- 5. Сабмит формы ---
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const data = {};
+        form.querySelectorAll('input[name]').forEach(input => {
+            data[input.name] = input.value.trim();
+        });
+        Object.keys(BASE_ROWS_COUNT).forEach(section => {
+            const tbody = document.getElementById(section + "-body");
+            const rows = Array.from(tbody.rows);
+            const sectionData = [];
+            for (let i = BASE_ROWS_COUNT[section]; i < rows.length; i++) {
+                const row = rows[i];
+                const inputs = row.querySelectorAll("input");
+                const name = inputs[0]?.value.trim();
+                const value = inputs[1]?.value.trim();
+                if (name || value) {
+                    sectionData.push({ name, value });
+                }
+            }
+            if (sectionData.length > 0) {
+                data[section] = sectionData;
+            }
+        });
+        await fetch("/save_stimulation_system", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
         alert("Данные успешно сохранены!");
+        Object.keys(BASE_ROWS_COUNT).forEach(section => {
+            const tbody = document.getElementById(section + "-body");
+            tbody.innerHTML = originalRows[section];
+        });
+        form.querySelectorAll('input[name]').forEach(input => {
+            input.value = "";
+        });
     });
 });
