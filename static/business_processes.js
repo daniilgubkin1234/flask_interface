@@ -13,69 +13,91 @@ document.addEventListener("DOMContentLoaded", function () {
   let lastXml = "";
 
 
-   // --- ДОБАВЛЕНО: кнопка для ручного сохранения бизнес-процессов ---
-   
- 
-   // --- ДОБАВЛЕНО: автоматическая загрузка бизнес-процессов пользователя при загрузке страницы ---
-   fetch('/get_business_processes')
-     .then(res => res.json())
-     .then(rows => {
-       if (rows && rows.length > 0) {
-         // Очищаем таблицу и наполняем строками из БД
-         while (table.rows.length > 1) table.deleteRow(1);
-         rows.forEach((row, idx) => {
-           let tr = idx === 0 ? table.rows[0] : table.rows[0].cloneNode(true);
-           // Заполняем поля из объекта row — ЧЕТКО ПО КЛАССАМ input/select
-           tr.querySelector('.rowNum').innerText = row.num || ('N' + (idx + 1));
-           tr.querySelector('.stepNameField').value = row.name || "";
-           tr.querySelector('.stepTypeField').value = row.type || "task";
-           tr.querySelector('.roleField').value = row.role || "";
-           tr.querySelector('.nextField').value = row.next || "";
-           tr.querySelector('.conditionField').value = row.conditions || "";
-           tr.querySelector('.commentsField').value = row.comment || "";
-           if (idx !== 0) {
-             table.appendChild(tr);
-             // Кнопка удаления строки для новых строк
-             tr.querySelector('.deleteRow').onclick = function () {
-               if (table.rows.length > 1) {
-                 tr.remove();
-                 updateRowNumbers();
-               }
-             };
-           }
-         });
-         updateRowNumbers();
-       }
-     });
- 
-   // --- ДОБАВЛЕНО: функция для преобразования таблицы в массив объектов (для сохранения) ---
-   function getTableRowsData() {
-     return Array.from(table.rows).map((tr, idx) => {
-       return {
-         num: tr.querySelector('.rowNum').innerText,
-         name: tr.querySelector('.stepNameField').value,
-         type: tr.querySelector('.stepTypeField').value,
-         role: tr.querySelector('.roleField').value,
-         next: tr.querySelector('.nextField').value,
-         conditions: tr.querySelector('.conditionField').value,
-         comment: tr.querySelector('.commentsField').value
-       };
-     });
-   }
- 
-   // --- ДОБАВЛЕНО: обработчик на кнопку "Сохранить бизнес-процессы" ---
-   saveBtn.addEventListener('click', function () {
-     const rows = getTableRowsData();
-     fetch('/save_business_processes', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({ rows: rows })
-     })
-     .then(res => res.json())
-     .then(data => alert(data.message || "Данные сохранены!"))
-     .catch(e => alert("Ошибка сохранения: " + e));
-   });
- 
+  // --- ДОБАВЛЕНО: кнопка для ручного сохранения бизнес-процессов ---
+
+
+  // --- ДОБАВЛЕНО: автоматическая загрузка бизнес-процессов пользователя при загрузке страницы ---
+  fetch('/get_business_processes')
+    .then(res => res.json())
+    .then(rows => {
+      if (rows && rows.length > 0) {
+        // Очищаем таблицу и наполняем строками из БД
+        while (table.rows.length > 1) table.deleteRow(1);
+        rows.forEach((row, idx) => {
+          let tr = idx === 0 ? table.rows[0] : table.rows[0].cloneNode(true);
+
+          tr.querySelector('.stepNameField').value = row.name || "";
+          tr.querySelector('.stepTypeField').value = row.type || "task";
+          tr.querySelector('.roleField').value = row.role || "";
+          tr.querySelector('.commentsField').value = row.comment || "";
+          tr.querySelector('.rowNum').innerText = row.num || ('N' + (idx + 1));
+
+          if (idx !== 0) {
+            table.appendChild(tr);
+          }
+        });
+
+        // ❗ Вызываем один раз для всех строк, после добавления
+        updateRowNumbers();
+        attachTypeChangeListeners();
+
+        // ❗ Теперь ВОССТАНАВЛИВАЕМ .next
+        rows.forEach((row, idx) => {
+          const tr = table.rows[idx];
+          const next = row.next?.split(',') || [];
+          const selects = tr.querySelectorAll('.nextField');
+          if (selects.length === 1 && next[0]) selects[0].value = next[0];
+          if (selects.length === 2) {
+            if (next[0]) selects[0].value = next[0];
+            if (next[1]) selects[1].value = next[1];
+          }
+        });
+
+        updateRowNumbers();
+        attachTypeChangeListeners();
+      }
+    });
+
+  // --- ДОБАВЛЕНО: функция для преобразования таблицы в массив объектов (для сохранения) ---
+  function getTableRowsData() {
+    return Array.from(table.rows).map((tr, idx) => {
+      const type = tr.querySelector('.stepTypeField').value;
+      const selects = tr.querySelectorAll('.nextField');
+      let nextVal = '';
+      if (type === 'gateway' && selects.length === 2) {
+        const val1 = selects[0].value || '';
+        const val2 = selects[1].value || '';
+        nextVal = [val1, val2].filter(Boolean).join(',');
+      } else if (selects.length === 1) {
+        nextVal = selects[0].value || '';
+      }
+
+      return {
+        id: 'N' + (idx + 1),
+        num: tr.querySelector('.rowNum').innerText,
+        name: tr.querySelector('.stepNameField').value,
+        type: type,
+        role: tr.querySelector('.roleField').value,
+        next: nextVal,
+        conditions: "", // можно оставить или связать с comment
+        comment: tr.querySelector('.commentsField').value
+      };
+    });
+  }
+
+  // --- ДОБАВЛЕНО: обработчик на кнопку "Сохранить бизнес-процессы" ---
+  saveBtn.addEventListener('click', function () {
+    const rows = getTableRowsData();
+    fetch('/save_business_processes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rows: rows })
+    })
+      .then(res => res.json())
+      .then(data => alert(data.message || "Данные сохранены!"))
+      .catch(e => alert("Ошибка сохранения: " + e));
+  });
+
   function updateRowNumbers() {
     Array.from(table.rows).forEach((row, idx) => {
       let cell = row.querySelector('.rowNum');
@@ -84,30 +106,60 @@ document.addEventListener("DOMContentLoaded", function () {
     updateNextStepSelects();
   }
 
+  function attachTypeChangeListeners() {
+    const selects = document.querySelectorAll('.stepTypeField');
+    selects.forEach(sel => {
+      sel.removeEventListener('change', handleTypeChange); // защита от дублирования
+      sel.addEventListener('change', handleTypeChange);
+    });
+  }
+
+  function handleTypeChange() {
+    updateNextStepSelects();
+  }
+
   function updateNextStepSelects() {
     const rows = Array.from(table.rows);
     rows.forEach((row, idx) => {
-      const select = row.querySelector('.nextField');
-      if (!select) return;
-      // Сохраним текущее значение перед обновлением
-      const oldValue = select.value;
-      // Очистим опции и добавим пустую
-      select.innerHTML = '<option value="">—</option>';
-      // Добавим актуальные номера (N1, N2, ...), кроме текущего
-      rows.forEach((otherRow, i2) => {
-        if (i2 !== idx) {
-          const id = 'N' + (i2 + 1);
-          const option = document.createElement('option');
-          option.value = id;
-          option.text = id;
-          select.appendChild(option);
+      const type = row.querySelector('.stepTypeField').value;
+      const nextCell = row.cells[4];
+      const oldValues = Array.from(nextCell.querySelectorAll('select')).map(s => s.value); // сохранить
+
+      nextCell.innerHTML = ''; // очищаем ячейку
+
+      const availableIds = rows
+        .map((r, i) => 'N' + (i + 1))
+        .filter(id => id !== 'N' + (idx + 1)); // исключаем текущий шаг
+
+      function createSelect(index) {
+        const select = document.createElement('select');
+        select.className = 'nextField';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = '-- выбрать --';
+        select.appendChild(defaultOpt);
+        availableIds.forEach(id => {
+          const opt = document.createElement('option');
+          opt.value = id;
+          opt.textContent = id;
+          select.appendChild(opt);
+        });
+        // Восстановление старого значения
+        if (oldValues[index]) {
+          select.value = oldValues[index];
         }
-      });
-      // Если старое значение ещё существует — восстановим выбор, иначе — очистим
-      if (oldValue && Array.from(select.options).some(o => o.value === oldValue)) {
-        select.value = oldValue;
+        return select;
+      }
+
+      if (type === 'gateway') {
+        const select1 = createSelect(0);
+        const select2 = createSelect(1);
+        nextCell.appendChild(select1);
+        nextCell.appendChild(document.createTextNode(' и '));
+        nextCell.appendChild(select2);
       } else {
-        select.value = "";
+        const select = createSelect(0);
+        nextCell.appendChild(select);
       }
     });
   }
@@ -123,6 +175,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     };
     updateRowNumbers();
+    attachTypeChangeListeners();
   };
 
   Array.from(document.getElementsByClassName('deleteRow')).forEach(btn => {
@@ -130,6 +183,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (table.rows.length > 1) {
         btn.closest('tr').remove();
         updateRowNumbers();
+        attachTypeChangeListeners();
       }
     };
   });
@@ -152,7 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   buildBtn.onclick = function () {
-    const steps = getTableData();
+    const steps = getTableRowsData();
     const xml = buildBPMNxml(steps);
     lastXml = xml;
     renderDiagram(xml);
@@ -165,19 +219,30 @@ document.addEventListener("DOMContentLoaded", function () {
     Array.from(table.rows).forEach((tr, i) => {
       const tds = tr.cells;
       const type = tds[2].querySelector('select').value;
+
+      let nextVal = "";
+      if (type === 'gateway') {
+        const selects = tds[4].querySelectorAll('select');
+        const val1 = selects[0]?.value || '';
+        const val2 = selects[1]?.value || '';
+        nextVal = [val1, val2].filter(Boolean).join(',');
+      } else {
+        const sel = tds[4].querySelector('select');
+        if (sel) nextVal = sel.value;
+      }
+
       arr.push({
         id: "N" + (i + 1),
         name: tds[1].querySelector('input').value || ("Шаг " + (i + 1)),
         type: type,
         role: tds[3].querySelector('input').value.trim() || 'Без роли',
-        next: tds[4].querySelector('select').value,
-        conditions: tds[5].querySelector('input').value,
-        comment: tds[6].querySelector('input').value
+        next: nextVal,
+        conditions: "",  // если всё вынесено в next
+        comment: tds[5].querySelector('input').value
       });
     });
     return arr;
   }
-
 
   // ---------- Новый участок: расчет точек входа/выхода для стрелок ----------
   function getShapeDims(type) {
@@ -409,4 +474,5 @@ document.addEventListener("DOMContentLoaded", function () {
   exportBtn.disabled = true;
   toggleBtn.disabled = true;
   updateRowNumbers();
+  attachTypeChangeListeners();
 });
