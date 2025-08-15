@@ -108,7 +108,8 @@ button {
     background-color: #1F4B8F;
 }
 #exportBPMN,
-#toggleMode {
+#toggleMode,
+#sendToRegulations {
     background-color: #2A63C2;
     margin-top: 10px;
     text-align: center;
@@ -119,6 +120,7 @@ button {
 
 #exportBPMN:hover,
 #toggleMode:hover,
+#sendToRegulations:hover,
 #buildDiagram:hover {
     background-color: #1F4B8F;
     transition: background-color 0.3s;

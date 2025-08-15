@@ -37,7 +37,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {
     'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt',
-    'png', 'jpg', 'jpeg'
+    'png', 'jpg', 'jpeg', 'bpmn', 'xml', 'svg'
 }
 def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -683,7 +683,57 @@ def upload_regulation():
         }
     }), 201
 
+@app.route('/upload_regulation_text', methods=['POST'])
+@login_required
+def upload_regulation_text():
+    """
+    Принимает JSON: { "filename": "diagram.bpmn", "title": "Название", "content": "<xml...>", "content_type": "application/xml" }
+    Создаёт файл в uploads/regulations и регистрирует его как документ регламентов.
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    filename = (data.get('filename') or '').strip()
+    title = (data.get('title') or '').strip() or filename or 'Документ'
+    content = data.get('content') or ''
+    content_type = (data.get('content_type') or 'application/octet-stream').strip()
 
+    if not filename or '.' not in filename:
+        return jsonify({"success": False, "error": "Некорректное имя файла"}), 400
+    ext = filename.rsplit('.', 1)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({"success": False, "error": f"Запрещённое расширение: .{ext}"}), 400
+    if not content:
+        return jsonify({"success": False, "error": "Пустое содержимое"}), 400
+
+    safe_name = secure_filename(f"{current_user.id}_{int(time.time())}_{filename}")
+    save_path = os.path.join(UPLOAD_FOLDER, safe_name)
+    try:
+        with open(save_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Ошибка записи файла: {e}"}), 500
+
+    doc = {
+        "owner_id": ObjectId(current_user.id),
+        "title": title,
+        "filename": safe_name,
+        "original_filename": filename,
+        "content_type": content_type,
+        "size": os.path.getsize(save_path),
+        "uploaded_at": datetime.utcnow(),
+    }
+    ins = regulation_files_collection.insert_one(doc)
+    url = url_for('get_regulation_file', filename=safe_name)
+    return jsonify({
+        "success": True,
+        "doc": {
+            "_id": str(ins.inserted_id),
+            "title": title,
+            "url": url,
+            "content_type": doc["content_type"],
+            "size": doc["size"],
+            "uploaded_at": doc["uploaded_at"].isoformat() + "Z"
+        }
+    }), 201
 @app.route('/get_regulation_files', methods=['GET'])
 @login_required
 def get_regulation_files():
