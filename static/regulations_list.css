@@ -1,201 +1,241 @@
-/* Общие стили страницы — как в орг-структуре */
+/* ========= БАЗА ========= */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+:root{
+  --c-primary: #2A63C2;
+  --c-primary-hover: #1F4B8F;
+  --c-danger: #c0392b;
+  --c-danger-hover: #9d2f23;
+  --c-bg: #f5f7fb;
+  --c-text: #1c1c1e;
+  --c-muted: #666;
+  --c-border: #dcdfe6;
+  --c-head: #f6f8ff;
+}
+
+html, body {
+  height: 100%;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #F0F0F0;
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+  color: var(--c-text);
+  background: var(--c-bg);
+  line-height: 1.45;
 }
 
-.container {
-    background-color: #FFFFFF;
-    padding: 40px;
-    margin: 40px auto;
+/* ========= КОНТЕЙНЕР И ЗАГОЛОВКИ ========= */
+.container{
+  max-width: 1100px;
+  margin: 32px auto;
+  background: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+
+h2{
+  margin: 0 0 8px;
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+.section{ margin-top: 24px; }
+h3{
+  margin: 0 0 12px;
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+/* ========= ТЕКСТОВЫЕ ПОДСКАЗКИ ========= */
+.hint{ font-size: 14px; color:#555; margin-top: 6px; }
+.muted{ font-size: 12px; color: var(--c-muted); }
+
+/* ========= КНОПКИ ========= */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--c-primary);
+  color: #fff;
+  border: 0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color .2s ease, transform .02s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover{ background: var(--c-primary-hover); }
+.btn:active{ transform: translateY(1px); }
+.btn-primary{ background: var(--c-primary); }
+.btn-danger{ background: var(--c-danger); }
+.btn-danger:hover{ background: var(--c-danger-hover); }
+
+/* ========= ФОРМА ЗАГРУЗКИ ========= */
+#uploadForm .row{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 8px 0;
+}
+#uploadForm input[type="text"],
+#uploadForm input[type="file"]{
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  outline: none;
+}
+#uploadForm input[type="text"]:focus,
+#uploadForm input[type="file"]:focus{
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(42, 99, 194, .12);
+}
+
+/* ========= ТАБЛИЦЫ (общие) ========= */
+.table{
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th,
+.table td{
+  border: 1px solid var(--c-border);
+  padding: 10px 12px;
+  vertical-align: top;
+}
+.table thead th{
+  background: var(--c-head);
+  color: var(--c-primary);
+  font-weight: 600;
+}
+.table tbody tr:nth-child(even){
+  background: #fafbff;
+}
+
+/* ========= Список загруженных ========= */
+#uploadedTable th:nth-child(1),
+#uploadedTable td:nth-child(1){
+  text-align: center;
+  width: 60px;
+}
+
+#uploadedTable td .actions{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#uploadedTable .actions a{
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--c-primary);
+  text-decoration: none;
+}
+
+/* ========= Предпросмотр ========= */
+.preview-wrap{
+  display: none; /* показывается JS-ом */
+  margin-top: 16px;
+}
+.preview-title{ margin: 16px 0 8px; }
+.preview-wrap iframe{
+  width: 100%;
+  height: 560px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* ========= Реестр регламентов ========= */
+.table-wrapper{ overflow-x: auto; }
+
+#regsTable .row-number{
+  text-align: center;
+}
+
+#regsTable input[type="text"]{
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  outline: none;
+}
+#regsTable input[type="text"]:focus{
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(42, 99, 194, .12);
+}
+
+/* Вложенная таблица для документов */
+.inner-table{
+  margin: 4px 0 8px;
+}
+.inner-table thead th{
+  background: #eef3ff;
+}
+.docs-rows td{
+  vertical-align: middle;
+}
+
+/* Блок кнопок под таблицей */
+.buttons-container{
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ========= АДАПТИВ ========= */
+@media (max-width: 900px){
+  .preview-wrap iframe{ height: 460px; }
+}
+@media (max-width: 680px){
+  body{ line-height: 1.35; }
+  #uploadedTable th, #uploadedTable td{ font-size: 14px; }
+  .preview-wrap iframe{ height: 400px; }
+}
+/* Кнопка у input[type=file] */
+#uploadForm input[type="file"]::file-selector-button {
+    background: var(--c-primary);
+    color: #fff;
+    border: 0;
+    padding: 10px 16px;
     border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    max-width: 1300px;
-    /* тот же, что в орг-структуре */
-    width: 100%;
-    position: relative;
-}
-
-/* Заголовок */
-h2 {
-    text-align: center;
-    color: #2A63C2;
-    margin-bottom: 30px;
-}
-
-/* Таблица */
-.table-wrapper {
-    overflow-x: auto;
-}
-
-#regsTable {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 1200px;
-    /* как в орг-структуре */
-}
-
-#regsTable th,
-#regsTable td {
-    border: 1px solid #ccc;
-    padding: 10px;
-    text-align: center;
-    /* центрируем содержимое */
-}
-
-#regsTable thead th {
-    background: #2A63C2;
+    cursor: pointer;
+    margin-right: 12px;
+    transition: background-color .2s ease;
+  }
+  #uploadForm input[type="file"]::file-selector-button:hover {
+    background: var(--c-primary-hover);
+  }
+  /* Поддержка старых движков WebKit */
+  #uploadForm input[type="file"]::-webkit-file-upload-button {
+    background: var(--c-primary);
     color: #fff;
-    font-weight: 600;
-    font-size: 14px;
-    white-space: normal;
-    word-break: break-word;
-    vertical-align: middle;
-    line-height: 1.3;
-}
-
-/* Чередование строк */
-#regsTable tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-/* Скругления углов */
-#regsTable th:first-child {
-    border-top-left-radius: 8px;
-}
-
-#regsTable th:last-child {
-    border-top-right-radius: 8px;
-}
-
-#regsTable tr:last-child td:first-child {
-    border-bottom-left-radius: 8px;
-}
-
-#regsTable tr:last-child td:last-child {
-    border-bottom-right-radius: 8px;
-}
-
-/* 3) Уменьшаем ширину первого столбца «№» */
-#regsTable th:nth-child(1),
-#regsTable td:nth-child(1) {
-    width: 50px;
-    /* фиксированная ширина 50px */
-    max-width: 50px;
-    text-align: center;
-    /* центрируем номер */
-}
-
-/* 1) Уменьшаем ширину столбцов «Иден. №» (3-й) и «Действия» (4-й) */
-#regsTable th:nth-child(3),
-#regsTable td:nth-child(3) {
-    width: 150px;
-    /* Иден. №: ширина 150px */
-    max-width: 150px;
-}
-
-#regsTable th:nth-child(4),
-#regsTable td:nth-child(4) {
-    width: 100px;
-    /* Действия: ширина 100px */
-    max-width: 100px;
-}
-
-/* Поля ввода */
-#regsTable input[type="text"] {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-/* Кнопка «Удалить» — красная и по центру ячейки */
-button.deleteRow {
-    background-color: red;
-    color: #fff;
+    border: 0;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 12px;
+    transition: background-color .2s ease;
+  }
+  #uploadForm input[type="file"]::-webkit-file-upload-button:hover {
+    background: var(--c-primary-hover);
+  }
+  
+  /* Подправить ссылку "Открыть" и кнопки в таблице загруженных, чтобы смотрелись как кнопки */
+  #uploadedTable .actions a {
+    background: #fff;
+    border: 1px solid var(--c-primary);
+  }
+  #uploadedTable .actions .btn { /* на случай кнопок внутри ячейки */
     padding: 8px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    display: inline-block;
-    vertical-align: middle;
-    /* центр по высоте ячейки */
-    margin: 0 auto;
-    /* центр по горизонтали */
-}
-
-button.deleteRow:hover {
-    background-color: rgb(182, 14, 14);
-}
-
-/* Контейнер для кнопок под таблицей */
-.buttons-container {
-    position: relative;
-    margin-top: 20px;
-    height: 60px;
-    /* чтобы хватило места под обе кнопки */
-}
-
-/* Кнопка «Добавить строку» — выровнена вправо */
-#addRow {
-    position: absolute;
-    right: 0;
-    top: 0;
-    background-color: #2A63C2;
-    color: #fff;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-}
-
-#addRow:hover {
-    background-color: #1F4B8F;
-}
-
-#addRow:active {
-    transform: scale(0.98);
-}
-
-/* Кнопка «Сохранить» — по центру снизу */
-#saveRegs {
-    display: block;
-    position: absolute;
-    left: 50%;
-    bottom: -20px;
-    transform: translateX(-50%);
-    background-color: #2A63C2;
-    color: #fff;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-}
-
-#saveRegs:hover {
-    background-color: #1F4B8F;
-}
-
-#saveRegs:active {
-    transform: translateX(-50%) scale(0.98);
-}
-
-/* Адаптив */
-@media (max-width: 768px) {
-    .container {
-        padding: 20px;
-        margin: 20px;
-    }
-
-    #regsTable {
-        min-width: 700px;
-    }
-}
+    border-radius: 8px;
+  }
+  

@@ -1,42 +1,112 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Перечень регламентов</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='regulations_list.css') }}">
-    <script defer src="{{ url_for('static', filename='regulations_list.js') }}"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Перечень регламентов</title>
+
+  <!-- Стиль страницы -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='regulations_list.css') }}">
+
+  <!-- Логика страницы (загрузка, список, предпросмотр, сохранение реестра) -->
+  <script defer src="{{ url_for('static', filename='regulations_list.js') }}"></script>
 </head>
-
 <body>
-    <div class="container">
-        <h2>Перечень корпоративных стандартов</h2>
-        <div class="table-wrapper">
-            <table id="regsTable">
-                <thead>
-                    <tr>
-                        <th>№</th>
-                        <th>Название документа</th>
-                        <th>Иден. №</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- всегда одна пустая строка при загрузке -->
-                    <tr>
-                        <td class="row-number">1</td>
-                        <td><input type="text" class="doc-name" placeholder="Название"></td>
-                        <td><input type="text" class="doc-id" placeholder="ИД"></td>
-                        <td><button class="deleteRow">Удалить</button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="buttons-container">
-            <button id="addRow">Добавить строку</button>
-            <button id="saveRegs">Сохранить</button>
-        </div>
-    </div>
-</body>
+  <div class="container">
+    <h2>Перечень корпоративных стандартов</h2>
 
+    <!-- Блок загрузки файла -->
+    <section class="section">
+      <h3>Загрузка документа</h3>
+
+      <form id="uploadForm" enctype="multipart/form-data">
+        <div class="row">
+          <input type="text" id="docTitle" name="title" placeholder="Название документа (необязательно)">
+        </div>
+        <div class="row">
+          <input type="file" id="docFile" name="file"
+                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg" required>
+          <button type="submit" class="btn">Загрузить</button>
+        </div>
+
+        <div id="uploadMsg" class="hint"></div>
+        <div class="muted">Поддерживаемые форматы: PDF, DOC(X), XLS(X), PPT(X), TXT, PNG, JPG.</div>
+      </form>
+    </section>
+
+    <!-- Список загруженных -->
+    <section class="section">
+      <h3>Загруженные документы</h3>
+
+      <table id="uploadedTable" class="table">
+        <thead>
+          <tr>
+            <th style="width:60px;">№</th>
+            <th>Название</th>
+            <th style="width:140px;">Тип</th>
+            <th style="width:130px;">Размер</th>
+            <th style="width:180px;">Дата</th>
+            <th style="width:180px;">Просмотр</th>
+            <th style="width:120px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="preview" class="preview-wrap">
+        <h3 id="previewTitle" class="preview-title">Предпросмотр</h3>
+        <iframe id="previewFrame" title="Предпросмотр документа"></iframe>
+      </div>
+    </section>
+
+    <!-- Структурированный реестр регламентов -->
+    <section class="section">
+      <h3>Реестр регламентов (структурированные записи)</h3>
+
+      <div class="table-wrapper">
+        <table id="regsTable" class="table">
+          <thead>
+            <tr>
+              <th style="width:60px;">№</th>
+              <th>Наименование регламента</th>
+              <th>Документы</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-number">1</td>
+              <td>
+                <input type="text" class="reg-name" placeholder="Например: Положение об оплате труда">
+              </td>
+              <td>
+                <table class="table inner-table">
+                  <thead>
+                    <tr>
+                      <th>Название</th>
+                      <th>ID/внешняя ссылка</th>
+                      <th style="width:110px;">Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody class="docs-rows">
+                    <tr>
+                      <td><input type="text" class="doc-name" placeholder="Название"></td>
+                      <td><input type="text" class="doc-id" placeholder="ID или URL"></td>
+                      <td><button class="btn btn-danger deleteRow" type="button">Удалить</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button class="btn addDocRow" type="button">Добавить документ</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="buttons-container">
+        <button id="addRow" class="btn" type="button">Добавить строку</button>
+        <button id="saveRegs" class="btn btn-primary" type="button">Сохранить реестр</button>
+      </div>
+    </section>
+  </div>
+</body>
 </html>

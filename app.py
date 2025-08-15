@@ -13,6 +13,9 @@ from flask_login import LoginManager, UserMixin, login_user, \
 from authlib.integrations.flask_client import OAuth
 # --- OAuth: добавлено ---
 from functools import wraps
+import time
+from werkzeug.utils import secure_filename
+from flask import send_from_directory
 
 # -------------------------------------------------------------------------
 # 1.  Загрузка переменных окружения
@@ -27,6 +30,17 @@ if not app.config["MONGO_URI"]:
     raise ValueError("Ошибка: переменная MONGO_URI не найдена в .env!")
 
 mongo = PyMongo(app)
+# === Файлы регламентов ===
+app.config['MAX_CONTENT_LENGTH'] = 25 * 1024 * 1024  # до 25 МБ
+UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads', 'regulations')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt',
+    'png', 'jpg', 'jpeg'
+}
+def allowed_file(filename: str) -> bool:
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # -------------------------------------------------------------------------
 # 2.  Flask-Login и OAuth настройка
@@ -101,6 +115,7 @@ three_plus_twenty_collection = mongo.db.three_plus_twenty
 regulations_collection = mongo.db.regulations_list
 organizational_structure_coll = mongo.db.organizational_structure
 users_collection = mongo.db.users                # --- OAuth: добавлено ---
+regulation_files_collection = mongo.db.regulation_files
 
 # -------------------------------------------------------------------------
 # 6.  OAuth-роуты (вход / колбек / выход)
@@ -626,6 +641,94 @@ def get_three_plus_twenty():
 @login_required
 def regulations_list():
     return render_template('regulations_list.html')
+@app.route('/upload_regulation', methods=['POST'])
+@login_required
+def upload_regulation():
+    if 'file' not in request.files:
+        return jsonify({"success": False, "error": "Файл не получен"}), 400
+
+    file = request.files['file']
+    title = (request.form.get('title') or '').strip() or file.filename
+
+    if file.filename == '':
+        return jsonify({"success": False, "error": "Имя файла пустое"}), 400
+    if not allowed_file(file.filename):
+        return jsonify({"success": False, "error": "Недопустимый формат файла"}), 400
+
+    safe_name = secure_filename(f"{current_user.id}_{int(time.time())}_{file.filename}")
+    save_path = os.path.join(UPLOAD_FOLDER, safe_name)
+    file.save(save_path)
+
+    doc = {
+        "owner_id": ObjectId(current_user.id),
+        "title": title,
+        "filename": safe_name,
+        "original_filename": file.filename,
+        "content_type": file.mimetype,
+        "size": os.path.getsize(save_path),
+        "uploaded_at": datetime.utcnow(),
+    }
+    ins = regulation_files_collection.insert_one(doc)
+
+    url = url_for('get_regulation_file', filename=safe_name)
+    return jsonify({
+        "success": True,
+        "doc": {
+            "_id": str(ins.inserted_id),
+            "title": title,
+            "url": url,
+            "content_type": doc["content_type"],
+            "size": doc["size"],
+            "uploaded_at": doc["uploaded_at"].isoformat() + "Z"
+        }
+    }), 201
+
+
+@app.route('/get_regulation_files', methods=['GET'])
+@login_required
+def get_regulation_files():
+    docs = list(regulation_files_collection
+                .find({"owner_id": ObjectId(current_user.id)})
+                .sort("uploaded_at", -1))
+    result = []
+    for d in docs:
+        result.append({
+            "_id": str(d["_id"]),
+            "title": d.get("title") or d.get("original_filename"),
+            "url": url_for('get_regulation_file', filename=d["filename"]),
+            "content_type": d.get("content_type", ""),
+            "size": d.get("size", 0),
+            "uploaded_at": d.get("uploaded_at", datetime.utcnow()).isoformat() + "Z"
+        })
+    return jsonify({"success": True, "items": result})
+
+
+@app.route('/delete_regulation_file/<doc_id>', methods=['DELETE'])
+@login_required
+def delete_regulation_file(doc_id):
+    try:
+        _id = ObjectId(doc_id)
+    except:
+        return jsonify({"success": False, "error": "Некорректный ID"}), 400
+
+    doc = regulation_files_collection.find_one({"_id": _id, "owner_id": ObjectId(current_user.id)})
+    if not doc:
+        return jsonify({"success": False, "error": "Документ не найден"}), 404
+
+    try:
+        os.remove(os.path.join(UPLOAD_FOLDER, doc["filename"]))
+    except FileNotFoundError:
+        pass
+
+    regulation_files_collection.delete_one({"_id": _id})
+    return jsonify({"success": True})
+
+
+@app.route('/uploads/regulations/<path:filename>')
+@login_required
+def get_regulation_file(filename):
+    # Просмотр в браузере (без принудительного скачивания)
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=False)
 
 
 @app.route('/save_regulations_list', methods=['POST'])
