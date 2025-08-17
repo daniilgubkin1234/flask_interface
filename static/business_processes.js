@@ -1,470 +1,414 @@
 // business_processes.js
 
-document.addEventListener("DOMContentLoaded", function () {
-  const table = document.getElementById('bpTable').getElementsByTagName('tbody')[0];
-  const addRowBtn = document.getElementById('addRow');
-  const buildBtn = document.getElementById('buildDiagram');
-  const exportBtn = document.getElementById('exportBPMN');
-  const toggleBtn = document.getElementById('toggleMode');
-  const saveBtn = document.getElementById('saveBP');
-  const sendBtn = document.getElementById('sendToRegulations');
-  const bpmnContainer = document.getElementById('bpmnContainer');
+document.addEventListener("DOMContentLoaded", () => {
+  // --- DOM
+  const tbody = document.getElementById("bpTable")?.getElementsByTagName("tbody")[0];
+  const addRowBtn = document.getElementById("addRow");
+  const buildBtn = document.getElementById("buildDiagram");
+  const exportBtn = document.getElementById("exportBPMN");
+  const toggleBtn = document.getElementById("toggleMode");
+  const saveBtn = document.getElementById("saveBP");
+  const sendBtn = document.getElementById("sendToRegulations"); // опционально
+  const bpmnContainer = document.getElementById("bpmnContainer");
 
-  let bpmnModeler = null;
-  let isViewer = true;          // "Просмотр" прячет палитру/контекстное меню
-  let lastXml = "";
+  if (!tbody) return;
 
-  // ---------------------- Загрузка сохранённых строк ----------------------
-  fetch('/get_business_processes')
-    .then(res => res.json())
+  // --- BPMN
+  let bpmnModeler = null;     // если подключён bpmn-js, сюда положим инстанс
+  let isViewer = true;        // режим «просмотр» (прячем палитру/контекст)
+  let lastXml = "";           // последнее сгенерированное XML
+
+  // ======================================================================
+  // 1) Загрузка сохранённых данных
+  // ======================================================================
+  fetch("/get_business_processes")
+    .then(r => r.json())
     .then(rows => {
-      if (rows && rows.length > 0) {
-        while (table.rows.length > 1) table.deleteRow(1);
-        rows.forEach((row, idx) => {
-          const tr = idx === 0 ? table.rows[0] : table.rows[0].cloneNode(true);
-          tr.querySelector('.stepNameField').value = row.name || "";
-          tr.querySelector('.stepTypeField').value = row.type || "task";
-          tr.querySelector('.roleField').value = row.role || "";
-          tr.querySelector('.commentsField').value = row.comment || "";
-          tr.querySelector('.rowNum').innerText = row.num || ('N' + (idx + 1));
-          if (idx !== 0) table.appendChild(tr);
-        });
-
-        updateRowNumbers();
+      // Ожидаем массив вида [{ num, name, type, role, next, comment }, ...]
+      if (!Array.isArray(rows) || rows.length === 0) {
         attachTypeChangeListeners();
-
-        // восстановим "следующие шаги"
-        rows.forEach((row, idx) => {
-          const tr = table.rows[idx];
-          const next = (row.next || '').split(',');
-          const selects = tr.querySelectorAll('.nextField');
-          if (selects.length === 1 && next[0]) selects[0].value = next[0];
-          if (selects.length === 2) {
-            if (next[0]) selects[0].value = next[0];
-            if (next[1]) selects[1].value = next[1];
-          }
-        });
-
         updateRowNumbers();
-        attachTypeChangeListeners();
+        return;
       }
-    });
 
-  // ---------------------- Сохранение строк в БД ----------------------
-  saveBtn.addEventListener('click', function () {
+      // Удалим все строки кроме первой (шаблон)
+      while (tbody.rows.length > 1) tbody.deleteRow(1);
+
+      rows.forEach((row, idx) => {
+        const tr = idx === 0 ? tbody.rows[0] : tbody.rows[0].cloneNode(true);
+
+        setText(tr, ".rowNum", row.num || `N${idx + 1}`);
+        setValue(tr, ".stepNameField", row.name || "");
+        setValue(tr, ".stepTypeField", row.type || "task");
+        setValue(tr, ".roleField", row.role || "");
+        setValue(tr, ".commentsField", row.comment || "");
+
+        // перестроим поля «Следующий шаг» под тип
+        ensureNextControls(tr, (row.type || "task"));
+
+        // восстановим значения next (для gateway — два значения через запятую)
+        const nextVals = String(row.next || "").split(",").map(s => s.trim()).filter(Boolean);
+        const selects = tr.querySelectorAll(".nextField");
+        if (selects[0] && nextVals[0]) selects[0].value = nextVals[0];
+        if (selects[1] && nextVals[1]) selects[1].value = nextVals[1];
+
+        if (idx !== 0) tbody.appendChild(tr);
+      });
+
+      updateRowNumbers();
+      attachTypeChangeListeners();
+    })
+    .catch(err => console.error("Ошибка загрузки бизнес-процессов:", err));
+
+  // ======================================================================
+  // 2) Сохранение
+  // ======================================================================
+  saveBtn?.addEventListener("click", () => {
     const rows = getTableRowsData();
-    fetch('/save_business_processes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("/save_business_processes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rows })
     })
-      .then(res => res.json())
-      .then(data => alert(data.message || "Данные сохранены!"))
-      .catch(e => alert("Ошибка сохранения: " + e));
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) throw new Error(d.error);
+        alert(d.message || "Данные сохранены!");
+      })
+      .catch(e => alert("Ошибка сохранения: " + e.message));
   });
 
-  // ---------------------- Вспомогательные функции таблицы ----------------------
-  function getTableRowsData() {
-    return Array.from(table.rows).map((tr, idx) => {
-      const type = tr.querySelector('.stepTypeField').value;
-      const selects = tr.querySelectorAll('.nextField');
-      let nextVal = '';
-      if (type === 'gateway' && selects.length === 2) {
-        const val1 = selects[0].value || '';
-        const val2 = selects[1].value || '';
-        nextVal = [val1, val2].filter(Boolean).join(',');
-      } else if (selects.length === 1) {
-        nextVal = selects[0].value || '';
-      }
+  // ======================================================================
+  // 3) Работа с таблицей (добавление/удаление/перенумерация/варианты next)
+  // ======================================================================
+  addRowBtn?.addEventListener("click", () => {
+    const tr = tbody.rows[0].cloneNode(true);
+    // очистка
+    setText(tr, ".rowNum", "");
+    setValue(tr, ".stepNameField", "");
+    setValue(tr, ".stepTypeField", "task");
+    setValue(tr, ".roleField", "");
+    setValue(tr, ".commentsField", "");
+    // перестроить зону «Следующий шаг»
+    ensureNextControls(tr, "task");
+    tbody.appendChild(tr);
 
-      return {
-        id: 'N' + (idx + 1),
-        num: 'N' + (idx + 1),
-        name: tr.querySelector('.stepNameField').value,
-        type,
-        role: tr.querySelector('.roleField').value,
-        next: nextVal,
-        conditions: "",
-        comment: tr.querySelector('.commentsField').value
+    updateRowNumbers();
+    attachTypeChangeListeners();
+  });
+
+  // делегирование на удаление строки
+  tbody.addEventListener("click", (e) => {
+    const btn = e.target.closest(".deleteRow");
+    if (!btn) return;
+    const tr = btn.closest("tr");
+    // не даём удалить единственную строку-шаблон
+    if (tbody.rows.length === 1) {
+      // просто очистим поля
+      setValue(tr, ".stepNameField", "");
+      setValue(tr, ".stepTypeField", "task");
+      setValue(tr, ".roleField", "");
+      setValue(tr, ".commentsField", "");
+      ensureNextControls(tr, "task");
+    } else {
+      tr.remove();
+    }
+    updateRowNumbers();
+  });
+
+  // ======================================================================
+  // 4) Построение BPMN и экспорт
+  // ======================================================================
+  buildBtn?.addEventListener("click", async () => {
+    const rows = getTableRowsData();
+    if (rows.length === 0) {
+      alert("Заполните таблицу.");
+      return;
+    }
+    lastXml = buildBpmnXml(rows);
+
+    // Если есть bpmn-js — отрисуем
+    try {
+      if (window.BpmnJS) {
+        // инициализация (Modeler работает и как viewer, просто спрячем палитру)
+        if (!bpmnModeler) {
+          bpmnModeler = new window.BpmnJS({ container: bpmnContainer });
+        }
+        await bpmnModeler.importXML(lastXml);
+        const canvas = bpmnModeler.get("canvas");
+        canvas.zoom("fit-viewport", "auto");
+
+        applyViewerMode(isViewer);
+      } else {
+        // Фолбэк: просто покажем XML
+        bpmnContainer.textContent = lastXml;
+      }
+      alert("Диаграмма построена.");
+    } catch (e) {
+      console.error(e);
+      alert("Не удалось построить диаграмму: " + (e.message || e));
+    }
+  });
+
+  exportBtn?.addEventListener("click", () => {
+    if (!lastXml) {
+      alert("Сначала постройте схему.");
+      return;
+    }
+    const blob = new Blob([lastXml], { type: "application/xml;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "process.bpmn";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  toggleBtn?.addEventListener("click", () => {
+    isViewer = !isViewer;
+    applyViewerMode(isViewer);
+    toggleBtn.textContent = isViewer ? "Режим: просмотр" : "Режим: редактирование";
+  });
+
+  // (опционально) генерация текстовой «заготовки» регламента из таблицы
+  sendBtn?.addEventListener("click", () => {
+    const rows = getTableRowsData();
+    const text = rows.map(r => {
+      const nextTxt = r.type === "gateway"
+        ? `Переходы: ${r.next}`
+        : (r.next ? `Следующий шаг: ${r.next}` : "Завершение");
+      return `# ${r.num} ${r.name}\nТип: ${r.type}\nРоль: ${r.role}\n${nextTxt}\nКомментарий: ${r.comment}\n`;
+    }).join("\n");
+    // Просто загрузим .txt — дальше можно прикрутить ваш endpoint
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "regulation_draft.txt";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // ======================================================================
+  // helpers
+  // ======================================================================
+  function $(scope, sel) { return scope.querySelector(sel); }
+  function setValue(scope, sel, val) { const el = $(scope, sel); if (el) el.value = val; }
+  function setText(scope, sel, val) { const el = $(scope, sel); if (el) el.textContent = val; }
+
+  function updateRowNumbers() {
+    Array.from(tbody.rows).forEach((tr, i) => {
+      setText(tr, ".rowNum", `N${i + 1}`);
+    });
+    rebuildNextOptions();
+  }
+
+  function rebuildNextOptions() {
+    const nums = Array.from(tbody.rows).map((_, i) => `N${i + 1}`);
+    Array.from(tbody.querySelectorAll(".nextField")).forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = `<option value=""></option>` + nums.map(n => `<option value="${n}">${n}</option>`).join("");
+      if (nums.includes(cur)) sel.value = cur; // восстановим, если возможно
+    });
+  }
+
+  function attachTypeChangeListeners() {
+    Array.from(tbody.querySelectorAll(".stepTypeField")).forEach(sel => {
+      sel.onchange = () => {
+        const tr = sel.closest("tr");
+        ensureNextControls(tr, sel.value);
+        rebuildNextOptions();
       };
     });
   }
 
-  function updateRowNumbers() {
-    Array.from(table.rows).forEach((row, idx) => {
-      const cell = row.querySelector('.rowNum');
-      if (cell) cell.innerText = 'N' + (idx + 1);
-    });
-    updateNextStepSelects();
-  }
-
-  function attachTypeChangeListeners() {
-    const selects = document.querySelectorAll('.stepTypeField');
-    selects.forEach(sel => {
-      sel.removeEventListener('change', handleTypeChange);
-      sel.addEventListener('change', handleTypeChange);
-    });
-  }
-  function handleTypeChange() { updateNextStepSelects(); }
-
-  function updateNextStepSelects() {
-    const rows = Array.from(table.rows);
-    rows.forEach((row, idx) => {
-      const type = row.querySelector('.stepTypeField').value;
-      const nextCell = row.cells[4];
-      const oldValues = Array.from(nextCell.querySelectorAll('select')).map(s => s.value);
-      nextCell.innerHTML = '';
-
-      const availableIds = rows.map((_, i) => 'N' + (i + 1)).filter(id => id !== 'N' + (idx + 1));
-
-      function createSelect(index) {
-        const select = document.createElement('select');
-        select.className = 'nextField';
-        const def = document.createElement('option');
-        def.value = '';
-        def.textContent = '-- выбрать --';
-        select.appendChild(def);
-        availableIds.forEach(id => {
-          const opt = document.createElement('option');
-          opt.value = id;
-          opt.textContent = id;
-          select.appendChild(opt);
-        });
-        if (oldValues[index]) select.value = oldValues[index];
-        return select;
-      }
-
-      if (type === 'gateway') {
-        const s1 = createSelect(0);
-        const s2 = createSelect(1);
-        nextCell.appendChild(s1);
-        nextCell.appendChild(document.createTextNode(' и '));
-        nextCell.appendChild(s2);
-      } else {
-        nextCell.appendChild(createSelect(0));
-      }
-    });
-  }
-
-  addRowBtn.onclick = function () {
-    const row = table.rows[0].cloneNode(true);
-    Array.from(row.querySelectorAll('input')).forEach(inp => (inp.value = ""));
-    row.querySelector('.stepTypeField').value = 'task';
-    table.appendChild(row);
-
-    row.querySelector('.deleteRow').onclick = function () {
-      if (table.rows.length > 1) {
-        row.remove();
-        updateRowNumbers();
-      }
-    };
-    updateRowNumbers();
-    attachTypeChangeListeners();
-  };
-
-  Array.from(document.getElementsByClassName('deleteRow')).forEach(btn => {
-    btn.onclick = function () {
-      if (table.rows.length > 1) {
-        btn.closest('tr').remove();
-        updateRowNumbers();
-        attachTypeChangeListeners();
-      }
-    };
-  });
-
-  // ---------------------- Построение/рендер BPMN ----------------------
-  buildBtn.onclick = function () {
-    const steps = getTableRowsData();
-    const xml = buildBPMNxml(steps);
-    lastXml = xml;
-    renderDiagram(xml);
-    exportBtn.disabled = false;
-    toggleBtn.disabled = false;
-    sendBtn.disabled = false; // активируем отправку после построения
-  };
-
-  exportBtn.onclick = function () {
-    if (!lastXml) return;
-    const blob = new Blob([lastXml], { type: "application/xml" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "diagram.bpmn";
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => link.remove(), 50);
-  };
-
-  toggleBtn.onclick = function () {
-    isViewer = !isViewer;
-    toggleBtn.innerText = isViewer ? "Режим: Просмотр" : "Режим: Редактирование";
-    if (lastXml) renderDiagram(lastXml);
-  };
-
-  function renderDiagram(xml) {
-    bpmnContainer.innerHTML = "";
-    if (bpmnModeler) {
-      try { bpmnModeler.destroy && bpmnModeler.destroy(); } catch (e) {}
-      bpmnModeler = null;
+  function ensureNextControls(tr, type) {
+    // Находим (или создаём) ячейку для select'ов «Следующий шаг»
+    let nextCell = tr.querySelector(".nextCell");
+    if (!nextCell) {
+      // если в шаблоне не размечено — создадим последнюю ячейку перед комментарием
+      // предпочтительно найдём существующие select'ы и их родителя
+      const existing = tr.querySelector(".nextField")?.parentElement;
+      nextCell = existing || tr.insertCell(-1);
+      nextCell.classList.add("nextCell");
     }
 
-    setTimeout(() => {
-      // Используем Modeler всегда; режим "Просмотр" просто скрывает палитру/контекст
-      bpmnModeler = new window.BpmnJS({ container: "#bpmnContainer" });
-      bpmnModeler.importXML(xml).then(() => {
-        // Авто-подгон размеров контейнера
-        let numRoles = 1;
-        let maxTasks = 1;
-        if (window.lastSteps) {
-          numRoles = window.lastSteps.lanes?.length || 1;
-          maxTasks = Math.max(...window.lastSteps.lanes.map(l => l.nodes.length), 1);
-        }
-        const maxContainerWidth = document.querySelector('.container').clientWidth - 80;
-        const width = Math.min(Math.max(800, maxTasks * 140 + 200), maxContainerWidth);
-        const height = Math.max(600, numRoles * 130 + 200);
+    // Сохраним текущие значения (если были)
+    const oldVals = Array.from(nextCell.querySelectorAll(".nextField")).map(s => s.value);
 
-        Object.assign(bpmnContainer.style, {
-          width: width + "px",
-          minWidth: width + "px",
-          height: height + "px",
-          minHeight: height + "px",
-          margin: "0 auto"
-        });
-
-        setTimeout(() => {
-          const palette = bpmnContainer.querySelector('.djs-palette');
-          const contextPad = bpmnContainer.querySelector('.djs-context-pad');
-          if (palette) palette.style.display = isViewer ? 'none' : '';
-          if (contextPad) contextPad.style.display = isViewer ? 'none' : '';
-        }, 0);
-      }).catch(err => {
-        bpmnContainer.innerHTML = `<div style="color: red; font-weight:bold;">Ошибка импорта BPMN:<br>${err}</div>`;
-      });
-    }, 30);
-  }
-
-  // ---------- Геометрия и генерация BPMN XML ----------
-  function getShapeDims(type) {
-    if (type === "start" || type === "end") return { w: 36, h: 36 };
-    if (type === "gateway") return { w: 50, h: 50 };
-    return { w: 80, h: 60 }; // task, default
-  }
-
-  function getConnectionPoints(fromId, toId, fromType, toType, nodeCoords) {
-    const from = nodeCoords[fromId];
-    const to = nodeCoords[toId];
-    const dFrom = getShapeDims(fromType);
-    const dTo = getShapeDims(toType);
-
-    if (from.x < to.x) {
-      return [{ x: from.x + dFrom.w, y: from.y + dFrom.h / 2 }, { x: to.x, y: to.y + dTo.h / 2 }];
-    } else if (from.x > to.x) {
-      return [{ x: from.x, y: from.y + dFrom.h / 2 }, { x: to.x + dTo.w, y: to.y + dTo.h / 2 }];
+    if (type === "gateway") {
+      nextCell.innerHTML = `
+        <select class="nextField"></select>
+        <select class="nextField" style="margin-left:6px;"></select>
+      `;
+    } else if (type === "end") {
+      nextCell.innerHTML = `<span style="opacity:.7;">—</span>`;
     } else {
-      return [{ x: from.x + dFrom.w / 2, y: from.y + dFrom.h }, { x: to.x + dTo.w / 2, y: to.y }];
+      nextCell.innerHTML = `<select class="nextField"></select>`;
     }
+
+    rebuildNextOptions();
+
+    // вернём сохранённые значения
+    const news = nextCell.querySelectorAll(".nextField");
+    if (news[0] && oldVals[0]) news[0].value = oldVals[0];
+    if (news[1] && oldVals[1]) news[1].value = oldVals[1];
   }
 
-  function buildBPMNxml(steps) {
-    // lanes: роль = дорожка
-    const lanes = [];
-    const laneMap = {};
-    steps.forEach(s => {
-      if (!laneMap[s.role]) {
-        laneMap[s.role] = "Lane_" + (lanes.length + 1);
-        lanes.push({ id: laneMap[s.role], name: s.role || 'Без роли', nodes: [] });
+  function getTableRowsData() {
+    return Array.from(tbody.rows).map((tr, idx) => {
+      const type = tr.querySelector(".stepTypeField")?.value || "task";
+      const role = tr.querySelector(".roleField")?.value?.trim() || "";
+      const name = tr.querySelector(".stepNameField")?.value?.trim() || `Шаг ${idx + 1}`;
+      const comment = tr.querySelector(".commentsField")?.value?.trim() || "";
+      let next = "";
+
+      if (type === "gateway") {
+        const [a, b] = Array.from(tr.querySelectorAll(".nextField")).map(s => s.value).slice(0, 2);
+        next = [a, b].filter(Boolean).join(",");
+      } else if (type !== "end") {
+        next = tr.querySelector(".nextField")?.value || "";
       }
-      lanes.find(l => l.id === laneMap[s.role]).nodes.push(s.id);
+
+      return {
+        num: `N${idx + 1}`,
+        name,
+        type,     // task | gateway | end
+        role,
+        next,     // "", "N2" или "N3,N5" для gateway
+        comment
+      };
+    });
+  }
+
+  function applyViewerMode(viewOnly) {
+    if (!bpmnModeler) return;
+    // спрячем/покажем палитру и контекстное меню
+    const palette = bpmnContainer.querySelector(".djs-palette");
+    const contextPads = bpmnContainer.querySelectorAll(".djs-context-pad");
+
+    if (palette) palette.style.display = viewOnly ? "none" : "";
+    contextPads.forEach(el => el.style.display = viewOnly ? "none" : "");
+
+    // отключим хоткеи в «просмотре»
+    const keyboard = bpmnModeler.get("keyboard", false);
+    if (keyboard && keyboard._config) keyboard._config.bindTo = viewOnly ? null : document;
+  }
+
+  // --- Генерация простого BPMN-XML по таблице
+  function buildBpmnXml(rows) {
+    // Геометрия — просто вертикальная колонка
+    const laneY = 100, xStart = 150, stepDY = 120;
+
+    // Карта id по номеру
+    const idByNum = {};
+    rows.forEach((r, i) => {
+      const base = r.type === "gateway" ? "Gateway" : (r.type === "end" ? "EndEvent" : "Task");
+      idByNum[r.num] = `${base}_${i + 1}`;
     });
 
-    // Координаты элементов (lane вертикально, задачи по горизонтали)
-    const nodeCoords = {};
-    const laneX = 60;
-    const firstPad = 60;
-    const laneHeight = 120;
-    const gapY = 30;
-    const blockWidth = 120;
-    const blockGap = 8;
+    // Элементы процесса
+    const flowNodes = [];
+    const diShapes = [];
+    const flows = [];
+    const diEdges = [];
 
-    lanes.forEach((lane, i) => {
-      const topY = 80 + i * (laneHeight + gapY);
-      lane.nodes.forEach((nid, j) => {
-        const st = steps.find(x => x.id === nid);
-        const dims = getShapeDims(st.type);
-        nodeCoords[nid] = { x: laneX + firstPad + j * (blockWidth + blockGap), y: topY + (laneHeight - dims.h) / 2 };
-      });
-      lane._topY = topY;
-      lane._leftX = laneX;
-      lane._width = firstPad + (lane.nodes.length - 1) * (blockWidth + blockGap) + blockWidth;
-      lane._height = laneHeight;
-    });
-
-    // LaneSet XML
-    const laneSetXml =
-      `<laneSet id="LaneSet_1">` +
-      lanes.map(l => `<lane id="${l.id}" name="${l.name}">${l.nodes.map(n => `<flowNodeRef>${n}</flowNodeRef>`).join('')}</lane>`).join('') +
-      `</laneSet>`;
+    // Стартовое событие
+    flowNodes.push(`<bpmn:startEvent id="StartEvent_1" name="Старт" />`);
+    diShapes.push(shape("StartEvent_1", xStart, laneY - stepDY, 36, 36));
 
     // Узлы
-    let nodes = "";
-    steps.forEach(step => {
-      if (step.type === "start") nodes += `<startEvent id="${step.id}" name="${step.name}"/>`;
-      else if (step.type === "end") nodes += `<endEvent id="${step.id}" name="${step.name}"/>`;
-      else if (step.type === "gateway") nodes += `<exclusiveGateway id="${step.id}" name="${step.name}"/>`;
-      else nodes += `<task id="${step.id}" name="${step.name}"/>`;
-    });
+    rows.forEach((r, i) => {
+      const id = idByNum[r.num];
+      const y = laneY + i * stepDY;
 
-    // Потоки
-    let flows = "";
-    let edges = "";
-    steps.forEach(step => {
-      if (step.next) {
-        step.next.split(',').filter(Boolean).forEach(nxt => {
-          const flowId = `Flow_${step.id}_${nxt}`;
-          flows += `<sequenceFlow id="${flowId}" sourceRef="${step.id}" targetRef="${nxt}"/>`;
-          const [fromPt, toPt] = getConnectionPoints(step.id, nxt, step.type, (steps.find(s => s.id === nxt) || {}).type, nodeCoords);
-          edges += `<bpmndi:BPMNEdge id="Edge_${flowId}" bpmnElement="${flowId}">
-                      <di:waypoint x="${fromPt.x}" y="${fromPt.y}"/>
-                      <di:waypoint x="${toPt.x}" y="${toPt.y}"/>
-                    </bpmndi:BPMNEdge>`;
-        });
-      }
-    });
-
-    // Геометрия фигур
-    let shapes = "";
-    steps.forEach(step => {
-      const c = nodeCoords[step.id];
-      const d = getShapeDims(step.type);
-      shapes += `<bpmndi:BPMNShape id="Shape_${step.id}" bpmnElement="${step.id}">
-                   <dc:Bounds x="${c.x}" y="${c.y}" width="${d.w}" height="${d.h}"/>
-                 </bpmndi:BPMNShape>`;
-    });
-
-    // Геометрия дорожек
-    const planeLanes = lanes.map(l => `
-      <bpmndi:BPMNShape id="LaneShape_${l.id}" bpmnElement="${l.id}">
-        <dc:Bounds x="${l._leftX - 12}" y="${l._topY - 12}" width="${l._width + 60}" height="${l._height + 24}"/>
-      </bpmndi:BPMNShape>`).join('');
-
-    // Сохраним для вычисления размеров при рендере
-    window.lastSteps = { lanes, steps };
-
-    // Итоговый XML
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
- xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
- xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
- id="Definitions_1"
- targetNamespace="http://bpmn.io/schema/bpmn">
- <process id="Process_1" isExecutable="false">
-   ${laneSetXml}
-   ${nodes}
-   ${flows}
- </process>
- <collaboration id="Collaboration_1">
-   <participant id="Participant_1" processRef="Process_1"/>
- </collaboration>
- <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-   <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
-     ${planeLanes}
-     ${shapes}
-     ${edges}
-   </bpmndi:BPMNPlane>
- </bpmndi:BPMNDiagram>
-</definitions>`;
-  }
-
-  // ---------------------- Интеграция с «Перечнем регламентов» ----------------------
-
-  // Хелпер: отправка текстового содержимого как файла через /upload_regulation_text
-  async function postRegText({ filename, title, content, contentType }) {
-    const res = await fetch('/upload_regulation_text', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename,
-        title,
-        content,
-        content_type: contentType || 'application/octet-stream'
-      })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
-    return data.doc;
-  }
-
-  // Отправляем: TXT-выгрузку, BPMN XML и SVG-картинку
-  sendBtn.addEventListener('click', async () => {
-    try {
-      // 1) Если XML ещё не построен — построим сейчас
-      if (!lastXml) {
-        const steps = getTableRowsData();
-        if (!steps.length) { alert('Добавьте хотя бы один шаг.'); return; }
-        lastXml = buildBPMNxml(steps);
-        renderDiagram(lastXml);
-        exportBtn.disabled = false;
-        toggleBtn.disabled = false;
-      }
-
-      // 2) Заголовок документа
-      const defaultTitle = 'BPMN схема — ' + new Date().toLocaleString();
-      const title = prompt('Название документа для перечня регламентов:', defaultTitle) || defaultTitle;
-
-      // 3) Читабельная TXT-выгрузка (как раньше)
-      const rows = getTableRowsData();
-      const lines = [
-        'Схема бизнес-процесса (BPMN) — сводная выгрузка',
-        '--------------------------------------------------',
-        ...rows.map(r =>
-          `${r.id}. ${r.name}  [${r.type}]  Роль: ${r.role || '—'}  ` +
-          `Далее: ${r.next || '—'}${r.comment ? `  // ${r.comment}` : ''}`
-        )
-      ];
-      await postRegText({
-        filename: `bpmn_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.txt`,
-        title,
-        content: lines.join('\n'),
-        contentType: 'text/plain'
-      });
-
-      // 4) Исходник схемы — BPMN XML
-      await postRegText({
-        filename: 'diagram.bpmn',
-        title: title + ' (XML)',
-        content: lastXml,
-        contentType: 'application/xml'
-      });
-
-      // 5) Картинка схемы — SVG из bpmn-js (покажется в предпросмотре регламентов)
-      if (bpmnModeler && bpmnModeler.saveSVG) {
-        const { svg } = await bpmnModeler.saveSVG();
-        await postRegText({
-          filename: 'diagram.svg',
-          title: title + ' (SVG)',
-          content: svg,
-          contentType: 'image/svg+xml'
-        });
+      if (r.type === "gateway") {
+        flowNodes.push(`<bpmn:exclusiveGateway id="${id}" name="${escapeXml(r.name)}" />`);
+        diShapes.push(shape(id, xStart, y, 50, 50));
+      } else if (r.type === "end") {
+        flowNodes.push(`<bpmn:endEvent id="${id}" name="${escapeXml(r.name)}" />`);
+        diShapes.push(shape(id, xStart, y, 36, 36));
       } else {
-        alert('Не удалось получить SVG. Постройте схему и повторите.');
-        return;
+        flowNodes.push(`<bpmn:task id="${id}" name="${escapeXml(r.name)}">
+  <bpmn:documentation>${escapeXml(r.comment || "")}</bpmn:documentation>
+</bpmn:task>`);
+        diShapes.push(shape(id, xStart, y, 120, 80));
       }
 
-      alert('Готово! TXT, XML и SVG добавлены в «Перечень регламентов». Откроем список.');
-      window.location.href = '/regulations_list';
-    } catch (e) {
-      console.error(e);
-      alert('Не удалось отправить в регламенты: ' + e.message);
-    }
-  });
+      // Переходы
+      const nexts = String(r.next || "").split(",").map(s => s.trim()).filter(Boolean);
+      const fromId = (i === 0) ? "StartEvent_1" : idByNum[r.num];
+      if (i === 0 && rows.length > 0 && !rows[0].next) {
+        // если у первого шага не указан next — соединим старт -> первый
+        const firstId = idByNum[rows[0].num];
+        flows.push(seq(`Flow_Start_${firstId}`, "StartEvent_1", firstId));
+        diEdges.push(edge(`Flow_Start_${firstId}`, "StartEvent_1", firstId));
+      }
 
-  // Инициализация
-  exportBtn.disabled = true;
-  toggleBtn.disabled = true;
-  // держим активной: при нажатии сама построит XML, если его ещё нет
-  sendBtn.disabled = false;
+      nexts.forEach((n, k) => {
+        const toId = idByNum[n];
+        if (!toId) return;
+        const fid = `Flow_${id}_${toId}_${k + 1}`;
+        flows.push(seq(fid, id, toId));
+        diEdges.push(edge(fid, id, toId));
+      });
+    });
 
-  updateRowNumbers();
-  attachTypeChangeListeners();
+    // Если у нас нет явного конца — добавим end к тем, кто без next
+    rows.forEach((r, i) => {
+      if (r.next || r.type === "end") return;
+      const from = idByNum[r.num];
+      const endId = `AutoEnd_${i + 1}`;
+      flowNodes.push(`<bpmn:endEvent id="${endId}" name="Конец" />`);
+      diShapes.push(shape(endId, xStart + 220, laneY + i * stepDY, 36, 36));
+      const fid = `Flow_${from}_${endId}`;
+      flows.push(seq(fid, from, endId));
+      diEdges.push(edge(fid, from, endId));
+    });
+
+    // Итоговая сборка
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_1" isExecutable="false">
+    ${flowNodes.join("\n    ")}
+    ${flows.join("\n    ")}
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      ${diShapes.join("\n      ")}
+      ${diEdges.join("\n      ")}
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>`;
+  }
+
+  function shape(id, x, y, w, h) {
+    return `<bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}">
+  <dc:Bounds x="${x}" y="${y}" width="${w}" height="${h}" />
+</bpmndi:BPMNShape>`;
+  }
+
+  function seq(id, src, tgt) {
+    return `<bpmn:sequenceFlow id="${id}" sourceRef="${src}" targetRef="${tgt}" />`;
+  }
+
+  function edge(id /*, src, tgt */) {
+    // простая ломаная — координаты посчитает bpmn-js
+    return `<bpmndi:BPMNEdge id="${id}_di" bpmnElement="${id}">
+  <di:waypoint x="0" y="0" />
+  <di:waypoint x="0" y="0" />
+</bpmndi:BPMNEdge>`;
+  }
+
+  function escapeXml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+  }
 });
