@@ -1,5 +1,5 @@
 # --- OAuth: добавлено redirect,url_for,abort ---
-from flask import Flask, render_template, request, jsonify, redirect, url_for, abort
+from flask import Response, Flask, render_template, request, jsonify, redirect, url_for, abort
 from flask_pymongo import PyMongo
 from dotenv import load_dotenv
 import os
@@ -16,13 +16,14 @@ from functools import wraps
 import time
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
-
+from prometheus_flask_exporter import PrometheusMetrics
 # -------------------------------------------------------------------------
 # 1.  Загрузка переменных окружения
 # -------------------------------------------------------------------------
 load_dotenv()
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
 app.secret_key = os.getenv("SECRET_KEY") or os.getenv(
     "FLASK_SECRET")  # --- OAuth: добавлено ---
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
@@ -141,12 +142,25 @@ def auth_callback():
         user_doc = {
             "google_id": userinfo["sub"],
             "email":     userinfo["email"],
-            "name":      userinfo["name"],
+            "name":      userinfo.get("name"),
             "picture":   userinfo.get("picture"),
             "role":      "user",
             "created_at": datetime.utcnow()
         }
-        users_collection.insert_one(user_doc)
+        ins = users_collection.insert_one(user_doc)
+        user_doc["_id"] = ins.inserted_id  # ВАЖНО: добавили _id для login_user
+    else:
+        # (необязательно) обновим базовые поля, если поменялись на стороне Google
+        updates = {}
+        if user_doc.get("email") != userinfo.get("email"):
+            updates["email"] = userinfo.get("email")
+        if user_doc.get("name") != userinfo.get("name"):
+            updates["name"] = userinfo.get("name")
+        if user_doc.get("picture") != userinfo.get("picture"):
+            updates["picture"] = userinfo.get("picture")
+        if updates:
+            users_collection.update_one({"_id": user_doc["_id"]}, {"$set": updates})
+            user_doc.update(updates)
 
     login_user(User(user_doc))
     return redirect(url_for("star_navigation"))
@@ -203,56 +217,122 @@ def get_user_survey():
 # 8.  Задачи (теперь привязаны к current_user)
 # -------------------------------------------------------------------------
 @app.route("/get_tasks", methods=["GET"])
-# --- OAuth: добавлено ---
 @login_required
 def get_tasks():
-    """Возвращает задачи текущего пользователя."""
-    tasks = list(
-        tasks_collection.find(
-            {"owner_id": ObjectId(current_user.id)},
-            {"_id": 0}
-        )
-    )
+    docs = list(tasks_collection.find({"owner_id": ObjectId(current_user.id)}))
+    tasks = []
+    for d in docs:
+        d["_id"] = str(d["_id"])
+        d.pop("owner_id", None)
+        tasks.append(d)
     return jsonify(tasks)
 
 
 @app.route("/add_task", methods=["POST"])
-# --- OAuth: добавлено ---
 @login_required
 def add_task():
-    """Добавляет новую задачу в базу данных."""
     data = request.json or {}
     if not data.get("task"):
         return jsonify({"error": "Название задачи обязательно"}), 400
-
-    # --- OAuth: добавлено ---
     data["owner_id"] = ObjectId(current_user.id)
-    tasks_collection.insert_one(data)
-    return jsonify({"message": "Задача успешно добавлена", "task": data})
+    ins = tasks_collection.insert_one(data)
+    return jsonify({"message": "Задача успешно добавлена",
+                    "inserted_id": str(ins.inserted_id)})
 
 
 @app.route("/edit_task/<task_id>", methods=["PUT"])
-# --- OAuth: добавлено ---
 @login_required
 def edit_task(task_id):
     data = request.json or {}
+    try:
+        oid = ObjectId(task_id)
+    except Exception:
+        return jsonify({"error": "Некорректный ID"}), 400
+
     result = tasks_collection.update_one(
-        # --- OAuth: добавлено ---
-        {"task": task_id, "owner_id": ObjectId(current_user.id)},
+        {"_id": oid, "owner_id": ObjectId(current_user.id)},
         {"$set": data}
     )
     if result.matched_count:
         return jsonify({"message": "Задача успешно обновлена"})
     return jsonify({"error": "Задача не найдена"}), 404
 
+@app.route("/sync_tasks_from_sources", methods=["POST"])
+@login_required
+def sync_tasks_from_sources():
+    owner = ObjectId(current_user.id)
+
+    # --- Берём последнюю бизнес-цель и протокол ---
+    bg = business_goal_collection.find_one(
+        {"owner_id": owner}, sort=[("_id", -1)]
+    ) or {}
+    mp = meeting_protocol_collection.find_one(
+        {"owner_id": owner}, sort=[("_id", -1)]
+    ) or {}
+
+    upserts = 0
+
+    # --- 1) Этапы реализации из бизнес-цели -> задачи ---
+    stages = (bg or {}).get("stages") or []
+    for idx, st in enumerate(stages):
+        task_doc = {
+            "task": (st.get("stageNumber") or "Этап").strip(),
+            "event": "Бизнес-цель",
+            "work": (st.get("stageDescription") or "").strip(),
+            "responsible": "",
+            "deadline": (st.get("stageDate") or "").strip(),
+            "result": "",
+            "resources": "",
+            "coexecutors": "",
+            "comments": "",
+            "owner_id": owner,
+            "origin": {"type": "business_goal_stage", "source_id": str(bg.get("_id")), "key": f"{idx}"}
+        }
+        tasks_collection.update_one(
+            {"owner_id": owner, "origin.type": "business_goal_stage",
+             "origin.source_id": str(bg.get("_id")), "origin.key": f"{idx}"},
+            {"$set": task_doc},
+            upsert=True
+        )
+        upserts += 1
+
+    # --- 2) Следующие шаги из протокола -> задачи ---
+    next_steps = (mp or {}).get("nextSteps") or []
+    meeting_date = (mp or {}).get("meetingDate") or ""
+    for idx, ns in enumerate(next_steps):
+        task_doc = {
+            "task": (ns.get("task") or "Работа/поручение").strip(),
+            "event": f"Протокол совещания {meeting_date}".strip(),
+            "work": (ns.get("task") or "").strip(),
+            "responsible": (ns.get("executor") or "").strip(),
+            "deadline": (ns.get("deadline") or "").strip(),
+            "result": "",
+            "resources": "",
+            "coexecutors": "",
+            "comments": "",
+            "owner_id": owner,
+            "origin": {"type": "meeting_protocol_step", "source_id": str(mp.get("_id")), "key": f"{idx}"}
+        }
+        tasks_collection.update_one(
+            {"owner_id": owner, "origin.type": "meeting_protocol_step",
+             "origin.source_id": str(mp.get("_id")), "origin.key": f"{idx}"},
+            {"$set": task_doc},
+            upsert=True
+        )
+        upserts += 1
+
+    return jsonify({"message": f"Синхронизировано элементов: {upserts}"}), 200
 
 @app.route("/delete_task/<task_id>", methods=["DELETE"])
-# --- OAuth: добавлено ---
 @login_required
 def delete_task(task_id):
+    try:
+        oid = ObjectId(task_id)
+    except Exception:
+        return jsonify({"error": "Некорректный ID"}), 400
+
     result = tasks_collection.delete_one(
-        # --- OAuth: добавлено ---
-        {"task": task_id, "owner_id": ObjectId(current_user.id)}
+        {"_id": oid, "owner_id": ObjectId(current_user.id)}
     )
     if result.deleted_count:
         return jsonify({"message": "Задача успешно удалена"})

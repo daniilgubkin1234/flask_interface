@@ -1,172 +1,327 @@
-document.addEventListener("DOMContentLoaded", function () {
-    loadTasks(); 
-     
-    
-    function loadTasks() {
-        fetch("/get_tasks")
-            .then(response => response.json())
-            .then(tasks => {
-                const tableBody = document.querySelector("#tasks-table tbody");
-                tableBody.innerHTML = ""; 
-
-                tasks.forEach((task, index) => {
-                    const row = document.createElement("tr");
-
-                    row.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${task.task}</td>
-                        <td>${task.event || ""}</td>
-                        <td>${task.work || ""}</td>
-                        <td>${task.responsible || ""}</td>
-                        <td>${task.deadline || ""}</td>
-                        <td>${task.result || ""}</td>
-                        <td>${task.resources || ""}</td>
-                        <td>${task.coexecutors || ""}</td>
-                        <td>${task.comments || ""}</td>
-                        <td class="task-actions">
-                            <button class="edit-task btn btn-primary" data-id="${task.task}">Редактировать</button>
-                            <button class="delete-task btn btn-danger" data-id="${task.task}">Удалить</button>
-                            <button class="copy-task btn btn-secondary" data-id="${task.task}">Копировать в буффер</button>
-                        </td>
-                    `;
-
-                    tableBody.appendChild(row);
-                });
-
-                addEventListeners(); // 
-            })
-            .catch(error => console.error("Ошибка загрузки задач:", error));
-    }
-
-    function addEventListeners() {
-        document.querySelectorAll(".delete-task").forEach(button => {
-            button.addEventListener("click", function () {
-                const taskId = this.getAttribute("data-id");
-
-                fetch(`/delete_task/${encodeURIComponent(taskId)}`, { method: "DELETE" })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);
-                        loadTasks();
-                    })
-                    .catch(error => console.error("Ошибка удаления:", error));
-            });
-        });
-
-        document.querySelectorAll(".edit-task").forEach(button => {
-            button.addEventListener("click", function () {
-                const row = this.closest("tr");
-
-                document.getElementById("task").value = row.cells[1].textContent;
-                document.getElementById("event").value = row.cells[2].textContent;
-                document.getElementById("work").value = row.cells[3].textContent;
-                document.getElementById("responsible").value = row.cells[4].textContent;
-                document.getElementById("deadline").value = row.cells[5].textContent;
-                document.getElementById("result").value = row.cells[6].textContent;
-                document.getElementById("resources").value = row.cells[7].textContent;
-                document.getElementById("coexecutors").value = row.cells[8].textContent;
-                document.getElementById("comments").value = row.cells[9].textContent;
-
-                document.getElementById("saveChanges").setAttribute("data-id", this.getAttribute("data-id"));
-
-                document.getElementById("submitTask").style.display = "none";
-                document.getElementById("saveChanges").style.display = "block";
-            });
-        });
-    }
-
-    document.getElementById("saveChanges").addEventListener("click", function () {
-        const taskId = this.getAttribute("data-id");
-        const updatedTask = {
-            task: document.getElementById("task").value,
-            event: document.getElementById("event").value,
-            work: document.getElementById("work").value,
-            responsible: document.getElementById("responsible").value,
-            deadline: document.getElementById("deadline").value,
-            result: document.getElementById("result").value,
-            resources: document.getElementById("resources").value,
-            coexecutors: document.getElementById("coexecutors").value,
-            comments: document.getElementById("comments").value
-        };
-
-        fetch(`/edit_task/${encodeURIComponent(taskId)}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedTask)
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            loadTasks();
-            document.getElementById("saveChanges").style.display = "none";
-            document.getElementById("submitTask").style.display = "block";
-            document.getElementById("task-form").reset();
-        })
-        .catch(error => console.error("Ошибка редактирования:", error));
-    });
-
-    document.getElementById("submitTask").addEventListener("click", function (event) {
-        event.preventDefault();
-
-        const newTask = {
-            task: document.getElementById("task").value,
-            event: document.getElementById("event").value,
-            work: document.getElementById("work").value,
-            responsible: document.getElementById("responsible").value,
-            deadline: document.getElementById("deadline").value,
-            result: document.getElementById("result").value,
-            resources: document.getElementById("resources").value,
-            coexecutors: document.getElementById("coexecutors").value,
-            comments: document.getElementById("comments").value
-        };
-
-        fetch("/add_task", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newTask)
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            loadTasks(); // 
-            document.getElementById("task-form").reset();
-        })
-        .catch(error => console.error("Ошибка добавления задачи:", error));
-    });
-
-    const tableBody = document.querySelector("#tasks-table tbody");
-
-    // Добавляем обработчик на кнопки "Копировать"
-    tableBody.addEventListener("click", (event) => {
-        if (event.target.classList.contains("copy-task")) {
-            const row = event.target.closest("tr");
-            copyTaskToClipboard(row);
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("tasks-form");
+    const tbody = document.querySelector("#tasks-table tbody");
+  
+    const submitBtn = document.getElementById("submitTask");
+    const saveBtn = document.getElementById("saveChanges");
+    const syncBtn = document.getElementById("syncSources");
+  
+    // -------- helpers --------
+    const $ = (id) => document.getElementById(id);
+  
+    async function fetchJSON(url, options = {}) {
+      const opts = {
+        credentials: "same-origin",
+        headers: { Accept: "application/json", ...(options.headers || {}) },
+        ...options,
+      };
+      const res = await fetch(url, opts);
+  
+      // если редирект на логин или отдан HTML/текст — покажем понятное сообщение
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) {
+        const text = await res.text();
+        // наиболее частый кейс — редирект @login_required на /login
+        if (res.redirected || res.status === 401 || /<html|<!doctype/i.test(text)) {
+          throw new Error("Похоже, требуется вход в систему. Обновите страницу и войдите заново.");
         }
-    });
-
-    function copyTaskToClipboard(row) {
-        const columns = row.querySelectorAll("td");
-        const taskData = {
-            "Номер": columns[0].textContent.trim(),
-            "Задача": columns[1].textContent.trim(),
-            "Мероприятие": columns[2].textContent.trim(),
-            "Работа": columns[3].textContent.trim(),
-            "Ответственный": columns[4].textContent.trim(),
-            "Срок": columns[5].textContent.trim(),
-            "Результат": columns[6].textContent.trim(),
-            "Ресурсы": columns[7].textContent.trim(),
-            "Соисполнители": columns[8].textContent.trim(),
-            "Комментарии": columns[9].textContent.trim()
-        };
-
-        // Формируем текст для копирования
-        const taskText = Object.entries(taskData)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join("\n");
-
-        // Копируем в буфер обмена
-        navigator.clipboard.writeText(taskText)
-            .then(() => alert("Задача успешно скопирована в буфер обмена!"))
-            .catch((err) => console.error("Ошибка копирования:", err));
+        throw new Error(text.slice(0, 300) || `Неожиданный ответ (${res.status})`);
+      }
+  
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        throw new Error("Некорректный JSON от сервера");
+      }
+      if (!res.ok) {
+        throw new Error(data.error || `Ошибка ${res.status}`);
+      }
+      return data;
     }
-});
+  
+    // ---------- datalists ----------
+    async function preloadDatalists() {
+      try {
+        const [bg, mp] = await Promise.all([
+          fetchJSON("/get_business_goal"),
+          fetchJSON("/get_meeting_protocol"),
+        ]);
+  
+        const taskList = $("task-list");
+        const eventList = $("event-list");
+        if (!taskList || !eventList) return;
+  
+        taskList.innerHTML = "";
+        eventList.innerHTML = "";
+  
+        // Этапы БЦ -> подсказки "Задача"
+        (bg.stages || []).forEach((s) => {
+          const v = (s?.stageNumber || "").trim();
+          if (!v) return;
+          const o = document.createElement("option");
+          o.value = v;
+          taskList.appendChild(o);
+        });
+  
+        // Следующие шаги из протокола -> тоже в "Задача"
+        (mp.nextSteps || []).forEach((s) => {
+          const v = (s?.task || "").trim();
+          if (!v) return;
+          const o = document.createElement("option");
+          o.value = v;
+          taskList.appendChild(o);
+        });
+  
+        // Подсказки "Мероприятие"
+        ["Бизнес-цель", mp.meetingDate ? `Протокол совещания ${mp.meetingDate}` : ""]
+          .filter(Boolean)
+          .forEach((name) => {
+            const o = document.createElement("option");
+            o.value = name;
+            eventList.appendChild(o);
+          });
+      } catch (e) {
+        console.error("Datalist preload error:", e);
+      }
+    }
+  
+    // ---------- загрузка / рендер задач ----------
+    async function loadTasks() {
+      try {
+        const tasks = await fetchJSON("/get_tasks");
+        tbody.innerHTML = "";
+  
+        (tasks || []).forEach((t, i) => {
+          const id = t._id || "";
+          const tr = document.createElement("tr");
+          tr.setAttribute("data-id", id);
+          tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${t.task || ""}</td>
+            <td>${t.event || ""}</td>
+            <td>${t.work || ""}</td>
+            <td>${t.responsible || ""}</td>
+            <td>${t.deadline || ""}</td>
+            <td>${t.result || ""}</td>
+            <td>${t.resources || ""}</td>
+            <td>${t.coexecutors || ""}</td>
+            <td>${t.comments || ""}</td>
+            <td>
+              <button class="edit-task btn btn-primary" data-id="${id}">Редактировать</button>
+              <button class="delete-task btn btn-danger" data-id="${id}">Удалить</button>
+              <button class="copy-row btn">Копировать в буфер</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+  
+        bindRowActions();
+      } catch (e) {
+        console.error("Ошибка загрузки задач:", e);
+        alert(String(e.message || e));
+      }
+    }
+  
+    // ---------- действия по рядам ----------
+    function bindRowActions() {
+      // Удаление
+      tbody.querySelectorAll(".delete-task").forEach((btn) => {
+        btn.onclick = async () => {
+          const id = btn.dataset.id;
+          if (!id) return;
+          try {
+            const data = await fetchJSON(`/delete_task/${encodeURIComponent(id)}`, { method: "DELETE" });
+            alert(data.message || "Готово");
+            await loadTasks();
+          } catch (e) {
+            alert(String(e.message || e));
+          }
+        };
+      });
+  
+      // Редактирование
+      tbody.querySelectorAll(".edit-task").forEach((btn) => {
+        btn.onclick = () => {
+          const row = btn.closest("tr").children;
+          $("task").value = row[1].textContent;
+          $("event").value = row[2].textContent;
+          $("work").value = row[3].textContent;
+          $("responsible").value = row[4].textContent;
+          $("deadline").value = row[5].textContent;
+          $("result").value = row[6].textContent;
+          $("resources").value = row[7].textContent;
+          $("coexecutors").value = row[8].textContent;
+          $("comments").value = row[9].textContent;
+  
+          saveBtn.dataset.id = btn.dataset.id || "";
+          submitBtn.style.display = "none";
+          saveBtn.style.display = "inline-block";
+        };
+      });
+    }
+  
+    // ---------- обработчики формы ----------
+    function bindFormHandlers() {
+      form?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (saveBtn.style.display !== "none" && saveBtn.dataset.id) {
+          doSaveChanges();
+        } else {
+          addTask();
+        }
+      });
+  
+      submitBtn?.addEventListener("click", (e) => {
+        e.preventDefault();
+        addTask();
+      });
+  
+      saveBtn?.addEventListener("click", (e) => {
+        e.preventDefault();
+        doSaveChanges();
+      });
+    }
+  
+    async function addTask() {
+      const payload = collectForm();
+      if (!payload.task) {
+        alert("Название задачи обязательно");
+        return;
+      }
+      try {
+        const data = await fetchJSON("/add_task", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        alert(data.message || "Готово");
+        form.reset();
+        await loadTasks();
+      } catch (e) {
+        alert(String(e.message || e));
+      }
+    }
+  
+    async function doSaveChanges() {
+      const id = saveBtn.dataset.id;
+      if (!id) return;
+      const payload = collectForm();
+      try {
+        const data = await fetchJSON(`/edit_task/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        alert(data.message || "Готово");
+        saveBtn.style.display = "none";
+        saveBtn.dataset.id = "";
+        submitBtn.style.display = "inline-block";
+        form.reset();
+        await loadTasks();
+      } catch (e) {
+        alert(String(e.message || e));
+      }
+    }
+  
+    function collectForm() {
+      return {
+        task: $("task").value,
+        event: $("event").value,
+        work: $("work").value,
+        responsible: $("responsible").value,
+        deadline: $("deadline").value,
+        result: $("result").value,
+        resources: $("resources").value,
+        coexecutors: $("coexecutors").value,
+        comments: $("comments").value,
+      };
+    }
+  
+    // ---------- синхронизация ----------
+    function bindSyncButton() {
+      if (!syncBtn) return;
+      syncBtn.addEventListener("click", async () => {
+        syncBtn.disabled = true;
+        try {
+          const data = await fetchJSON("/sync_tasks_from_sources", { method: "POST" });
+          alert(data.message || "Готово");
+          await Promise.all([preloadDatalists(), loadTasks()]);
+        } catch (e) {
+          alert("Ошибка синхронизации: " + String(e.message || e));
+        } finally {
+          syncBtn.disabled = false;
+        }
+      });
+    }
+  
+    // ---------- копирование строки ----------
+    function bindCopyDelegation() {
+      tbody.addEventListener("click", (e) => {
+        const btn = e.target.closest(".copy-row");
+        if (!btn) return;
+        const row = btn.closest("tr");
+        const cells = Array.from(row.children).slice(0, 10).map((td) => td.textContent.trim());
+        navigator.clipboard
+          .writeText(cells.join(" | "))
+          .then(() => alert("Скопировано в буфер"))
+          .catch(() => alert("Не удалось скопировать"));
+      });
+    }
+  
+    // ---------- фильтр ----------
+    function bindFilter() {
+      const filterInput = $("filter-input");
+      const filterColumn = $("filter-column");
+      if (!filterInput || !filterColumn) return;
+  
+      const colIndexByName = {
+        task: 1,
+        event: 2,
+        work: 3,
+        responsible: 4,
+        deadline: 5,
+        result: 6,
+        resources: 7,
+        coexecutors: 8,
+        comments: 9,
+      };
+  
+      function applyFilter() {
+        const q = filterInput.value.trim().toLowerCase();
+        const col = filterColumn.value;
+  
+        Array.from(tbody.querySelectorAll("tr")).forEach((tr) => {
+          const cells = tr.querySelectorAll("td");
+          let match = false;
+  
+          if (col === "all") {
+            for (let i = 1; i <= 9; i++) {
+              if ((cells[i]?.textContent || "").toLowerCase().includes(q)) {
+                match = true;
+                break;
+              }
+            }
+          } else {
+            const idx = colIndexByName[col];
+            match = (cells[idx]?.textContent || "").toLowerCase().includes(q);
+          }
+  
+          tr.style.display = match ? "" : "none";
+        });
+      }
+  
+      filterInput.addEventListener("input", applyFilter);
+      filterColumn.addEventListener("change", applyFilter);
+    }
+  
+    // старт
+    (async () => {
+      await Promise.all([loadTasks(), preloadDatalists()]);
+      bindSyncButton();
+      bindCopyDelegation();
+      bindFilter();
+      bindFormHandlers();
+    })();
+  });
+  
