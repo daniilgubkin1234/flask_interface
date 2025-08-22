@@ -3,6 +3,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const addFieldButton = document.getElementById("add-field-button");
     const additionalFieldsContainer = document.getElementById("additional-fields");
 
+    additionalFieldsContainer.addEventListener("click", (e) => {
+        const btn = e.target.closest(".delete-field-button");
+        if (!btn) return;
+        const item = btn.closest(".profile-item");
+        if (item) item.remove();
+        // ВАЖНО: удаление — это не input-событие, поэтому явно сохраняем
+        autoSaveProfile();
+    });
+    
     // --- 1. АВТОЗАГРУЗКА профиля сотрудника ---
     fetch('/get_employee')
         .then(res => res.json())

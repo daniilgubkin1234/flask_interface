@@ -48,6 +48,10 @@
             <!-- 2. Требования к кандидатам на вакансию -->
             <fieldset>
                 <legend>2. Требования к кандидатам на вакансию</legend>
+
+                <label for="name">Имя сотрудника:</label>
+                <input type="text" id="name" name="name">
+
                 <label for="gender">Пол:</label>
                 <input type="text" id="gender" name="gender">
 
@@ -66,8 +70,8 @@
                 <label for="languages">Знание иностранных языков:</label>
                 <input type="text" id="languages" name="languages">
 
-                <label for="pcSkills">Владение ПК, оргтехникой:</label>
-                <input type="text" id="pcSkills" name="pcSkills">
+                <label for="pc">Владение ПК, оргтехникой:</label>
+                <input type="text" id="pc" name="pc">
 
                 <label for="appearance">Внешний вид:</label>
                 <input type="text" id="appearance" name="appearance">
@@ -75,21 +79,55 @@
                 <label for="habits">Вредные привычки:</label>
                 <input type="text" id="habits" name="habits">
 
-                <label for="infoSkills">Умение работать с информацией:</label>
-                <input type="text" id="infoSkills" name="infoSkills">
+                <label for="info">Умение работать с информацией:</label>
+                <input type="text" id="info" name="info">
 
                 <label for="accuracy">Точность:</label>
                 <input type="text" id="accuracy" name="accuracy">
 
-                <label for="decisionMaking">Умение самостоятельно принимать решение:</label>
-                <input type="text" id="decisionMaking" name="decisionMaking">
+                <label for="scrupulousness">Скурпулезность:</label>
+                <input type="text" id="scrupulousness" name="scrupulousness">
+
+                <label for="systemThinking">Системное мышление:</label>
+                <input type="text" id="systemThinking" name="systemThinking">
+
+                <label for="decisiveness">Решительность:</label>
+                <input type="text" id="decisiveness" name="decisiveness">
+
+                <label for="stressResistance">Стрессоустойчивость:</label>
+                <input type="text" id="stressResistance" name="stressResistance">
+
+                <label for="otherQualities">Иные качества:</label>
+                <input type="text" id="otherQualities" name="otherQualities">
+
+                <label for="independence">Умение самостоятельно принимать решение:</label>
+                <input type="text" id="independence" name="independence">
+
+                <label for="organization">Умение организовать труд подчиненных:</label>
+                <input type="text" id="organization" name="organization">
+
+                <label for="responsibility">Умение брать ответственность:</label>
+                <input type="text" id="responsibility" name="responsibility">
+
+                <label for="managementStyle">Стиль управления:</label>
+                <input type="text" id="managementStyle" name="managementStyle">
 
                 <label for="leadership">Лидерские качества:</label>
                 <input type="text" id="leadership" name="leadership">
 
+                <label for="mobility">Мобильность:</label>
+                <input type="text" id="mobility" name="mobility">
+
+                <label for="businessTrips">Возможность и желание командировок:</label>
+                <input type="text" id="businessTrips" name="businessTrips">
+
                 <label for="car">Наличие автомобиля:</label>
                 <input type="text" id="car" name="car">
+
+                <!-- Дополнительные пункты из портрета -->
+                <div id="profileAdditionalFields"></div>
             </fieldset>
+
 
             <!-- 3. Основные направления деятельности -->
             <fieldset>
@@ -146,7 +184,7 @@
         <div class="recommendation-section">
             <h4>Персонал</h4>
             <div class="button-row">
-                <button onclick="window.location.href='/personnel'">Портрет сотрудника</button>
+                <button onclick="window.location.href='/employee_profile'">Портрет сотрудника</button>
                 <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
                 <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
                 <button onclick="window.location.href='/job_description'">Должностная инструкция</button>

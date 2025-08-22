@@ -1,9 +1,10 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #F0F0F0;
-    margin: 40px auto;
+    margin: 0;
+    padding: 0;
 
-
+    min-height: 100vh;
 }
 
 .container {
@@ -14,9 +15,8 @@ body {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     max-width: 800px;
     width: 100%;
-    margin: 40px auto;
-    margin-bottom: 50px;
-    padding-bottom: 40px;
+    display: block;
+    /* Убеждаемся, что контейнер занимает всю ширину */
 }
 
 h2 {
@@ -63,27 +63,6 @@ table th {
     font-weight: bold;
 }
 
-textarea {
-    width: 100%;
-    resize: vertical;
-}
-
-.primary-button {
-    background-color: #2A63C2;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    margin: 15px 0;
-    transition: background-color 0.3s;
-}
-
-.primary-button:hover {
-    background-color: #1F4B8F;
-}
-
 #addParticipant,
 #addDiscussionResult,
 #addNextStep {
@@ -95,6 +74,7 @@ textarea {
     cursor: pointer;
     font-size: 16px;
     margin: 15px 0;
+    transition: background-color 0.3s;
 }
 
 #addParticipant:hover,
@@ -142,45 +122,23 @@ textarea:focus {
 }
 
 .add-task-btn {
-    background-color: #2A63C2;
+    background-color: #757575;
     color: white;
-    padding: 10px;
+    padding: 100px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    margin: 15px 0;
     transition: background-color 0.3s;
+    margin: 20px 0;
 }
 
-.delete-task-btn {
-    background-color: #dc3545;
-    /* красный цвет кнопки */
-    color: #fff;
-    /* белый текст */
-    padding: 10px 15px;
-    /* отступы */
-    border: none;
-    /* убираем границу */
-    border-radius: 4px;
-    /* скругление углов */
-    cursor: pointer;
-    /* курсор при наведении */
-    font-size: 14px;
-    /* размер шрифта */
-    margin-top: 15px;
-    /* отступ сверху */
-    transition: background-color 0.3s ease;
-    /* плавный переход цвета */
+#add-task-btn:hover {
+    background-color: #1F4B8F;
+
 }
 
-.delete-task-btn:hover {
-    background-color: #c82333;
-    /* цвет при наведении */
-}
-
-button[type="submit"],
-button[type="reset"] {
+button[type="submit"] {
     background-color: #2A63C2;
     color: white;
     padding: 15px;
@@ -193,8 +151,7 @@ button[type="reset"] {
     width: 100%;
 }
 
-button[type="submit"]:hover,
-button[type="reset"]:hover {
+button[type="submit"]:hover {
     background-color: #1F4B8F;
 }
 
@@ -202,6 +159,41 @@ button[type="reset"]:hover {
     margin-top: 20px;
 }
 
+#add-field-button {
+    background-color: #2A63C2;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    margin: 20px 0;
+}
+
+
+.delete-field-button {
+    background-color: #dc3545;
+    /* красный */
+    color: #fff;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+#add-field-button:hover {
+    background-color: #1F4B8F;
+
+}
+
+.delete-field-button:hover {
+    background-color: #c82333;
+    /* при наведении */
+}
 
 /* Блок рекомендаций */
 .recommendation-block {
@@ -213,7 +205,6 @@ button[type="reset"]:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     /* легкая тень */
     text-align: center;
-    margin-top: 50px;
 }
 
 .recommendation-block h3 {
