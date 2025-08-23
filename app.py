@@ -40,8 +40,11 @@ ALLOWED_EXTENSIONS = {
     'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt',
     'png', 'jpg', 'jpeg', 'bpmn', 'xml', 'svg'
 }
+
+
 def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 # -------------------------------------------------------------------------
 # 2.  Flask-Login и OAuth настройка
@@ -200,6 +203,8 @@ def star_navigation():
 @app.route('/survey_ai')
 def survey_ai():
     return render_template('survey_ai.html')
+
+
 @app.route("/get_user_survey", methods=["GET"])
 @login_required
 def get_user_survey():
@@ -339,13 +344,13 @@ def delete_task(task_id):
     return jsonify({"error": "Задача не найдена"}), 404
 
 # -------------------------------------------------------------------------
-# 9.  Персонал
+# 9.  Портрет сотрудника (единые названия)
 # -------------------------------------------------------------------------
 
 
-@app.route("/personnel")
+@app.route("/employee_profile")
 @login_required
-def personnel():
+def employee_profile_page():
     return render_template("employee_profile.html")
 
 # === БЛОК 2: Единая синхронизация персонала ===
@@ -456,7 +461,6 @@ def sync_personnel_from_sources():
 def add_employee():
     data = request.json
     if data:
-        # --- OAuth: добавлено ---
         data["owner_id"] = ObjectId(current_user.id)
         employees_collection.insert_one(data)
         return jsonify({"message": "Сотрудник добавлен!"}), 201
@@ -470,11 +474,7 @@ def get_employee():
     query = {"owner_id": ObjectId(current_user.id)}
     if name:
         query["name"] = name
-    # Если имя не указано — берём последний профиль пользователя
-    employee = employees_collection.find_one(
-        query,
-        sort=[("_id", -1)]
-    )
+    employee = employees_collection.find_one(query, sort=[("_id", -1)])
     if employee:
         employee["_id"] = str(employee["_id"])
         return jsonify(employee)
@@ -487,8 +487,8 @@ def update_employee(employee_id):
     data = request.json
     if data:
         employees_collection.update_one(
-            {"_id": ObjectId(employee_id), "owner_id": ObjectId(
-                current_user.id)},  # --- OAuth ---
+            {"_id": ObjectId(employee_id),
+             "owner_id": ObjectId(current_user.id)},
             {"$set": data}
         )
         return jsonify({"message": "Данные обновлены!"})
@@ -515,6 +515,8 @@ def add_business_goal():
     data["owner_id"] = ObjectId(current_user.id)
     business_goal_collection.insert_one(data)
     return jsonify({"message": "Бизнес-цель добавлена успешно!"}), 201
+
+
 @app.route("/get_business_goal", methods=["GET"])
 @login_required
 def get_business_goal():
@@ -591,6 +593,8 @@ def submit_adaptation_plan():
         "message": "Адаптационный план успешно сохранен!",
         "plan_id": str(result.inserted_id)
     }), 201
+
+
 @app.route("/get_adaptation_plan", methods=["GET"])
 @login_required
 def get_adaptation_plan():
@@ -624,6 +628,8 @@ def save_meeting_protocol():
         "message": "Протокол успешно сохранен!",
         "plan_id": str(result.inserted_id)
     }), 201
+
+
 @app.route("/get_meeting_protocol", methods=["GET"])
 @login_required
 def get_meeting_protocol():
@@ -660,6 +666,7 @@ def save_stimulation():
     )
     return jsonify({"message": "Данные успешно сохранены!"}), 200
 
+
 @app.route("/get_stimulation_system", methods=["GET"])
 @login_required
 def get_stimulation_system():
@@ -695,6 +702,7 @@ def submit_job_description():
         "doc_id": str(result.inserted_id)
     }), 201
 
+
 @app.route("/get_job_description", methods=["GET"])
 @login_required
 def get_job_description_for_user():
@@ -704,6 +712,8 @@ def get_job_description_for_user():
         projection={"_id": 0}
     )
     return jsonify(doc if doc else {})
+
+
 @app.route("/get_job_description/<doc_id>", methods=["GET"])
 @login_required
 def get_job_description(doc_id):
@@ -773,6 +783,8 @@ def save_business_processes():
         return jsonify({"message": "Данные успешно сохранены!"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 @app.route("/get_business_processes", methods=["GET"])
 @login_required
 def get_business_processes():
@@ -805,6 +817,8 @@ def save_three_plus_twenty():
     data["owner_id"] = ObjectId(current_user.id)
     three_plus_twenty_collection.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
+
+
 @app.route("/get_three_plus_twenty", methods=["GET"])
 @login_required
 def get_three_plus_twenty():
@@ -823,6 +837,8 @@ def get_three_plus_twenty():
 @login_required
 def regulations_list():
     return render_template('regulations_list.html')
+
+
 @app.route('/upload_regulation', methods=['POST'])
 @login_required
 def upload_regulation():
@@ -837,7 +853,8 @@ def upload_regulation():
     if not allowed_file(file.filename):
         return jsonify({"success": False, "error": "Недопустимый формат файла"}), 400
 
-    safe_name = secure_filename(f"{current_user.id}_{int(time.time())}_{file.filename}")
+    safe_name = secure_filename(
+        f"{current_user.id}_{int(time.time())}_{file.filename}")
     save_path = os.path.join(UPLOAD_FOLDER, safe_name)
     file.save(save_path)
 
@@ -943,7 +960,8 @@ def delete_regulation_file(doc_id):
     except:
         return jsonify({"success": False, "error": "Некорректный ID"}), 400
 
-    doc = regulation_files_collection.find_one({"_id": _id, "owner_id": ObjectId(current_user.id)})
+    doc = regulation_files_collection.find_one(
+        {"_id": _id, "owner_id": ObjectId(current_user.id)})
     if not doc:
         return jsonify({"success": False, "error": "Документ не найден"}), 404
 
@@ -981,10 +999,12 @@ def save_regulations_list():
 # 20.  Вопрос-ответ
 # -------------------------------------------------------------------------
 
+
 @app.route('/question_answer')
 @login_required
 def question_answer():
     return render_template('question_answer.html')
+
 
 # -------------------------------------------------------------------------
 # 21.  Запуск приложения
