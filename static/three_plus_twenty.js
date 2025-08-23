@@ -43,7 +43,42 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
       });
-  
+      // --- 1.5 Автоподстановка из задач, если обязанности/направления ещё пустые ---
+fetch("/get_tasks")
+.then(r => r.json())
+.then(tasks => {
+  // Проверим: есть ли уже что-то в обязанностях/направлениях
+  const anyRespFilled = Array.from({ length: 20 }, (_, i) =>
+    document.getElementById(`responsibility_${i + 1}`)?.value.trim()
+  ).some(Boolean);
+
+  const d1 = document.getElementById("direction_1")?.value.trim() || "";
+  const d2 = document.getElementById("direction_2")?.value.trim() || "";
+  const d3 = document.getElementById("direction_3")?.value.trim() || "";
+
+  // Если пусто — подставим из задач
+  if (!anyRespFilled && Array.isArray(tasks) && tasks.length) {
+    const names = tasks
+      .map(t => (t.task || t.work || "").trim())
+      .filter(Boolean);
+
+    // Обязанности (до 20)
+    for (let i = 1; i <= 20 && i <= names.length; i++) {
+      const el = document.getElementById(`responsibility_${i}`);
+      if (el && !el.value.trim()) el.value = names[i - 1];
+    }
+
+    // Три основных направления — первые 3 задачи, если они не заданы
+    if (!d1) document.getElementById("direction_1").value = names[0] || "";
+    if (!d2) document.getElementById("direction_2").value = names[1] || "";
+    if (!d3) document.getElementById("direction_3").value = names[2] || "";
+
+    // Триггерим автосохранение существующей функцией
+    form.dispatchEvent(new Event("input"));
+  }
+})
+.catch(() => {});
+
     // --- 2. Автосохранение ---
     function autoSave() {
       const position = [document.getElementById("position_name").value.trim()];

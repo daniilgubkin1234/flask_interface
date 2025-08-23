@@ -348,6 +348,108 @@ def delete_task(task_id):
 def personnel():
     return render_template("employee_profile.html")
 
+# === БЛОК 2: Единая синхронизация персонала ===
+@app.route("/sync_personnel_from_sources", methods=["POST"])
+@login_required
+def sync_personnel_from_sources():
+    owner = ObjectId(current_user.id)
+
+    # 1) Забираем свежие источники
+    profile = employees_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
+    tpt     = three_plus_twenty_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
+    adapt   = adaptation_plans_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
+
+    # 2) Достаем данные из 3+20
+    def _to_list(val):
+        if not val: return []
+        if isinstance(val, list): return [x for x in val if isinstance(x, str) and x.strip()]
+        return [str(val)]
+
+    main_functions = _to_list(tpt.get("main_functions")) or _to_list(tpt.get("directions"))[:3]
+    additional_functions = _to_list(tpt.get("additional_functions"))
+    # Если кто-то всё еще хранит только responsibilities
+    if not additional_functions and tpt.get("responsibilities"):
+        additional_functions = [str(x).strip() for x in tpt["responsibilities"] if str(x).strip()]
+
+    # 3) Резюме адаптационного плана (короткое)
+    adapt_tasks = []
+    for i, task in enumerate(adapt.get("tasks") or [], start=1):
+        title = (task.get("title") or f"Задача {i}").strip()
+        time_ = (task.get("time") or "").strip()
+        adapt_tasks.append(f"{title}" + (f" — {time_}" if time_ else ""))
+
+    # 4) ДИ: собираем маппинг «портрет → требования»
+    #    (не перетираем уже заполненные в ДИ поля — если у пользователя есть ручные правки)
+    profile_to_jd = {
+        "gender": "gender",
+        "age": "age",
+        "residence": "residence",
+        "education": "education",
+        "speech": "speech",
+        "languages": "languages",
+        "pc": "pcSkills",
+        "appearance": "appearance",
+        "habits": "habits",
+        "info": "infoSkills",
+        "accuracy": "accuracy",
+        "independence": "decisionMaking",
+        "leadership": "leadership",
+        "car": "car"
+    }
+
+    latest_jd = job_description_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
+    jd_doc = {}
+
+    # Перенос «общих»/титульных полей из существующей ДИ, чтобы не потерять руками введённое
+    for keep in ["company", "approval", "appointedBy", "documentPurpose", "replaces",
+                 "activityGuide", "supervisor", "rights", "responsibility"]:
+        if latest_jd.get(keep): jd_doc[keep] = latest_jd[keep]
+
+    # Требования из портрета — заполняем ТОЛЬКО если в ДИ поля пусты
+    for src, dst in profile_to_jd.items():
+        if not jd_doc.get(dst):
+            val = (profile.get(src) or "").strip()
+            if val: jd_doc[dst] = val
+
+    # Позиция: берём из 3+20, иначе как было в ДИ
+    pos_arr = tpt.get("position") if isinstance(tpt.get("position"), list) else _to_list(tpt.get("position"))
+    position = (pos_arr[0].strip() if pos_arr else "").strip() or latest_jd.get("position", "")
+    jd_doc["position"] = position
+
+    # Основные направления и обязанности — формируем из 3+20 (этот блок считаем «истиной»)
+    jd_doc["mainActivity"] = main_functions
+    jd_doc["jobDuty"] = additional_functions
+
+    # Раздел «Адаптация» — сохраняем отдельно; фронт может его отрисовывать как read-only блок
+    if adapt_tasks:
+        jd_doc["adaptation"] = adapt_tasks
+
+    jd_doc["owner_id"] = owner
+    ins = job_description_collection.insert_one(jd_doc)
+    jd_id = str(ins.inserted_id)
+
+    # 5) Оргструктура: добавим/обновим самую свежую версию из ДИ/3+20
+    rows = []
+    if position:
+        rows.append({
+            "position": position,
+            "supervisorIndex": None,  # пока не знаем иерархию — пользователь заполнит
+            "staffCount": 1,
+            "functional": ", ".join(main_functions) if main_functions else ""
+        })
+
+    if rows:
+        organizational_structure_coll.insert_one({
+            "owner_id": owner,
+            "createdAt": datetime.utcnow(),
+            "rows": rows
+        })
+
+    return jsonify({
+        "message": "Синхронизация персонала выполнена",
+        "job_description_id": jd_id,
+        "org_rows_added": len(rows)
+    }), 200
 
 @app.route("/add_employee", methods=["POST"])
 @login_required

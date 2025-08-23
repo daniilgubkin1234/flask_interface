@@ -122,6 +122,18 @@
             </fieldset>
 
             <button type="submit">Сохранить</button>
+            <button id="syncPersonnelBtn" type="button">Синхронизировать персонал</button>
+<script>
+document.getElementById('syncPersonnelBtn').addEventListener('click', () => {
+  fetch('/sync_personnel_from_sources', { method: 'POST' })
+    .then(r => r.json())
+    .then(() => {
+      // после синхронизации просто перезагрузим форму ДИ
+      location.reload();
+    })
+    .catch(err => alert('Ошибка синхронизации: ' + err));
+});
+</script>
         </form>
     </div>
     <!-- Навигационный блок -->
