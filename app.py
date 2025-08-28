@@ -23,6 +23,8 @@ from prometheus_flask_exporter import PrometheusMetrics
 load_dotenv()
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.jinja_env.auto_reload = True
 metrics = PrometheusMetrics(app)
 app.secret_key = os.getenv("SECRET_KEY") or os.getenv(
     "FLASK_SECRET")  # --- OAuth: добавлено ---

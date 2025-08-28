@@ -231,7 +231,8 @@ button {
 }
 
 /* Кнопка "Отправить" по центру и ниже кнопки "Добавить строку" */
-#submitData {
+#submitData,
+#syncPersonnelToOrg {
     background-color: #2A63C2;
     padding: 12px 20px;
     width: 200px;
