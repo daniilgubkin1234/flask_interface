@@ -11,8 +11,15 @@
 </head>
 
 <body>
+    
+    
     <div class="container">
         <h2>Бизнес-процессы</h2>
+        <div class="bp-name-block">
+            <label for="bpName" class="bp-name-label">Название бизнес-процесса</label>
+            <input id="bpName" type="text" class="bp-name-input" placeholder="Например: Обработка заказа">
+            <div class="bp-name-hint">Это название попадёт в реестр регламентов и в имена файлов схемы.</div>
+          </div>
         <div class="table-wrapper">
             <table id="bpTable">
                 <thead>
@@ -56,7 +63,9 @@
         <button id="saveBP">Сохранить бизнес-процессы</button>
         <button id="buildDiagram">Построить BPMN</button>
         <button id="exportBPMN">Экспортировать BPMN XML</button>
+        <button id="resetToAutoLayout">Сбросить на автолэйаут из таблицы</button>
         <button id="toggleMode">Режим: Просмотр</button>
+        
         <div class="diagram-wrapper">
             <h3>Схема процесса</h3>
             <div id="bpmnContainer" style="width:100%;height:600px;border:1px solid #888;margin-top:10px"></div>
@@ -76,7 +85,7 @@
             <h4>Задачи</h4>
             <div class="button-row">
                 <button onclick="window.location.href='/business'">Бизнес цель</button>
-                <button onclick="window.location.href='/tasks'">Задачи и план работ и мероприятий</button>
+                <button onclick="window.location.href='/tasks'">Задачи, план мероприятий и работ</button>
                 <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
             </div>
         </div>

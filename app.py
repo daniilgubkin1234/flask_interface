@@ -3,6 +3,7 @@ from flask import Response, Flask, render_template, request, jsonify, redirect, 
 from flask_pymongo import PyMongo
 from dotenv import load_dotenv
 import os
+import re
 from bson.objectid import ObjectId
 # --- OAuth: добавлено ---
 from datetime import datetime
@@ -122,12 +123,15 @@ regulations_collection = mongo.db.regulations_list
 organizational_structure_coll = mongo.db.organizational_structure
 users_collection = mongo.db.users                # --- OAuth: добавлено ---
 regulation_files_collection = mongo.db.regulation_files
+bpmn_xml_collection = mongo.db.bpmn_xml_store
 
 # -------------------------------------------------------------------------
 # 6.  OAuth-роуты (вход / колбек / выход)
 # -------------------------------------------------------------------------
 
-
+def _slugify(name: str) -> str:
+    s = re.sub(r"[^\w\-]+", "_", (name or "").strip(), flags=re.U).strip("_")
+    return s[:80] or "process"
 @app.route("/login")
 def login():
     """Стартуем OIDC flow через Google."""
@@ -798,6 +802,58 @@ def get_business_processes():
     )
     # Если документ найден — вернуть rows, иначе пустой массив
     return jsonify(doc.get('rows', []) if doc else [])
+
+@app.route("/save_bpmn_xml", methods=["POST"])
+@login_required
+def save_bpmn_xml():
+    data = request.get_json(force=True) or {}
+    name = data.get("name", "") or "Без названия"
+    xml  = data.get("xml", "") or ""
+    if not xml:
+        return jsonify({"ok": False, "error": "Пустой XML"}), 400
+
+    slug = _slugify(name)
+    bpmn_xml_collection.update_one(
+        {"owner_id": ObjectId(current_user.id), "slug": slug},
+        {"$set": {
+            "owner_id": ObjectId(current_user.id),
+            "slug": slug,
+            "name": name,
+            "xml": xml,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    return jsonify({"ok": True, "slug": slug})
+
+@app.route("/get_bpmn_xml", methods=["GET"])
+@login_required
+def get_bpmn_xml():
+    name = request.args.get("name", "") or ""
+    if not name:
+        return jsonify({"found": False})
+    slug = _slugify(name)
+    doc = bpmn_xml_collection.find_one(
+        {"owner_id": ObjectId(current_user.id), "slug": slug}
+    )
+    if not doc:
+        return jsonify({"found": False})
+    return jsonify({"found": True, "xml": doc.get("xml", ""), "slug": slug})
+
+@app.route("/delete_bpmn_xml", methods=["POST"])
+@login_required
+def delete_bpmn_xml():
+    data = request.get_json(force=True) or {}
+    name = (data.get("name") or "").strip()
+    if not name:
+        return jsonify({"ok": False, "error": "Нет имени"}), 400
+
+    slug = _slugify(name)
+    result = bpmn_xml_collection.delete_one({
+        "owner_id": ObjectId(current_user.id),
+        "slug": slug
+    })
+    return jsonify({"ok": True, "deleted": result.deleted_count})
 # -------------------------------------------------------------------------
 # 18.  «3 + 20»
 # -------------------------------------------------------------------------

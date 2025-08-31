@@ -171,4 +171,127 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
         alert("Протокол совещания сохранён!");
     });
+    const downloadBtn = document.getElementById("downloadProtocol");
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", () => {
+      const data = collectProtocolData();
+      const html = buildProtocolDocHTML(data);
+      const datePart = (data.date || new Date().toISOString().slice(0,10)).replaceAll("-", ".");
+      downloadDoc(html, `Протокол_совещания_${datePart}.doc`);
+    });
+  }
+
+  function collectProtocolData() {
+    // Дата
+    const date = meetingDate?.value || "";
+
+    // Участники (все input внутри .participant)
+    const participants = Array.from(
+      participantsSection.querySelectorAll(".participant input")
+    ).map(el => el.value.trim()).filter(Boolean);
+
+    // Результаты обсуждения (все textarea внутри .discussion-result)
+    const discussionResults = Array.from(
+      discussionResultsSection.querySelectorAll(".discussion-result textarea")
+    ).map(el => el.value.trim()).filter(Boolean);
+
+    // Следующие шаги — пробегаемся по строкам tbody
+    const nextSteps = Array.from(nextStepsTable.rows).map((row) => {
+      const task = row.querySelector("textarea")?.value.trim() || "";
+      const executor = row.querySelector("input[name^='executor_']")?.value.trim() || "";
+      const deadline = row.querySelector("input[name^='deadline_']")?.value || "";
+      return { task, executor, deadline };
+    }).filter(s => s.task || s.executor || s.deadline);
+
+    return { date, participants, discussionResults, nextSteps };
+  }
+
+  function buildProtocolDocHTML({ date, participants, discussionResults, nextSteps }) {
+    const esc = (s) => String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    const formatDateRU = (iso) => {
+      if (!iso) return "";
+      const [y,m,d] = iso.split("-");
+      return `${d}.${m}.${y}`;
+    };
+
+    const participantsHTML = participants.length
+      ? `<ol>${participants.map(p => `<li>${esc(p)}</li>`).join("")}</ol>`
+      : `<p style="color:#555;">—</p>`;
+
+    const resultsHTML = discussionResults.length
+      ? `<ol>${discussionResults.map(r => `<li>${esc(r)}</li>`).join("")}</ol>`
+      : `<p style="color:#555;">—</p>`;
+
+    const stepsRows = (nextSteps.length ? nextSteps : [{task:"",executor:"",deadline:""}])
+      .map((s, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${esc(s.task)}</td>
+          <td>${esc(s.executor)}</td>
+          <td>${esc(formatDateRU(s.deadline))}</td>
+        </tr>`).join("");
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Протокол совещания</title>
+<style>
+  body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.35; }
+  h1   { text-align: center; font-size: 18pt; margin: 0 0 12pt; }
+  .meta p { margin: 0 0 6pt; }
+  .section-title { font-weight: bold; margin: 12pt 0 6pt; }
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0; }
+  th, td { border: 1px solid #000; padding: 6pt; vertical-align: top; }
+  th { text-align: center; }
+</style>
+</head>
+<body>
+  <h1>Протокол совещания</h1>
+
+  <div class="meta">
+    <p><b>Дата:</b> ${esc(formatDateRU(date))}</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Участники:</div>
+    ${participantsHTML}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Результаты обсуждения:</div>
+    ${resultsHTML}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Следующие шаги:</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40px;">№</th>
+          <th>Задача</th>
+          <th style="width:28%;">Исполнитель</th>
+          <th style="width:18%;">Срок</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${stepsRows}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>`;
+  }
+
+  function downloadDoc(htmlString, filename) {
+    const blob = new Blob([htmlString], { type: "application/msword;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
 });

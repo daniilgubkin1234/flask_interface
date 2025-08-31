@@ -109,7 +109,8 @@ button {
 }
 #exportBPMN,
 #toggleMode,
-#sendToRegulations {
+#sendToRegulations,
+#resetToAutoLayout {
     background-color: #2A63C2;
     margin-top: 10px;
     text-align: center;
@@ -171,6 +172,45 @@ input:focus {
     overflow-y: hidden;
     background: none;
 }
+/* Блок названия бизнес-процесса */
+.bp-name-block{
+    margin: 0 0 18px 0;
+  }
+  
+  .bp-name-label{
+    display:block;
+    font-weight:600;
+    color:#333;
+    margin-bottom:6px;
+  }
+  
+  .bp-name-input{
+    max-width:560px;
+    width:100%;
+    padding:10px 12px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    background:#fff;
+    transition: box-shadow .2s, border-color .2s;
+    box-sizing:border-box;
+  }
+  
+  .bp-name-input::placeholder{
+    color:#9aa3b2;
+  }
+  
+  .bp-name-input:focus{
+    outline:none;
+    border-color:#2A63C2;
+    box-shadow:0 0 0 3px rgba(42,99,194,.15);
+  }
+  
+  .bp-name-hint{
+    margin-top:6px;
+    font-size:12px;
+    color:#6b7280;
+  }
+  
 
 /* Скрытие баннера */
 .bjs-powered-by {
