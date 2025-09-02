@@ -19,7 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let isViewer = true;    // скрыть палитру и контекст в режиме просмотра
   let lastXml = "";       // актуальный XML с DI (редакторская версия)
   let isDirty = false;    // правда, если в редакторе были ручные правки
-
+  let autosaveEnabled = false;   // включим после первичной загрузки с сервера
+  let autosaveTimer = null;
   // === Цвета по ролям ===
   let lastRoles = [];
   function roleColor(idx) {
@@ -35,7 +36,33 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
     return palette[idx % palette.length];
   }
-
+  function debounce(fn, ms) {
+    return (...args) => {
+      clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(() => fn(...args), ms);
+    };
+  }async function saveNow({ silent = true } = {}) {
+    if (!autosaveEnabled) return;
+  
+    const bpName = (bpNameInput?.value || "").trim() || "Без названия";
+    const rows = getTableRowsData();
+  
+    try {
+      await fetch("/save_business_processes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json;charset=utf-8" },
+        body: JSON.stringify({ name: bpName, rows })
+      }).then(r => r.json());
+  
+      if (!silent) alert("Данные таблицы сохранены");
+      // для отладки
+      window.__bp_last_saved__ = { at: new Date().toISOString(), name: bpName, rows };
+    } catch (e) {
+      console.error("Autosave error:", e);
+      if (!silent) alert("Ошибка автосохранения: " + (e.message || e));
+    }
+  }
+  const autosave = debounce(() => saveNow({ silent: true }), 600);
   // легенда + скрытие ручек в режиме просмотра
   function ensureLegendStyles() {
     if (document.getElementById('bpLegendStyle')) return;
@@ -48,6 +75,12 @@ document.addEventListener("DOMContentLoaded", () => {
       .view-only .djs-bendpoints,
       .view-only .djs-resizer,
       .view-only .djs-outline{ display:none !important; }
+      #bpmnContainer .djs-label{
+            paint-order: stroke fill;
+           stroke:#fff;
+           stroke-width:4px;
+            stroke-linejoin:round;
+          }
     `;
     document.head.appendChild(st);
   }
@@ -74,40 +107,52 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1) Загрузка сохранённых данных таблицы БП
   // =========================================================
   fetch("/get_business_processes")
-    .then(r => r.json())
-    .then(rows => {
-      if (!Array.isArray(rows) || rows.length === 0) {
-        attachTypeChangeListeners();
-        updateRowNumbers();
-        return;
-      }
-
-      while (tbody.rows.length > 1) tbody.deleteRow(1);
-
-      rows.forEach((row, idx) => {
-        const tr = idx === 0 ? tbody.rows[0] : tbody.rows[0].cloneNode(true);
-
-        setText(tr, ".rowNum", row.num || `N${idx + 1}`);
-        setValue(tr, ".stepNameField", row.name || "");
-        setValue(tr, ".stepTypeField", row.type || "task");
-        setValue(tr, ".roleField", row.role || "");
-        setValue(tr, ".commentsField", row.comment || "");
-
-        ensureNextControls(tr, row.type || "task");
-
-        const nextVals = String(row.next || "")
-          .split(",").map(s => s.trim()).filter(Boolean);
-        const selects = tr.querySelectorAll(".nextField");
-        if (selects[0] && nextVals[0]) selects[0].value = nextVals[0];
-        if (selects[1] && nextVals[1]) selects[1].value = nextVals[1];
-
-        if (idx !== 0) tbody.appendChild(tr);
-      });
-
-      updateRowNumbers();
+  .then(r => r.json())
+  .then(rows => {
+    if (!Array.isArray(rows) || rows.length === 0) {
       attachTypeChangeListeners();
-    })
-    .catch(err => console.error("Ошибка загрузки бизнес-процессов:", err));
+      updateRowNumbers();
+      autosaveEnabled = true;          // ← ВКЛЮЧАЕМ автосейв и на «чистой» странице
+      return;
+    }
+
+    while (tbody.rows.length > 1) tbody.deleteRow(1);
+
+    rows.forEach((row, idx) => {
+      const tr = idx === 0 ? tbody.rows[0] : tbody.rows[0].cloneNode(true);
+
+      setText(tr, ".rowNum", row.num || `N${idx + 1}`);
+      setValue(tr, ".stepNameField", row.name || "");
+      setValue(tr, ".stepTypeField", row.type || "task");
+      setValue(tr, ".roleField", row.role || "");
+      setValue(tr, ".commentsField", row.comment || "");
+
+      ensureNextControls(tr, row.type || "task");
+
+      // 🔴 НЕ ставим value сейчас — опций N1..Nn ещё нет
+      // 🟢 Кладём исходное значение временно в data-атрибут строки
+      tr.dataset.nextSaved = row.next || "";
+
+      if (idx !== 0) tbody.appendChild(tr);
+    });
+
+    // здесь создаются все опции N1..Nn во всех .nextField
+    updateRowNumbers();
+
+    // ✅ Теперь, когда опции есть, подставляем сохранённые значения
+    Array.from(tbody.rows).forEach(tr => {
+      const nextVals = String(tr.dataset.nextSaved || "")
+        .split(",").map(s => s.trim()).filter(Boolean);
+      const selects = tr.querySelectorAll(".nextField");
+      if (selects[0] && nextVals[0]) selects[0].value = nextVals[0];
+      if (selects[1] && nextVals[1]) selects[1].value = nextVals[1];
+      delete tr.dataset.nextSaved;
+    });
+
+    attachTypeChangeListeners();
+    autosaveEnabled = true; 
+  })
+  .catch(err => console.error("Ошибка загрузки бизнес-процессов:", err));
 
   // =========================================================
   // 2) Сохранение: БД БП + (приоритетно) отредактированная схема + загрузка в «Регламенты»
@@ -294,6 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const tr = sel.closest("tr");
         ensureNextControls(tr, sel.value);
         rebuildNextOptions();
+        autosave();
       };
     });
   }
@@ -732,7 +778,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return String(s || "process").replace(/[^\w\-]+/g, "_").slice(0, 64);
   }
   function ts() { return new Date().toISOString().replace(/[:.TZ\-]/g, ""); }
-
+  tbody.addEventListener("input", autosave, true);
+  tbody.addEventListener("change", autosave, true);
+  
+  // Изменение названия процесса — автосейв
+  bpNameInput?.addEventListener("input", autosave);
   // ========================================================
   // 6) Таблица: добавление/удаление
   // =========================================================
@@ -746,6 +796,8 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.appendChild(tr);
     updateRowNumbers();
     attachTypeChangeListeners();
+    autosave();
+
   });
 
   tbody.addEventListener("click", (e) => {
@@ -762,6 +814,8 @@ document.addEventListener("DOMContentLoaded", () => {
       tr.remove();
     }
     updateRowNumbers();
+    autosave();
+
   });
 
   // =========================================================
