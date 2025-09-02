@@ -130,6 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.onclick = async () => {
           const id = btn.dataset.id;
           if (!id) return;
+      
+          // Соберём понятный текст подтверждения из строки таблицы
+          const row = btn.closest("tr");
+          const title = row?.children?.[1]?.textContent?.trim() || "эту задачу";
+          const deadline = row?.children?.[5]?.textContent?.trim();
+          const msg = `Удалить «${title}»${deadline ? ` (срок: ${deadline})` : ""}?`;
+      
+          if (!confirm(msg)) return; // защита от случайного клика
+      
           try {
             const data = await fetchJSON(`/delete_task/${encodeURIComponent(id)}`, { method: "DELETE" });
             alert(data.message || "Готово");

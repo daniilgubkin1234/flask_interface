@@ -679,7 +679,7 @@ def get_stimulation_system():
     doc = stimulation_system_collection.find_one(
         {"owner_id": ObjectId(current_user.id)},
         sort=[("_id", -1)],
-        projection={"_id": 0}
+        projection={"_id": 0, "owner_id": 0}  # было {"_id": 0}
     )
     return jsonify(doc if doc else {})
 
