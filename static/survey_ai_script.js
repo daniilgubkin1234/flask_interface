@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 li.innerHTML = rec;
                 recommendationsList.appendChild(li);
             });
-            drawRadarChart([block1Sum, block2Sum, block3Sum, block4Sum, block5Sum]);
+            drawRadarChart([block1Sum, block5Sum, block4Sum, block3Sum, block2Sum]);
             // плавная прокрутка к результатам
             function smoothScrollTo(targetY, duration) {
                 const startY = window.scrollY;
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
         new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['Задачи', 'Персонал', 'Система стимулирования', 'Бизнес-процессы', 'Организационная структура'],
+                labels: ['Задачи', 'Организационная структура', 'Бизнес-процессы', 'Система стимулирования', 'Персонал'],
                 datasets: [{
                     label: 'Оценка',
                     data,
