@@ -89,12 +89,15 @@ function positionMenu(group, menu) {
             left = gw.left - wrapperRect.left - menu.offsetWidth - 30;
             break;
         case 'processes':
+            // меню для «Бизнес-процессы»: ещё правее
             top = gw.bottom - wrapperRect.top - menu.offsetHeight;
-            left = gw.right - wrapperRect.left + gw.width - menu.offsetWidth;
+            left = gw.right - wrapperRect.left + 25;   // было +56
             break;
         case 'incentive-system':
+            // меню для «Система стимулирования»: чуть правее, меньше вылет влево
             top = gw.bottom - wrapperRect.top - menu.offsetHeight;
-            left = gw.left - wrapperRect.left - gw.width - 20;
+            left = gw.left - wrapperRect.left - menu.offsetWidth - 20; // было -48
+            if (left < 0) left = 0;
             break;
         case 'diagnostics':
             top = gw.bottom - wrapperRect.top + 175;
@@ -108,3 +111,15 @@ function positionMenu(group, menu) {
     menu.style.top = top + 'px';
     menu.style.left = left + 'px';
 }
+
+// Перепозиционируем открытые меню при изменении размеров окна
+window.addEventListener('resize', () => {
+    const wrapper = document.querySelector('.star-nav-wrapper');
+    if (!wrapper) return;
+    wrapper.querySelectorAll('.star-ray-group, .star-center-group').forEach(group => {
+        const menu = document.getElementById('menu-' + group.dataset.section);
+        if (menu && menu.classList.contains('open')) {
+            positionMenu(group, menu);
+        }
+    });
+});

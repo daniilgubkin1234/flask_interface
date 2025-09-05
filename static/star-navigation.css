@@ -7,6 +7,11 @@
     box-sizing: border-box;
 }
 
+:root {
+    --page-vpad: clamp(24px, 3vh, 40px);
+    /* верх/низ */
+}
+
 /* 2. Отключаем выделение текста внутри звезды */
 .star-nav-wrapper,
 .star-ray-group,
@@ -22,45 +27,59 @@
 /* 3. Фон страницы и подавление скроллов */
 html,
 body {
-    width: 100%;
     height: 100%;
-    overflow: hidden;
+    margin: 0;
+}
+
+html {
+    overflow-y: auto;
+    /* один скролл */
+    overflow-x: hidden;
     background: #f5f5f5;
+}
+
+body {
+    min-height: 100dvh;
+    /* учитывает панельки браузера, меньше шансов «1px-скролла» */
     font-family: sans-serif;
 }
 
-/* 4. Flex-контейнер для заголовка и звезды */
 .page-content {
     display: flex;
-    align-items: center;
     justify-content: center;
-    height: 100%;
-    padding: 0 20px;
+    align-items: flex-start;
+    /* базово не центрируем по вертикали */
+    min-height: 100dvh;
+    /* высота окна (динамическая) */
+    padding: var(--page-vpad) clamp(16px, 3vw, 40px);
+    /* комфортный верх/низ, без перепада */
+    gap: clamp(24px, 3vw, 48px);
+    flex-wrap: nowrap;
 }
 
 /* 5. Левая колонка – заголовок */
 .star-title {
-    flex: 0 0 auto;
+    flex: 0 1 clamp(420px, 28vw, 560px);
     margin-right: 40px;
 }
 
 .star-title h1 {
-    font-size: clamp(2rem, 5vw, 3rem);
+    font-size: clamp(2.25rem, 3vw, 3rem);
     line-height: 1.1;
     color: #0086D7;
     font-weight: 700;
     text-align: left;
 }
 
-/* 6. Правая колонка – контейнер звезды */
+/* как в исходнике — «эталонный» размер */
 .star-nav-wrapper {
-    flex: 0 0 auto;
     position: relative;
     width: 1200px;
     height: 1200px;
+    flex: 0 0 auto;
 }
 
-/* 7. Встраиваем SVG под размер контейнера */
+/* SVG во весь контейнер */
 #star-container {
     width: 100%;
     height: 100%;
@@ -71,6 +90,7 @@ body {
     width: 100%;
     height: 100%;
 }
+
 
 /* 8. Общие трансформации для групп и курсор */
 .star-ray-group,
@@ -166,4 +186,47 @@ body {
 .star-menu button:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(65, 105, 225, 0.5);
+}
+
+@media (min-width: 1401px) {
+    .page-content {
+        align-items: center;
+        /* вертикальный центр двух колонок */
+    }
+
+    /* Размер звезды = минимум из трёх ограничителей:
+     1) эталон 1200px,
+     2) ширина окна (чтобы рядом с текстом не вылезало),
+     3) высота окна минус отступы, чтобы ВЕСЬ силуэт был виден */
+    .star-nav-wrapper {
+        width: min(1200px,
+                64vw,
+                /* было 54vw — даём больше места */
+                calc(100dvh - (var(--page-vpad) * 2))
+                /* вместо жёстких -120px */
+            );
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+}
+
+@media (max-width: 1400px) {
+    .page-content {
+        flex-direction: column;
+        /* текст сверху */
+        align-items: center;
+        gap: 16px;
+    }
+
+    .star-title {
+        margin-right: 0;
+        text-align: center;
+        flex: 0 1 auto;
+    }
+
+    .star-nav-wrapper {
+        width: min(96vw, calc(100dvh - 120px));
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
 }
