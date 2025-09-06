@@ -337,3 +337,126 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Должностная инструкция сохранена!");
     });
 });
+
+// --- 7. Встроенный "Адаптационный план" на странице ДИ ---
+document.addEventListener('DOMContentLoaded', () => {
+    const jdContainer = document.getElementById('jdTasksContainer');
+    if (!jdContainer) return;
+
+    // Тот же стартовый шаблон из adaptation_plan.js (1:1)
+    const AP_DEFAULT_TASKS = [
+        'Задача 1: Оформление на работу',
+        'Задача 2: Знакомство с коллективом, офисом, оргтехникой',
+        'Задача 3: Изучение информации о компании',
+        'Задача 4: Изучение стандартов компании',
+        'Задача 5: Участие в планерке',
+        'Задача 6: Уточнение адаптационного плана',
+        'Задача 7: Формирование плана работы на неделю',
+        'Задача 8: Просмотр видео-семинаров',
+        'Задача 9: Чтение книг из корпоративной библиотеки',
+        'Задача 10: Подведение итогов адаптации'
+    ].map(title => ({
+        title, time: '', resources: '', customTitle: null, feedbackMentor: '', feedbackEmployee: ''
+    }));
+
+    const templateTask = jdContainer.querySelector('fieldset.task').cloneNode(true);
+    const addButton = document.querySelector('#adaptationPlanJD .add-task-btn');
+
+    // Рендер набора задач в DOM (совместим с форматом adaptation_plan.js)
+    function renderJDTasks(tasks) {
+        // Сохраняем только первый шаблон, остальное удаляем
+        while (jdContainer.querySelectorAll('fieldset.task').length > 1) {
+            jdContainer.querySelectorAll('fieldset.task')[1].remove();
+        }
+        tasks.forEach((t, idx) => {
+            const el = idx === 0 ? jdContainer.querySelector('fieldset.task') : templateTask.cloneNode(true);
+            el.querySelector('legend').textContent = t.title || `Задача ${idx + 1}`;
+
+            const timeEl = el.querySelector('input[name*="_time"]');
+            const resEl = el.querySelector('textarea[name*="_resources"]');
+            const sumM = el.querySelector('textarea[name*="_summarize_by_mentor"]');
+            const sumE = el.querySelector('textarea[name*="_summarize_by_employee"]');
+
+            if (timeEl) timeEl.value = t.time || '';
+            if (resEl) resEl.value = t.resources || '';
+            if (sumM) sumM.value = t.feedbackMentor || '';
+            if (sumE) sumE.value = t.feedbackEmployee || '';
+
+            if (idx !== 0) {
+                const wrapper = jdContainer.querySelector('.add-task-wrapper');
+                jdContainer.insertBefore(el, wrapper);
+            }
+        });
+        updateJDNumbers();
+        bindJDDeletes();
+    }
+
+    function collectJDTasks() {
+        return Array.from(jdContainer.querySelectorAll('fieldset.task')).map(fs => ({
+            title: fs.querySelector('legend')?.textContent?.trim() || '',
+            time: fs.querySelector('input[name*="_time"]')?.value.trim() || '',
+            resources: fs.querySelector('textarea[name*="_resources"]')?.value.trim() || '',
+            customTitle: fs.querySelector('input[name*="_custom_title"]')?.value.trim() || null,
+            feedbackMentor: fs.querySelector('textarea[name*="_summarize_by_mentor"]')?.value.trim() || '',
+            feedbackEmployee: fs.querySelector('textarea[name*="_summarize_by_employee"]')?.value.trim() || ''
+        }));
+    }
+
+    // Лёгкий дебаунс автосохранения
+    let saveTimer = null;
+    function autoSaveJD() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            const tasks = collectJDTasks();
+            fetch('/submit_adaptation_plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tasks })
+            }).catch(() => { });
+        }, 400);
+    }
+
+    function updateJDNumbers() {
+        jdContainer.querySelectorAll('fieldset.task').forEach((fs, i) => {
+            const title = fs.querySelector('legend')?.textContent || '';
+            // если заголовок не кастомный — поддержим стандартный "Задача N:"
+            if (/^Задача\s+\d+/.test(title)) {
+                fs.querySelector('legend').textContent = `Задача ${i + 1}: ${title.split(':').slice(1).join(':').trim()}`;
+            }
+        });
+    }
+
+    function bindJDDeletes() {
+        jdContainer.querySelectorAll('.delete-task-btn').forEach(btn => {
+            btn.onclick = () => {
+                const all = jdContainer.querySelectorAll('fieldset.task');
+                if (all.length <= 1) return; // минимум одна должна остаться
+                btn.closest('fieldset.task')?.remove();
+                updateJDNumbers();
+                autoSaveJD();
+            };
+        });
+    }
+
+    // Добавление новых задач (кнопки после 5/7/9 как на исходной странице)
+    addButton.addEventListener('click', () => {
+        const wrapper = jdContainer.querySelector('.add-task-wrapper');
+        const newEl = templateTask.cloneNode(true);
+        jdContainer.insertBefore(newEl, wrapper);
+        updateJDNumbers();
+        bindJDDeletes();
+        autoSaveJD();
+    });
+
+    // Автосохранение при любой правке внутри блока
+    jdContainer.addEventListener('input', autoSaveJD);
+
+    // Загрузка из БД (как на adaptation_plan.js)
+    fetch('/get_adaptation_plan')
+        .then(r => r.json())
+        .then(tasks => {
+            const has = Array.isArray(tasks) && tasks.length > 0;
+            renderJDTasks(has ? tasks : AP_DEFAULT_TASKS);
+        })
+        .catch(() => renderJDTasks(AP_DEFAULT_TASKS));
+});

@@ -159,19 +159,53 @@
                 <textarea name="responsibility" rows="3"></textarea>
             </fieldset>
 
+            <!-- 7. Адаптационный план -->
+            <fieldset id="adaptationPlanJD">
+                <legend>7. Адаптационный план</legend>
+
+                <div id="jdTasksContainer">
+                    <!-- Шаблонный первый fieldset (идентичный adaptation_plan.html) -->
+                    <fieldset class="task">
+                        <legend>Задача 1: Оформление на работу</legend>
+                        <label for="task1_time">Время на подготовку:</label>
+                        <input type="text" id="task1_time" name="task1_time" placeholder="Введите время на подготовку"
+                            required>
+
+                        <label for="task1_resources">Ресурсы:</label>
+                        <textarea id="task1_resources" name="task1_resources" rows="2" placeholder="Введите ресурсы"
+                            required></textarea>
+
+                        <label for="task1_summarize_by_mentor">Подведение итогов наставником:</label>
+                        <textarea id="task1_summarize_by_mentor" name="task1_summarize_by_mentor" rows="2"
+                            placeholder="Введите подведение итогов наставником"></textarea>
+
+                        <label for="task1_summarize_by_employee">Подведение итогов сотрудником:</label>
+                        <textarea id="task1_summarize_by_employee" name="task1_summarize_by_employee" rows="2"
+                            placeholder="Введите подведение итогов сотрудником"></textarea>
+
+                        <button type="button" class="delete-task-btn">Удалить задачу</button>
+                    </fieldset>
+
+                    <!-- Кнопки добавления (как на странице адаптационного плана) -->
+                    <div class="add-task-wrapper">
+                        <button type="button" class="add-task-btn" id="jdAddTask">+ Добавить задачу</button>
+                    </div>
+                </div>
+            </fieldset>
+
             <button type="submit">Сохранить</button>
             <button id="syncPersonnelBtn" type="button">Синхронизировать персонал</button>
-<script>
-document.getElementById('syncPersonnelBtn').addEventListener('click', () => {
-  fetch('/sync_personnel_from_sources', { method: 'POST' })
-    .then(r => r.json())
-    .then(() => {
-      // после синхронизации просто перезагрузим форму ДИ
-      location.reload();
-    })
-    .catch(err => alert('Ошибка синхронизации: ' + err));
-});
-</script>
+            <script>
+                document.getElementById('syncPersonnelBtn').addEventListener('click', () => {
+                    fetch('/sync_personnel_from_sources', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(() => {
+                            // после синхронизации просто перезагрузим форму ДИ
+                            location.reload();
+                        })
+                        .catch(err => alert('Ошибка синхронизации: ' + err));
+                });
+            </script>
         </form>
     </div>
     <!-- Навигационный блок -->
