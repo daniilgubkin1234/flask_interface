@@ -129,9 +129,12 @@ bpmn_xml_collection = mongo.db.bpmn_xml_store
 # 6.  OAuth-роуты (вход / колбек / выход)
 # -------------------------------------------------------------------------
 
+
 def _slugify(name: str) -> str:
     s = re.sub(r"[^\w\-]+", "_", (name or "").strip(), flags=re.U).strip("_")
     return s[:80] or "process"
+
+
 @app.route("/login")
 def login():
     """Стартуем OIDC flow через Google."""
@@ -168,7 +171,8 @@ def auth_callback():
         if user_doc.get("picture") != userinfo.get("picture"):
             updates["picture"] = userinfo.get("picture")
         if updates:
-            users_collection.update_one({"_id": user_doc["_id"]}, {"$set": updates})
+            users_collection.update_one(
+                {"_id": user_doc["_id"]}, {"$set": updates})
             user_doc.update(updates)
 
     login_user(User(user_doc))
@@ -268,6 +272,7 @@ def edit_task(task_id):
         return jsonify({"message": "Задача успешно обновлена"})
     return jsonify({"error": "Задача не найдена"}), 404
 
+
 @app.route("/sync_tasks_from_sources", methods=["POST"])
 @login_required
 def sync_tasks_from_sources():
@@ -334,6 +339,7 @@ def sync_tasks_from_sources():
 
     return jsonify({"message": f"Синхронизировано элементов: {upserts}"}), 200
 
+
 @app.route("/delete_task/<task_id>", methods=["DELETE"])
 @login_required
 def delete_task(task_id):
@@ -350,7 +356,7 @@ def delete_task(task_id):
     return jsonify({"error": "Задача не найдена"}), 404
 
 # -------------------------------------------------------------------------
-# 9.  Портрет сотрудника (единые названия)
+# 9.  Портрет сотрудника (страница)
 # -------------------------------------------------------------------------
 
 
@@ -359,146 +365,74 @@ def delete_task(task_id):
 def employee_profile_page():
     return render_template("employee_profile.html")
 
-# === БЛОК 2: Единая синхронизация персонала ===
-@app.route("/sync_personnel_from_sources", methods=["POST"])
+# -------------------------------------------------------------------------
+# 9A.  API сотрудников (изолированный, без конфликтов имён)
+# -------------------------------------------------------------------------
+
+
+def _emp_norm(doc):
+    if not doc:
+        return None
+    doc["_id"] = str(doc["_id"])
+    doc.pop("owner_id", None)
+    return doc
+
+
+@app.route("/api/employees", methods=["GET", "POST"])
 @login_required
-def sync_personnel_from_sources():
+def api_employees():
     owner = ObjectId(current_user.id)
+    if request.method == "GET":
+        docs = list(employees_collection.find({"owner_id": owner}))
+        docs = [_emp_norm(d) for d in docs]
+        docs.sort(key=lambda d: (d.get("name") or "").lower())
+        return jsonify(docs), 200
 
-    # 1) Забираем свежие источники
-    profile = employees_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
-    tpt     = three_plus_twenty_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
-    adapt   = adaptation_plans_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
+    # POST — создание
+    data = request.get_json(force=True, silent=True) or {}
+    data["owner_id"] = owner
+    ins = employees_collection.insert_one(data)
+    return jsonify({"_id": str(ins.inserted_id)}), 201
 
-    # 2) Достаем данные из 3+20
-    def _to_list(val):
-        if not val: return []
-        if isinstance(val, list): return [x for x in val if isinstance(x, str) and x.strip()]
-        return [str(val)]
 
-    main_functions = _to_list(tpt.get("main_functions")) or _to_list(tpt.get("directions"))[:3]
-    additional_functions = _to_list(tpt.get("additional_functions"))
-    # Если кто-то всё еще хранит только responsibilities
-    if not additional_functions and tpt.get("responsibilities"):
-        additional_functions = [str(x).strip() for x in tpt["responsibilities"] if str(x).strip()]
-
-    # 3) Резюме адаптационного плана (короткое)
-    adapt_tasks = []
-    for i, task in enumerate(adapt.get("tasks") or [], start=1):
-        title = (task.get("title") or f"Задача {i}").strip()
-        time_ = (task.get("time") or "").strip()
-        adapt_tasks.append(f"{title}" + (f" — {time_}" if time_ else ""))
-
-    # 4) ДИ: собираем маппинг «портрет → требования»
-    #    (не перетираем уже заполненные в ДИ поля — если у пользователя есть ручные правки)
-    profile_to_jd = {
-        "gender": "gender",
-        "age": "age",
-        "residence": "residence",
-        "education": "education",
-        "speech": "speech",
-        "languages": "languages",
-        "pc": "pcSkills",
-        "appearance": "appearance",
-        "habits": "habits",
-        "info": "infoSkills",
-        "accuracy": "accuracy",
-        "independence": "decisionMaking",
-        "leadership": "leadership",
-        "car": "car"
-    }
-
-    latest_jd = job_description_collection.find_one({"owner_id": owner}, sort=[("_id", -1)]) or {}
-    jd_doc = {}
-
-    # Перенос «общих»/титульных полей из существующей ДИ, чтобы не потерять руками введённое
-    for keep in ["company", "approval", "appointedBy", "documentPurpose", "replaces",
-                 "activityGuide", "supervisor", "rights", "responsibility"]:
-        if latest_jd.get(keep): jd_doc[keep] = latest_jd[keep]
-
-    # Требования из портрета — заполняем ТОЛЬКО если в ДИ поля пусты
-    for src, dst in profile_to_jd.items():
-        if not jd_doc.get(dst):
-            val = (profile.get(src) or "").strip()
-            if val: jd_doc[dst] = val
-
-    # Позиция: берём из 3+20, иначе как было в ДИ
-    pos_arr = tpt.get("position") if isinstance(tpt.get("position"), list) else _to_list(tpt.get("position"))
-    position = (pos_arr[0].strip() if pos_arr else "").strip() or latest_jd.get("position", "")
-    jd_doc["position"] = position
-
-    # Основные направления и обязанности — формируем из 3+20 (этот блок считаем «истиной»)
-    jd_doc["mainActivity"] = main_functions
-    jd_doc["jobDuty"] = additional_functions
-
-    # Раздел «Адаптация» — сохраняем отдельно; фронт может его отрисовывать как read-only блок
-    if adapt_tasks:
-        jd_doc["adaptation"] = adapt_tasks
-
-    jd_doc["owner_id"] = owner
-    ins = job_description_collection.insert_one(jd_doc)
-    jd_id = str(ins.inserted_id)
-
-    # 5) Оргструктура: добавим/обновим самую свежую версию из ДИ/3+20
-    rows = []
-    if position:
-        rows.append({
-            "position": position,
-            "supervisorIndex": None,  # пока не знаем иерархию — пользователь заполнит
-            "staffCount": 1,
-            "functional": ", ".join(main_functions) if main_functions else ""
-        })
-
-    if rows:
-        organizational_structure_coll.insert_one({
-            "owner_id": owner,
-            "createdAt": datetime.utcnow(),
-            "rows": rows
-        })
-
-    return jsonify({
-        "message": "Синхронизация персонала выполнена",
-        "job_description_id": jd_id,
-        "org_rows_added": len(rows)
-    }), 200
-
-@app.route("/add_employee", methods=["POST"])
+@app.route("/api/employees/<employee_id>", methods=["GET", "PUT", "DELETE"])
 @login_required
-def add_employee():
-    data = request.json
-    if data:
-        data["owner_id"] = ObjectId(current_user.id)
-        employees_collection.insert_one(data)
-        return jsonify({"message": "Сотрудник добавлен!"}), 201
-    return jsonify({"error": "Ошибка при добавлении"}), 400
+def api_employee_one(employee_id):
+    owner = ObjectId(current_user.id)
+    try:
+        _id = ObjectId(employee_id)
+    except Exception:
+        return jsonify({"error": "Некорректный ID"}), 400
 
+    if request.method == "GET":
+        d = employees_collection.find_one({"_id": _id, "owner_id": owner})
+        if not d:
+            return jsonify({"error": "Сотрудник не найден"}), 404
+        return jsonify(_emp_norm(d)), 200
 
-@app.route("/get_employee", methods=["GET"])
-@login_required
-def get_employee():
-    name = request.args.get("name")
-    query = {"owner_id": ObjectId(current_user.id)}
-    if name:
-        query["name"] = name
-    employee = employees_collection.find_one(query, sort=[("_id", -1)])
-    if employee:
-        employee["_id"] = str(employee["_id"])
-        return jsonify(employee)
-    return jsonify({"error": "Сотрудник не найден"}), 404
-
-
-@app.route("/update_employee/<employee_id>", methods=["PUT"])
-@login_required
-def update_employee(employee_id):
-    data = request.json
-    if data:
-        employees_collection.update_one(
-            {"_id": ObjectId(employee_id),
-             "owner_id": ObjectId(current_user.id)},
-            {"$set": data}
+    if request.method == "PUT":
+        payload = request.get_json(force=True, silent=True) or {}
+        r = employees_collection.update_one(
+            {"_id": _id, "owner_id": owner}, {"$set": payload}
         )
-        return jsonify({"message": "Данные обновлены!"})
-    return jsonify({"error": "Ошибка при обновлении"}), 400
+        return jsonify({"ok": r.matched_count == 1}), 200
+
+    # DELETE
+    r = employees_collection.delete_one({"_id": _id, "owner_id": owner})
+    return jsonify({"ok": r.deleted_count == 1}), 200
+
+
+@app.route("/api/employees:submit", methods=["POST"])
+@login_required
+def api_employees_submit():
+    """
+    «Отправить все портреты» — сюда прилетает { employees: [...] }.
+    Здесь можно сделать экспорт/почту и т.д.
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    employees = payload.get("employees", [])
+    return jsonify({"ok": True, "count": len(employees)}), 200
+
 
 # -------------------------------------------------------------------------
 # 10.  Бизнес-цели
@@ -803,12 +737,13 @@ def get_business_processes():
     # Если документ найден — вернуть rows, иначе пустой массив
     return jsonify(doc.get('rows', []) if doc else [])
 
+
 @app.route("/save_bpmn_xml", methods=["POST"])
 @login_required
 def save_bpmn_xml():
     data = request.get_json(force=True) or {}
     name = data.get("name", "") or "Без названия"
-    xml  = data.get("xml", "") or ""
+    xml = data.get("xml", "") or ""
     if not xml:
         return jsonify({"ok": False, "error": "Пустой XML"}), 400
 
@@ -826,6 +761,7 @@ def save_bpmn_xml():
     )
     return jsonify({"ok": True, "slug": slug})
 
+
 @app.route("/get_bpmn_xml", methods=["GET"])
 @login_required
 def get_bpmn_xml():
@@ -839,6 +775,7 @@ def get_bpmn_xml():
     if not doc:
         return jsonify({"found": False})
     return jsonify({"found": True, "xml": doc.get("xml", ""), "slug": slug})
+
 
 @app.route("/delete_bpmn_xml", methods=["POST"])
 @login_required
@@ -940,6 +877,7 @@ def upload_regulation():
         }
     }), 201
 
+
 @app.route('/upload_regulation_text', methods=['POST'])
 @login_required
 def upload_regulation_text():
@@ -951,7 +889,8 @@ def upload_regulation_text():
     filename = (data.get('filename') or '').strip()
     title = (data.get('title') or '').strip() or filename or 'Документ'
     content = data.get('content') or ''
-    content_type = (data.get('content_type') or 'application/octet-stream').strip()
+    content_type = (data.get('content_type')
+                    or 'application/octet-stream').strip()
 
     if not filename or '.' not in filename:
         return jsonify({"success": False, "error": "Некорректное имя файла"}), 400
@@ -961,7 +900,8 @@ def upload_regulation_text():
     if not content:
         return jsonify({"success": False, "error": "Пустое содержимое"}), 400
 
-    safe_name = secure_filename(f"{current_user.id}_{int(time.time())}_{filename}")
+    safe_name = secure_filename(
+        f"{current_user.id}_{int(time.time())}_{filename}")
     save_path = os.path.join(UPLOAD_FOLDER, safe_name)
     try:
         with open(save_path, 'w', encoding='utf-8') as f:
@@ -991,6 +931,8 @@ def upload_regulation_text():
             "uploaded_at": doc["uploaded_at"].isoformat() + "Z"
         }
     }), 201
+
+
 @app.route('/get_regulation_files', methods=['GET'])
 @login_required
 def get_regulation_files():

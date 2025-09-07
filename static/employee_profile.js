@@ -1,142 +1,283 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
+    // --- DOM
     const form = document.getElementById("employeeProfileForm");
+    const employeeSelect = document.getElementById("employeeSelect");
+    const newBtn = document.getElementById("newEmployeeBtn");
+    const saveBtn = document.getElementById("saveEmployeeBtn");
+    const deleteBtn = document.getElementById("deleteEmployeeBtn");
+    const submitAllBtn = document.getElementById("submitAllBtn");
     const addFieldButton = document.getElementById("add-field-button");
     const additionalFieldsContainer = document.getElementById("additional-fields");
 
-    additionalFieldsContainer.addEventListener("click", (e) => {
-        const btn = e.target.closest(".delete-field-button");
-        if (!btn) return;
-        const item = btn.closest(".profile-item");
-        if (item) item.remove();
-        // ВАЖНО: удаление — это не input-событие, поэтому явно сохраняем
-        autoSaveProfile();
-    });
-    
-    // --- 1. АВТОЗАГРУЗКА профиля сотрудника ---
-    fetch('/get_employee')
-        .then(res => res.json())
-        .then(data => {
-            // Если профиль найден — заполняем поля
-            if (data && !data.error) {
-                document.getElementById("name").value = data.name || '';
-                document.getElementById("gender").value = data.gender || '';
-                document.getElementById("age").value = data.age || '';
-                document.getElementById("residence").value = data.residence || '';
-                document.getElementById("education").value = data.education || '';
-                document.getElementById("speech").value = data.speech || '';
-                document.getElementById("languages").value = data.languages || '';
-                document.getElementById("pc").value = data.pc || '';
-                document.getElementById("appearance").value = data.appearance || '';
-                document.getElementById("habits").value = data.habits || '';
-                document.getElementById("info").value = data.info || '';
-                document.getElementById("accuracy").value = data.accuracy || '';
-                document.getElementById("scrupulousness").value = data.scrupulousness || '';
-                document.getElementById("systemThinking").value = data.systemThinking || '';
-                document.getElementById("decisiveness").value = data.decisiveness || '';
-                document.getElementById("stressResistance").value = data.stressResistance || '';
-                document.getElementById("otherQualities").value = data.otherQualities || '';
-                document.getElementById("independence").value = data.independence || '';
-                document.getElementById("organization").value = data.organization || '';
-                document.getElementById("responsibility").value = data.responsibility || '';
-                document.getElementById("managementStyle").value = data.managementStyle || '';
-                document.getElementById("leadership").value = data.leadership || '';
-                document.getElementById("mobility").value = data.mobility || '';
-                document.getElementById("businessTrips").value = data.businessTrips || '';
-                document.getElementById("car").value = data.car || '';
-                // Дополнительные поля
-                additionalFieldsContainer.innerHTML = '';
-                if (Array.isArray(data.additionalFields)) {
-                    data.additionalFields.forEach(val => {
-                        const fieldContainer = document.createElement("div");
-                        fieldContainer.classList.add("profile-item");
-                        const label = document.createElement("label");
-                        label.textContent = "Дополнительный пункт:";
-                        const input = document.createElement("input");
-                        input.type = "text";
-                        input.name = "custom_field";
-                        input.value = val;
-                        // Кнопка удаления
-                        const deleteButton = document.createElement("button");
-                        deleteButton.type = "button";
-                        deleteButton.textContent = "Удалить";
-                        deleteButton.classList.add("delete-field-button");
-                        deleteButton.addEventListener("click", () => fieldContainer.remove());
-                        fieldContainer.appendChild(label);
-                        fieldContainer.appendChild(input);
-                        fieldContainer.appendChild(deleteButton);
-                        additionalFieldsContainer.appendChild(fieldContainer);
-                    });
-                }
-            }
-        });
+    // --- State
+    let employees = [];
+    let currentId = null;
 
-    // --- 2. АВТОСОХРАНЕНИЕ при любом изменении ---
-    function autoSaveProfile() {
-        const employeeData = {
-            name: document.getElementById("name").value,
-            gender: document.getElementById("gender").value,
-            age: document.getElementById("age").value,
-            residence: document.getElementById("residence").value,
-            education: document.getElementById("education").value,
-            speech: document.getElementById("speech").value,
-            languages: document.getElementById("languages").value,
-            pc: document.getElementById("pc").value,
-            appearance: document.getElementById("appearance").value,
-            habits: document.getElementById("habits").value,
-            info: document.getElementById("info").value,
-            accuracy: document.getElementById("accuracy").value,
-            scrupulousness: document.getElementById("scrupulousness").value,
-            systemThinking: document.getElementById("systemThinking").value,
-            decisiveness: document.getElementById("decisiveness").value,
-            stressResistance: document.getElementById("stressResistance").value,
-            otherQualities: document.getElementById("otherQualities").value,
-            independence: document.getElementById("independence").value,
-            organization: document.getElementById("organization").value,
-            responsibility: document.getElementById("responsibility").value,
-            managementStyle: document.getElementById("managementStyle").value,
-            leadership: document.getElementById("leadership").value,
-            mobility: document.getElementById("mobility").value,
-            businessTrips: document.getElementById("businessTrips").value,
-            car: document.getElementById("car").value,
+    // --- Utils
+    function getVal(id) { return document.getElementById(id)?.value?.trim() || ""; }
+    function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v ?? ""; }
+
+    function readForm() {
+        const data = {
+            name: getVal("name"),
+            gender: getVal("gender"),
+            age: getVal("age"),
+            residence: getVal("residence"),
+            education: getVal("education"),
+            speech: getVal("speech"),
+            languages: getVal("languages"),
+            pc: getVal("pc"),
+            appearance: getVal("appearance"),
+            habits: getVal("habits"),
+            info: getVal("info"),
+            accuracy: getVal("accuracy"),
+            scrupulousness: getVal("scrupulousness"),
+            systemThinking: getVal("systemThinking"),
+            decisiveness: getVal("decisiveness"),
+            stressResistance: getVal("stressResistance"),
+            otherQualities: getVal("otherQualities"),
+            independence: getVal("independence"),
+            organization: getVal("organization"),
+            responsibility: getVal("responsibility"),
+            managementStyle: getVal("managementStyle"),
+            leadership: getVal("leadership"),
+            mobility: getVal("mobility"),
+            businessTrips: getVal("businessTrips"),
+            car: getVal("car"),
             additionalFields: []
         };
         additionalFieldsContainer.querySelectorAll("input[name='custom_field']").forEach(input => {
-            if (input.value.trim() !== "") employeeData.additionalFields.push(input.value);
+            const v = (input.value || "").trim();
+            if (v) data.additionalFields.push(v);
         });
-        fetch("/add_employee", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(employeeData)
-        });
+        return data;
     }
 
-    form.addEventListener("input", autoSaveProfile);
+    function fillForm(data = {}) {
+        setVal("name", data.name);
+        setVal("gender", data.gender);
+        setVal("age", data.age);
+        setVal("residence", data.residence);
+        setVal("education", data.education);
+        setVal("speech", data.speech);
+        setVal("languages", data.languages);
+        setVal("pc", data.pc);
+        setVal("appearance", data.appearance);
+        setVal("habits", data.habits);
+        setVal("info", data.info);
+        setVal("accuracy", data.accuracy);
+        setVal("scrupulousness", data.scrupulousness);
+        setVal("systemThinking", data.systemThinking);
+        setVal("decisiveness", data.decisiveness);
+        setVal("stressResistance", data.stressResistance);
+        setVal("otherQualities", data.otherQualities);
+        setVal("independence", data.independence);
+        setVal("organization", data.organization);
+        setVal("responsibility", data.responsibility);
+        setVal("managementStyle", data.managementStyle);
+        setVal("leadership", data.leadership);
+        setVal("mobility", data.mobility);
+        setVal("businessTrips", data.businessTrips);
+        setVal("car", data.car);
 
-    // --- 3. Добавление дополнительных пунктов ---
-    addFieldButton.addEventListener("click", function () {
-        const fieldContainer = document.createElement("div");
-        fieldContainer.classList.add("profile-item");
+        additionalFieldsContainer.innerHTML = "";
+        (data.additionalFields || []).forEach(val => addCustomField(val));
+    }
+
+    function clearForm() {
+        fillForm({});
+        currentId = null;
+    }
+
+    // --- List
+    function sortByNameRu(a, b) {
+        return (a.name || "").localeCompare(b.name || "", "ru", { sensitivity: "base" });
+    }
+
+    async function loadEmployees() {
+        try {
+            const res = await fetch("/api/employees");
+            if (!res.ok) {
+                const text = await res.text().catch(() => "");
+                alert(`Ошибка загрузки списка (GET /api/employees): HTTP ${res.status}\n${text}`);
+                return;
+            }
+            const list = await res.json();
+            employees = Array.isArray(list) ? list.sort(sortByNameRu) : [];
+            renderSelect();
+        } catch (e) {
+            alert(`Сбой загрузки списка сотрудников: ${e?.message || e}`);
+        }
+    }
+
+    function renderSelect() {
+        const opts = ['<option value="">— выберите профиль —</option>']
+            .concat(employees.map(e => `<option value="${e._id}">${escapeHtml(e.name || "(без ФИО)")}</option>`));
+        employeeSelect.innerHTML = opts.join("");
+        if (currentId) employeeSelect.value = currentId;
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[m]));
+    }
+
+    // --- CRUD
+    async function saveCurrent() {
+        const payload = readForm();
+        if (!payload.name) { alert("Укажите ФИО."); return; }
+
+        if (!currentId) {
+            // CREATE -> POST /api/employees
+            const res = await fetch("/api/employees", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const text = await res.text().catch(() => "");
+                alert(`Ошибка сохранения (create): HTTP ${res.status}\n${text}`);
+                return;
+            }
+
+            let data = null;
+            try { data = await res.json(); }
+            catch {
+                const text = await res.text().catch(() => "");
+                alert(`Сервер вернул не-JSON (create):\n${text}`);
+                return;
+            }
+
+            if (data && data._id) {
+                currentId = data._id;
+                await loadEmployees();
+                employeeSelect.value = currentId;
+                alert("Портрет создан и сохранён.");
+            } else {
+                alert("Не удалось сохранить портрет (create): нет _id в ответе.");
+            }
+        } else {
+            // UPDATE -> PUT /api/employees/:id
+            const res = await fetch(`/api/employees/${encodeURIComponent(currentId)}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const text = await res.text().catch(() => "");
+                alert(`Ошибка сохранения (update): HTTP ${res.status}\n${text}`);
+                return;
+            }
+
+            let data = null;
+            try { data = await res.json(); }
+            catch {
+                const text = await res.text().catch(() => "");
+                alert(`Сервер вернул не-JSON (update):\n${text}`);
+                return;
+            }
+
+            if (data && data.ok) {
+                await loadEmployees();
+                employeeSelect.value = currentId;
+                alert("Портрет обновлён.");
+            } else {
+                alert("Не удалось сохранить портрет (update).");
+            }
+        }
+    }
+
+    async function deleteCurrent() {
+        if (!currentId) { alert("Сначала выберите портрет для удаления."); return; }
+        const who = getVal("name") || "без ФИО";
+        if (!confirm(`Удалить портрет «${who}»? Действие необратимо.`)) return;
+
+        const res = await fetch(`/api/employees/${encodeURIComponent(currentId)}`, { method: "DELETE" });
+        if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            alert(`Ошибка удаления: HTTP ${res.status}\n${text}`);
+            return;
+        }
+        const data = await res.json().catch(() => ({}));
+        if (data && data.ok) {
+            await loadEmployees();
+            clearForm();
+            alert("Портрет удалён.");
+        } else {
+            alert("Не удалось удалить портрет.");
+        }
+    }
+
+    async function openById(id) {
+        if (!id) { clearForm(); return; }
+        const res = await fetch(`/api/employees/${encodeURIComponent(id)}`);
+        if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            alert(`Не удалось загрузить портрет: HTTP ${res.status}\n${text}`);
+            return;
+        }
+        const data = await res.json().catch(() => null);
+        if (!data || data.error) { alert("Не удалось загрузить портрет."); return; }
+        currentId = data._id;
+        fillForm(data);
+    }
+
+    // --- Доп. поля
+    function addCustomField(value = "") {
+        const wrap = document.createElement("div");
+        wrap.className = "profile-item custom-field";
+
         const label = document.createElement("label");
         label.textContent = "Дополнительный пункт:";
+
         const input = document.createElement("input");
         input.type = "text";
         input.name = "custom_field";
         input.placeholder = "Введите название и значение";
-        // Кнопка удаления
-        const deleteButton = document.createElement("button");
-        deleteButton.type = "button";
-        deleteButton.textContent = "Удалить";
-        deleteButton.classList.add("delete-field-button");
-        deleteButton.addEventListener("click", () => fieldContainer.remove());
-        fieldContainer.appendChild(label);
-        fieldContainer.appendChild(input);
-        fieldContainer.appendChild(deleteButton);
-        additionalFieldsContainer.appendChild(fieldContainer);
+        input.value = value;
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.textContent = "Удалить";
+        del.className = "delete-field-button";
+        del.addEventListener("click", () => wrap.remove());
+
+        wrap.append(label, input, del);
+        additionalFieldsContainer.appendChild(wrap);
+    }
+
+    addFieldButton.addEventListener("click", () => addCustomField());
+
+    // --- События панели
+    employeeSelect.addEventListener("change", e => openById(e.target.value));
+    newBtn.addEventListener("click", () => {
+        employeeSelect.value = "";
+        clearForm();
+        document.getElementById("name").focus();
+    });
+    saveBtn.addEventListener("click", saveCurrent);
+    deleteBtn.addEventListener("click", deleteCurrent);
+
+    submitAllBtn.addEventListener("click", async () => {
+        // Заберём актуальный список из БД и отправим
+        const resList = await fetch("/api/employees");
+        if (!resList.ok) {
+            const text = await resList.text().catch(() => "");
+            alert(`Не удалось получить список перед отправкой: HTTP ${resList.status}\n${text}`);
+            return;
+        }
+        const list = await resList.json().catch(() => []);
+        const res = await fetch("/api/employees:submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ employees: Array.isArray(list) ? list : [] })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data && data.ok) alert(`Все портреты отправлены (кол-во: ${data.count}).`);
+        else alert("Не удалось отправить все портреты.");
     });
 
-    // --- 4. Кнопка отправки (оставляем только alert, т.к. автосохранение) ---
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        alert("Данные профиля сотрудника сохранены!");
-    });
+    // --- init
+    loadEmployees();
 });

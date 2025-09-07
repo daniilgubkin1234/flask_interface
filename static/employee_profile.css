@@ -195,6 +195,53 @@ button[type="submit"]:hover {
     /* при наведении */
 }
 
+/* Панель управления профилями */
+.profiles-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.toolbar-left,
+.toolbar-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.toolbar-spacer {
+    flex: 1;
+}
+
+#employeeSelect {
+    min-width: 280px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+}
+
+button.primary {
+    background-color: #2A63C2;
+    color: #fff;
+}
+
+button.danger {
+    background-color: #d9534f;
+    color: #fff;
+}
+
+button.danger:hover {
+    background-color: #c9302c;
+}
+
+/* Доп. поле */
+.profile-item.custom-field .delete-field-button {
+    margin-top: 8px;
+}
+
 /* Блок рекомендаций */
 .recommendation-block {
     background-color: #fafafa;
