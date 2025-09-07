@@ -7,7 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const addBtn = document.getElementById('addRow');
     const sendBtn = document.getElementById('submitData');
 
-    // --- helpers (твои) ---
+    // ---- NEW: кэш должностей из 3+20 ----
+    let tptMap = {}; // { lowercasedPosition: ["направление 1","направление 2","направление 3"] }
+
+    // --- helpers ---
     const uuid = crypto.randomUUID
         ? () => crypto.randomUUID()
         : () => 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -60,6 +63,53 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.querySelectorAll('tr').forEach((tr, i) => tr.cells[0].textContent = i + 1);
         refreshSimpleSelects();
         refreshAllMultiboxes();
+        ensurePositionDatalist(); // NEW: привязать datalist ко всем .position
+    }
+
+    // ---- NEW: загрузить должности из 3+20 и создать datalist ----
+    function ensurePositionDatalist() {
+        let dl = document.getElementById('tpt-positions');
+        if (!dl) {
+            dl = document.createElement('datalist');
+            dl.id = 'tpt-positions';
+            document.body.appendChild(dl);
+        }
+        // привязка ко всем инпутам "Должность"
+        document.querySelectorAll('.position').forEach(inp => inp.setAttribute('list', 'tpt-positions'));
+
+        // наполнить опции
+        const positions = Object.keys(tptMap).sort();
+        dl.innerHTML = positions.map(p => `<option value="${p}"></option>`).join('');
+    }
+
+    async function loadTptPositions() {
+        try {
+            const res = await fetch('/tpt_positions');
+            const arr = await res.json();
+            tptMap = {};
+            (arr || []).forEach(item => {
+                const name = (item.position || '').trim();
+                if (!name) return;
+                const key = name.toLowerCase();
+                const mf  = Array.isArray(item.main_functions) ? item.main_functions.filter(Boolean) : [];
+                tptMap[key] = mf;
+            });
+            ensurePositionDatalist();
+        } catch (e) {
+            console.warn('Не удалось загрузить должности из 3+20:', e);
+            tptMap = {};
+        }
+    }
+
+    function applyFunctionalFromTpt(tr) {
+        const pos = tr.querySelector('.position')?.value?.trim().toLowerCase() || '';
+        const mf = tptMap[pos] || [];
+        if (mf.length) {
+            const field = tr.querySelector('.functional');
+            if (field && !field.value.trim()) { // не перетираем, если уже есть
+                field.value = mf.join(', ');
+            }
+        }
     }
 
     // --- автозагрузка данных из БД ---
@@ -76,38 +126,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 let tr = idx === 0 ? tbody.rows[0] : tbody.rows[0].cloneNode(true);
                 tr.querySelector('.position').value = row.position || '';
                 tr.querySelector('.staff-count').value = row.staffCount || 1;
+
                 // supervisorIndex: 1-based (или null)
                 syncTable(); // чтобы options появились
                 if (row.supervisorIndex && tr.querySelector('.supervisor')) {
                     const options = [...tr.querySelector('.supervisor').options];
-                    // Ищем опцию с value="2) Руководитель"
-                    const needed = options.find(opt =>
-                        (opt.value || '').startsWith(`${row.supervisorIndex})`)
-                    );
+                    const needed = options.find(opt => (opt.value || '').startsWith(`${row.supervisorIndex})`));
                     if (needed) tr.querySelector('.supervisor').value = needed.value;
                 }
-                // --- если есть еще поля (замещение, multibox и т.д.), здесь заполняй их ---
+
+                // NEW: основной функционал — из сохранённого или из 3+20
+                tr.querySelector('.functional').value = row.functional || '';
+                if (!row.functional) applyFunctionalFromTpt(tr);
+
                 if (idx !== 0) tbody.appendChild(tr);
             });
             syncTable();
             drawOrgChart(rows);
         });
 
-    // --- функция сбора данных ---
+    // --- функция сбора данных (добавили functional!) ---
     function collectRows() {
         return [...tbody.rows].map((tr, idx) => {
-            // rawSupervisorValue, например "2) Руководитель"
             const rawSup = tr.querySelector('.supervisor').value.trim();
-            // вытащим только число до ")"
-            const supervisorIndex = rawSup
-                ? parseInt(rawSup.split(')')[0], 10)  // 1-based
-                : null;                                 // корень, если пусто
-
+            const supervisorIndex = rawSup ? parseInt(rawSup.split(')')[0], 10) : null;
             return {
                 position: tr.querySelector('.position').value.trim(),
                 supervisorIndex: supervisorIndex,
-                staffCount: Math.max(1, parseInt(tr.querySelector('.staff-count').value, 10) || 1)
-                // ... (если нужно, добавь остальные поля)
+                staffCount: Math.max(1, parseInt(tr.querySelector('.staff-count').value, 10) || 1),
+                functional: tr.querySelector('.functional').value.trim()   // NEW
             };
         });
     }
@@ -121,9 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ rows })
         })
         .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-        .then(() => {
-            // Можно тут показывать индикатор "Сохранено"
-        })
         .catch(err => console.error('Ошибка автосохранения:', err));
     }
 
@@ -143,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const vals = [...cell.querySelectorAll('input:checked')].map(i => i.value);
             hidden.value = JSON.stringify(vals);
             setMultiboxCaption(cell);
-            autoSaveOrgStructure(); // автосохраняем!
+            autoSaveOrgStructure();
             return;
         }
         document.querySelectorAll('.multibox-list').forEach(l => l.style.display = 'none');
@@ -156,11 +200,15 @@ document.addEventListener('DOMContentLoaded', () => {
         tpl.querySelector('.subordinates').value = '[]';
         tbody.appendChild(tpl);
         syncTable();
+        ensurePositionDatalist();   // NEW
         autoSaveOrgStructure();
     });
 
     tbody.addEventListener('input', e => {
-        if (e.target.classList.contains('position')) syncTable();
+        if (e.target.classList.contains('position')) {
+            applyFunctionalFromTpt(e.target.closest('tr'));  // NEW
+            syncTable();
+        }
         autoSaveOrgStructure();
     });
 
@@ -189,10 +237,14 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error('Ошибка сохранения:', err));
     });
 
-    syncTable();
+    // ---- INIT ----
+    (async () => {
+        await loadTptPositions();  // NEW: загрузили должности из 3+20
+        syncTable();
+    })();
 });
 
-/* ====== Google OrgChart ====== */
+/* ====== Google OrgChart (без изменений) ====== */
 google.charts.load('current', { packages: ['orgchart'] });
 
 function buildChartData(rows) {
@@ -201,20 +253,12 @@ function buildChartData(rows) {
         if (!r.position) return;
         const baseNum = idx + 1;
         const firstId = `n${baseNum}_1`;
-        const parentId = r.supervisorIndex
-            ? `n${r.supervisorIndex}_1`
-            : '';
-        list.push([
-            { v: firstId, f: `<div class="node">${r.position}</div>` },
-            parentId
-        ]);
+        const parentId = r.supervisorIndex ? `n${r.supervisorIndex}_1` : '';
+        list.push([{ v: firstId, f: `<div class="node">${r.position}</div>` }, parentId]);
         for (let i = 2; i <= r.staffCount; i++) {
             const prevId = `n${baseNum}_${i - 1}`;
             const currId = `n${baseNum}_${i}`;
-            list.push([
-                { v: currId, f: `<div class="node">${r.position}</div>` },
-                prevId
-            ]);
+            list.push([{ v: currId, f: `<div class="node">${r.position}</div>` }, prevId]);
         }
     });
     return list;
@@ -228,14 +272,8 @@ function drawOrgChart(rows) {
     buildChartData(rows).forEach(([node, parent]) => {
         dataTable.addRow([node, parent, '']);
     });
-    const chart = new google.visualization.OrgChart(
-        document.getElementById('orgChart')
-    );
-    chart.draw(dataTable, {
-        allowHtml: true,
-        nodeClass: 'node',
-        collapseEndNodes: false
-    });
+    const chart = new google.visualization.OrgChart(document.getElementById('orgChart'));
+    chart.draw(dataTable, { allowHtml: true, nodeClass: 'node', collapseEndNodes: false });
 }
 
 document.getElementById('downloadChart').addEventListener('click', () => {

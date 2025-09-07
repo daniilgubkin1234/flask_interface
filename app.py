@@ -766,6 +766,26 @@ def get_org_structure():
         projection={'_id': 0, 'rows': 1}
     )
     return jsonify(doc['rows'] if doc else [])
+@app.route("/tpt_positions", methods=["GET"])
+@login_required
+def tpt_positions():
+    owner = ObjectId(current_user.id)
+    # все версии 3+20, самые свежие — первыми
+    docs = list(three_plus_twenty_collection.find({"owner_id": owner}).sort([("_id", -1)]))
+
+    seen = {}
+    for d in docs:
+        pos_arr = d.get("position") if isinstance(d.get("position"), list) else [d.get("position")]
+        position = (pos_arr[0] or "").strip() if pos_arr else ""
+        if not position or position in seen:
+            continue
+        main = d.get("main_functions")
+        if not main:
+            main = [x for x in (d.get("directions") or []) if isinstance(x, str) and x.strip()]
+        seen[position] = [s.strip() for s in (main or []) if isinstance(s, str) and s.strip()]
+
+    out = [{"position": p, "main_functions": mf} for p, mf in seen.items()]
+    return jsonify(out)
 
 # -------------------------------------------------------------------------
 # 17.  Бизнес-процессы
@@ -886,6 +906,73 @@ def get_three_plus_twenty():
         projection={"_id": 0}
     )
     return jsonify(doc if doc else {})
+@app.route("/tpt_add_main_function_from_task", methods=["POST"])
+@login_required
+def tpt_add_main_function_from_task():
+    """
+    Кладёт переданное название задачи в 'Основные направления деятельности' (первые 3),
+    не перезаписывая уже заполненные и не создавая дубликатов.
+    Храним версионность как и раньше — вставкой нового документа.
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    name = (payload.get("name") or "").strip()
+    if not name:
+        return jsonify({"ok": False, "error": "Пустое имя задачи"}), 400
+
+    owner = ObjectId(current_user.id)
+
+    # Берём последнюю версию 3+20
+    prev = three_plus_twenty_collection.find_one(
+        {"owner_id": owner}, sort=[("_id", -1)]
+    ) or {}
+
+    # Нормализация массивов
+    def _arr(x, size=None):
+        arr = []
+        if isinstance(x, list):
+            arr = [str(v).strip() for v in x if str(v).strip()]
+        elif isinstance(x, str) and x.strip():
+            arr = [x.strip()]
+        if size:
+            arr = (arr + [""] * size)[:size]
+        return arr
+
+    position         = _arr(prev.get("position"))
+    directions       = _arr(prev.get("directions"), size=3)   # 3 основных направления
+    responsibilities = _arr(prev.get("responsibilities"))
+    main_functions   = _arr(prev.get("main_functions"))
+    additional_fns   = _arr(prev.get("additional_functions"))
+
+    # Если уже есть — делаем вызов идемпотентным
+    if name in directions or name in main_functions:
+        return jsonify({"ok": True, "updated": False})
+
+    # Кладём в первую свободную «дырку» среди 3 направлений
+    placed = False
+    for i in range(3):
+        if not directions[i]:
+            directions[i] = name
+            placed = True
+            break
+
+    if not placed:
+        # Все 3 направления заняты — ничего не меняем (можно поменять логику на "сдвиг", если нужно)
+        return jsonify({"ok": True, "updated": False})
+
+    # Поддерживаем новый унифицированный формат:
+    # main_functions = directions, additional_functions оставляем как было
+    doc = {
+        "owner_id": owner,
+        "position": position,
+        "directions": directions,
+        "responsibilities": responsibilities,
+        "main_functions": [d for d in directions if d],
+        "additional_functions": additional_fns,
+        "updated_at": datetime.utcnow()
+    }
+
+    three_plus_twenty_collection.insert_one(doc)
+    return jsonify({"ok": True, "updated": True})
 # -------------------------------------------------------------------------
 # 19.  Перечень регламентов
 # -------------------------------------------------------------------------
