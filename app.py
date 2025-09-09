@@ -388,8 +388,19 @@ def api_employees():
         docs.sort(key=lambda d: (d.get("name") or "").lower())
         return jsonify(docs), 200
 
-    # POST — создание
+    # POST — создание ТОЛЬКО по явной команде с фронта
     data = request.get_json(force=True, silent=True) or {}
+
+    # Требуем маркер ручного сохранения — иначе отклоняем
+    if not data.pop("_manual", False):
+        return jsonify({"ok": False, "error": "explicit save required"}), 400
+
+    # Мини-валидация
+    name = (data.get("name") or "").strip()
+    if not name:
+        return jsonify({"ok": False, "error": "name is required"}), 400
+
+    data["name"] = name
     data["owner_id"] = owner
     ins = employees_collection.insert_one(data)
     return jsonify({"_id": str(ins.inserted_id)}), 201
@@ -412,8 +423,18 @@ def api_employee_one(employee_id):
 
     if request.method == "PUT":
         payload = request.get_json(force=True, silent=True) or {}
+
+        # Маркер ручного сохранения обязателен
+        if not payload.pop("_manual", False):
+            return jsonify({"ok": False, "error": "explicit save required"}), 400
+
+        # Если меняем ФИО — подчистим
+        if "name" in payload:
+            payload["name"] = (payload.get("name") or "").strip()
+
         r = employees_collection.update_one(
-            {"_id": _id, "owner_id": owner}, {"$set": payload}
+            {"_id": _id, "owner_id": owner},
+            {"$set": payload}
         )
         return jsonify({"ok": r.matched_count == 1}), 200
 
@@ -700,23 +721,29 @@ def get_org_structure():
         projection={'_id': 0, 'rows': 1}
     )
     return jsonify(doc['rows'] if doc else [])
+
+
 @app.route("/tpt_positions", methods=["GET"])
 @login_required
 def tpt_positions():
     owner = ObjectId(current_user.id)
     # все версии 3+20, самые свежие — первыми
-    docs = list(three_plus_twenty_collection.find({"owner_id": owner}).sort([("_id", -1)]))
+    docs = list(three_plus_twenty_collection.find(
+        {"owner_id": owner}).sort([("_id", -1)]))
 
     seen = {}
     for d in docs:
-        pos_arr = d.get("position") if isinstance(d.get("position"), list) else [d.get("position")]
+        pos_arr = d.get("position") if isinstance(
+            d.get("position"), list) else [d.get("position")]
         position = (pos_arr[0] or "").strip() if pos_arr else ""
         if not position or position in seen:
             continue
         main = d.get("main_functions")
         if not main:
-            main = [x for x in (d.get("directions") or []) if isinstance(x, str) and x.strip()]
-        seen[position] = [s.strip() for s in (main or []) if isinstance(s, str) and s.strip()]
+            main = [x for x in (d.get("directions") or [])
+                    if isinstance(x, str) and x.strip()]
+        seen[position] = [s.strip()
+                          for s in (main or []) if isinstance(s, str) and s.strip()]
 
     out = [{"position": p, "main_functions": mf} for p, mf in seen.items()]
     return jsonify(out)
@@ -843,6 +870,8 @@ def get_three_plus_twenty():
         projection={"_id": 0}
     )
     return jsonify(doc if doc else {})
+
+
 @app.route("/tpt_add_main_function_from_task", methods=["POST"])
 @login_required
 def tpt_add_main_function_from_task():
@@ -874,11 +903,12 @@ def tpt_add_main_function_from_task():
             arr = (arr + [""] * size)[:size]
         return arr
 
-    position         = _arr(prev.get("position"))
-    directions       = _arr(prev.get("directions"), size=3)   # 3 основных направления
+    position = _arr(prev.get("position"))
+    # 3 основных направления
+    directions = _arr(prev.get("directions"), size=3)
     responsibilities = _arr(prev.get("responsibilities"))
-    main_functions   = _arr(prev.get("main_functions"))
-    additional_fns   = _arr(prev.get("additional_functions"))
+    main_functions = _arr(prev.get("main_functions"))
+    additional_fns = _arr(prev.get("additional_functions"))
 
     # Если уже есть — делаем вызов идемпотентным
     if name in directions or name in main_functions:

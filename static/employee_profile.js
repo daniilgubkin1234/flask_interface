@@ -9,9 +9,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const addFieldButton = document.getElementById("add-field-button");
     const additionalFieldsContainer = document.getElementById("additional-fields");
 
+    // ❶ Запретить любой автосабмит формы (Enter, implicit submit и т.п.)
+    form.addEventListener("submit", (e) => e.preventDefault());
+
     // --- State
-    let employees = [];
-    let currentId = null;
+    let employees = [];     // кэш списка
+    let currentId = null;   // _id выбранного сотрудника
 
     // --- Utils
     function getVal(id) { return document.getElementById(id)?.value?.trim() || ""; }
@@ -89,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentId = null;
     }
 
-    // --- List
+    // --- Список
     function sortByNameRu(a, b) {
         return (a.name || "").localeCompare(b.name || "", "ru", { sensitivity: "base" });
     }
@@ -124,14 +127,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- CRUD
     async function saveCurrent() {
         const payload = readForm();
-        if (!payload.name) { alert("Укажите ФИО."); return; }
+
+        // минимальная валидация
+        if (!payload.name) {
+            alert("Укажите ФИО.");
+            return;
+        }
+        const ageNum = Number(payload.age);
+        if (Number.isFinite(ageNum) && (ageNum < 14 || ageNum > 100)) {
+            alert("Возраст должен быть в пределах 14–100.");
+            return;
+        }
 
         if (!currentId) {
             // CREATE -> POST /api/employees
             const res = await fetch("/api/employees", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ ...payload, _manual: true })  // явный флаг ручного сохранения
             });
 
             if (!res.ok) {
@@ -161,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(`/api/employees/${encodeURIComponent(currentId)}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ ...payload, _manual: true })  // явный флаг ручного сохранения
             });
 
             if (!res.ok) {
@@ -260,7 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
     deleteBtn.addEventListener("click", deleteCurrent);
 
     submitAllBtn.addEventListener("click", async () => {
-        // Заберём актуальный список из БД и отправим
         const resList = await fetch("/api/employees");
         if (!resList.ok) {
             const text = await resList.text().catch(() => "");
