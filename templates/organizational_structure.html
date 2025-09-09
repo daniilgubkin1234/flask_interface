@@ -68,18 +68,6 @@
         <div class="buttons-container">
             <button id="addRow">Добавить строку</button>
             <button id="submitData">Отправить</button>
-            <button id="syncPersonnelToOrg" type="button">Синхронизировать персонал → оргструктура</button>
-<script>
-document.getElementById('syncPersonnelToOrg').addEventListener('click', () => {
-  fetch('/sync_personnel_from_sources', { method: 'POST' })
-    .then(r => r.json())
-    .then(() => {
-      // страница сама грузит /get_organizational_structure — просто обновим
-      location.reload();
-    })
-    .catch(err => alert('Ошибка синхронизации: ' + err));
-});
-</script>
         </div>
     </div>
 
