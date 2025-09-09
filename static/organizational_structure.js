@@ -7,8 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const addBtn = document.getElementById('addRow');
     const sendBtn = document.getElementById('submitData');
 
-    // ---- NEW: кэш должностей из 3+20 ----
-    let tptMap = {}; // { lowercasedPosition: ["направление 1","направление 2","направление 3"] }
+    // --- кэш из 3+20 ---
+    let tptMap = {};   // { lowercasedPosition: ["направление 1","направление 2","направление 3"] }
+    let tptNames = []; // ["Руководитель отдела", "Маркетолог", ...]
 
     // --- helpers ---
     const uuid = crypto.randomUUID
@@ -63,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.querySelectorAll('tr').forEach((tr, i) => tr.cells[0].textContent = i + 1);
         refreshSimpleSelects();
         refreshAllMultiboxes();
-        ensurePositionDatalist(); // NEW: привязать datalist ко всем .position
+        ensurePositionDatalist(); // привязать datalist ко всем .position
     }
 
-    // ---- NEW: загрузить должности из 3+20 и создать datalist ----
+    // ---- datalist с должностями из 3+20 ----
     function ensurePositionDatalist() {
         let dl = document.getElementById('tpt-positions');
         if (!dl) {
@@ -74,11 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
             dl.id = 'tpt-positions';
             document.body.appendChild(dl);
         }
-        // привязка ко всем инпутам "Должность"
         document.querySelectorAll('.position').forEach(inp => inp.setAttribute('list', 'tpt-positions'));
 
-        // наполнить опции
-        const positions = Object.keys(tptMap).sort();
+        // показываем «красивые» имена, без lowerCase и дублей
+        const positions = [...new Set(tptNames)].sort((a, b) => a.localeCompare(b));
         dl.innerHTML = positions.map(p => `<option value="${p}"></option>`).join('');
     }
 
@@ -87,17 +87,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/tpt_positions');
             const arr = await res.json();
             tptMap = {};
+            tptNames = [];
             (arr || []).forEach(item => {
                 const name = (item.position || '').trim();
                 if (!name) return;
                 const key = name.toLowerCase();
                 const mf  = Array.isArray(item.main_functions) ? item.main_functions.filter(Boolean) : [];
                 tptMap[key] = mf;
+                tptNames.push(name);
             });
             ensurePositionDatalist();
         } catch (e) {
             console.warn('Не удалось загрузить должности из 3+20:', e);
             tptMap = {};
+            tptNames = [];
         }
     }
 
@@ -135,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (needed) tr.querySelector('.supervisor').value = needed.value;
                 }
 
-                // NEW: основной функционал — из сохранённого или из 3+20
+                // основной функционал — из сохранённого или из 3+20
                 tr.querySelector('.functional').value = row.functional || '';
                 if (!row.functional) applyFunctionalFromTpt(tr);
 
@@ -145,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             drawOrgChart(rows);
         });
 
-    // --- функция сбора данных (добавили functional!) ---
+    // --- сбор данных (включая functional) ---
     function collectRows() {
         return [...tbody.rows].map((tr, idx) => {
             const rawSup = tr.querySelector('.supervisor').value.trim();
@@ -154,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 position: tr.querySelector('.position').value.trim(),
                 supervisorIndex: supervisorIndex,
                 staffCount: Math.max(1, parseInt(tr.querySelector('.staff-count').value, 10) || 1),
-                functional: tr.querySelector('.functional').value.trim()   // NEW
+                functional: tr.querySelector('.functional').value.trim()
             };
         });
     }
@@ -200,19 +203,25 @@ document.addEventListener('DOMContentLoaded', () => {
         tpl.querySelector('.subordinates').value = '[]';
         tbody.appendChild(tpl);
         syncTable();
-        ensurePositionDatalist();   // NEW
+        ensurePositionDatalist();
         autoSaveOrgStructure();
     });
 
     tbody.addEventListener('input', e => {
         if (e.target.classList.contains('position')) {
-            applyFunctionalFromTpt(e.target.closest('tr'));  // NEW
+            applyFunctionalFromTpt(e.target.closest('tr'));
             syncTable();
         }
         autoSaveOrgStructure();
     });
 
-    tbody.addEventListener('change', autoSaveOrgStructure);
+    // подстановка функционала срабатывает и при выборе из datalist
+    tbody.addEventListener('change', e => {
+        if (e.target.classList.contains('position')) {
+            applyFunctionalFromTpt(e.target.closest('tr'));
+        }
+        autoSaveOrgStructure();
+    });
 
     tbody.addEventListener('click', e => {
         if (e.target.classList.contains('deleteRow') && tbody.rows.length > 1) {
@@ -239,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- INIT ----
     (async () => {
-        await loadTptPositions();  // NEW: загрузили должности из 3+20
+        await loadTptPositions();  // загрузили должности из 3+20
         syncTable();
     })();
 });

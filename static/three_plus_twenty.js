@@ -141,8 +141,32 @@ document.addEventListener("DOMContentLoaded", function () {
     await attachTaskDatalistToDirections(); // подключить выпадающий список задач к направлениям
 
     // навешиваем автосохранение на любые изменения формы
-    form?.addEventListener("input", autoSave);
-
+    let _saveTptTimer;
+function scheduleAutoSave() {
+  clearTimeout(_saveTptTimer);
+  _saveTptTimer = setTimeout(autoSave, 700); // 700 мс “тишины” перед сохранением
+}
+form?.addEventListener("input", scheduleAutoSave);
+window.addEventListener("beforeunload", () => {
+  if (_saveTptTimer) clearTimeout(_saveTptTimer);
+  // авто-save лёгкий и идемпотентный — можно вызвать синхронно
+  navigator.sendBeacon?.("/save_three_plus_twenty", new Blob([JSON.stringify({
+    position: [document.getElementById("position_name")?.value?.trim() || ""],
+    directions: [
+      document.getElementById("direction_1")?.value?.trim() || "",
+      document.getElementById("direction_2")?.value?.trim() || "",
+      document.getElementById("direction_3")?.value?.trim() || ""
+    ].filter(Boolean),
+    responsibilities: Array.from({length:20}, (_,i)=>document.getElementById(`responsibility_${i+1}`)?.value?.trim()||"").filter(Boolean),
+    // поля main/additional продублируем — их же пишет autoSave
+    main_functions: [
+      document.getElementById("direction_1")?.value?.trim() || "",
+      document.getElementById("direction_2")?.value?.trim() || "",
+      document.getElementById("direction_3")?.value?.trim() || ""
+    ].filter(Boolean),
+    additional_functions: Array.from({length:20}, (_,i)=>document.getElementById(`responsibility_${i+1}`)?.value?.trim()||"").filter(Boolean),
+  })], { type: "application/json" }));
+});
     // submit просто показывает уведомление (автосохранение уже сработало)
     form?.addEventListener("submit", function (event) {
       event.preventDefault();
