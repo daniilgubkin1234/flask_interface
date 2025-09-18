@@ -1,235 +1,416 @@
 <!DOCTYPE html>
 <html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+        <title>Портрет сотрудника</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='employee_profile.css') }}"
+        />
+    </head>
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>Портрет сотрудника</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='employee_profile.css') }}">
-</head>
+    <body>
+        <div class="container">
+            <h2>Портрет сотрудника</h2>
 
-<body>
-    <div class="container">
-
-        <h2>Портрет сотрудника</h2>
-
-        <!-- Панель управления профилями -->
-        <div class="profiles-toolbar">
-            <div class="toolbar-left">
-                <label for="employeeSelect">Выбрать профиль:</label>
-                <select id="employeeSelect">
-                    <option value="">— загрузка списка… —</option>
-                </select>
-                <button type="button" id="newEmployeeBtn">Создать новый</button>
-                <button type="button" id="saveEmployeeBtn">Сохранить портрет</button>
-                <button type="button" id="deleteEmployeeBtn" class="danger">Удалить портрет</button>
-            </div>
-            <div class="toolbar-spacer"></div>
-            <div class="toolbar-right">
-                <button type="button" id="submitAllBtn" class="primary">Отправить все портреты</button>
-            </div>
-        </div>
-
-        <form id="employeeProfileForm" action="#">
-            <fieldset>
-                <legend>Портрет сотрудника</legend>
-
-                <div id="profileItems">
-                    <div class="profile-item">
-                        <label for="name">ФИО:</label>
-                        <input type="text" id="name" name="name" placeholder="Введите ФИО" required />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="gender">Пол:</label>
-                        <input type="text" id="gender" name="gender" placeholder="Введите значение" required />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="age">Возраст:</label>
-                        <input type="number" id="age" name="age" placeholder="Введите значение" min="14" max="100" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="residence">Проживание:</label>
-                        <input type="text" id="residence" name="residence" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="education">Образование:</label>
-                        <input type="text" id="education" name="education" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="speech">Грамотная речь:</label>
-                        <input type="text" id="speech" name="speech" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="languages">Иностранные языки:</label>
-                        <input type="text" id="languages" name="languages" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="pc">Владение ПК и оргтехникой:</label>
-                        <input type="text" id="pc" name="pc" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="appearance">Внешний вид:</label>
-                        <input type="text" id="appearance" name="appearance" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="habits">Привычки:</label>
-                        <input type="text" id="habits" name="habits" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="info">Работа с информацией:</label>
-                        <input type="text" id="info" name="info" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="accuracy">Точность:</label>
-                        <input type="text" id="accuracy" name="accuracy" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="scrupulousness">Скрупулёзность:</label>
-                        <input type="text" id="scrupulousness" name="scrupulousness" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="systemThinking">Системное мышление:</label>
-                        <input type="text" id="systemThinking" name="systemThinking" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="decisiveness">Решительность:</label>
-                        <input type="text" id="decisiveness" name="decisiveness" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="stressResistance">Стрессоустойчивость:</label>
-                        <input type="text" id="stressResistance" name="stressResistance"
-                            placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="otherQualities">Другие качества:</label>
-                        <input type="text" id="otherQualities" name="otherQualities" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="independence">Самостоятельность:</label>
-                        <input type="text" id="independence" name="independence" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="organization">Организованность:</label>
-                        <input type="text" id="organization" name="organization" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="responsibility">Умение брать ответственность:</label>
-                        <input type="text" id="responsibility" name="responsibility" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="managementStyle">Стиль управления:</label>
-                        <input type="text" id="managementStyle" name="managementStyle" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="leadership">Лидерские качества:</label>
-                        <input type="text" id="leadership" name="leadership" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="mobility">Мобильность:</label>
-                        <input type="text" id="mobility" name="mobility" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="businessTrips">Командировки (возможность/желание):</label>
-                        <input type="text" id="businessTrips" name="businessTrips" placeholder="Введите значение" />
-                    </div>
-
-                    <div class="profile-item">
-                        <label for="car">Наличие автомобиля:</label>
-                        <input type="text" id="car" name="car" placeholder="Введите значение" />
-                    </div>
+            <!-- Панель управления профилями -->
+            <div class="profiles-toolbar">
+                <div class="toolbar-left">
+                    <label for="employeeSelect">Выбрать профиль:</label>
+                    <select id="employeeSelect">
+                        <option value="">— загрузка списка… —</option>
+                    </select>
+                    <button type="button" id="newEmployeeBtn">
+                        Создать новый
+                    </button>
+                    <button type="button" id="saveEmployeeBtn">
+                        Сохранить портрет
+                    </button>
+                    <button type="button" id="deleteEmployeeBtn" class="danger">
+                        Удалить портрет
+                    </button>
                 </div>
+                <div class="toolbar-spacer"></div>
+                <div class="toolbar-right">
+                    <button type="button" id="submitAllBtn" class="primary">
+                        Отправить все портреты
+                    </button>
+                </div>
+            </div>
 
-                <div id="additional-fields"></div>
-                <button type="button" id="add-field-button">+ Добавить пункт</button>
-            </fieldset>
-        </form>
-    </div>
+            <form id="employeeProfileForm" action="#">
+                <fieldset>
+                    <legend>Портрет сотрудника</legend>
 
-    <!-- Навигационный блок -->
-    <div class="recommendation-block">
-        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
-        <div class="recommendation-section">
-            <h4>Диагностика</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
+                    <div id="profileItems">
+                        <div class="profile-item">
+                            <label for="name">Наименование должности:</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                placeholder="Введите ФИО"
+                                required
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="gender">Пол:</label>
+                            <input
+                                type="text"
+                                id="gender"
+                                name="gender"
+                                placeholder="Введите значение"
+                                required
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="age">Возраст:</label>
+                            <input
+                                type="number"
+                                id="age"
+                                name="age"
+                                placeholder="Введите значение"
+                                min="14"
+                                max="100"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="residence">Проживание:</label>
+                            <input
+                                type="text"
+                                id="residence"
+                                name="residence"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="education">Образование:</label>
+                            <input
+                                type="text"
+                                id="education"
+                                name="education"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="speech">Грамотная речь:</label>
+                            <input
+                                type="text"
+                                id="speech"
+                                name="speech"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="languages">Иностранные языки:</label>
+                            <input
+                                type="text"
+                                id="languages"
+                                name="languages"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="pc">Владение ПК и оргтехникой:</label>
+                            <input
+                                type="text"
+                                id="pc"
+                                name="pc"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="appearance">Внешний вид:</label>
+                            <input
+                                type="text"
+                                id="appearance"
+                                name="appearance"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="habits">Привычки:</label>
+                            <input
+                                type="text"
+                                id="habits"
+                                name="habits"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="info">Работа с информацией:</label>
+                            <input
+                                type="text"
+                                id="info"
+                                name="info"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="accuracy">Точность:</label>
+                            <input
+                                type="text"
+                                id="accuracy"
+                                name="accuracy"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="scrupulousness">Скрупулёзность:</label>
+                            <input
+                                type="text"
+                                id="scrupulousness"
+                                name="scrupulousness"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="systemThinking"
+                                >Системное мышление:</label
+                            >
+                            <input
+                                type="text"
+                                id="systemThinking"
+                                name="systemThinking"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="decisiveness">Решительность:</label>
+                            <input
+                                type="text"
+                                id="decisiveness"
+                                name="decisiveness"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="stressResistance"
+                                >Стрессоустойчивость:</label
+                            >
+                            <input
+                                type="text"
+                                id="stressResistance"
+                                name="stressResistance"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="otherQualities">Другие качества:</label>
+                            <input
+                                type="text"
+                                id="otherQualities"
+                                name="otherQualities"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="independence">Самостоятельность:</label>
+                            <input
+                                type="text"
+                                id="independence"
+                                name="independence"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="organization">Организованность:</label>
+                            <input
+                                type="text"
+                                id="organization"
+                                name="organization"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="responsibility"
+                                >Умение брать ответственность:</label
+                            >
+                            <input
+                                type="text"
+                                id="responsibility"
+                                name="responsibility"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="managementStyle"
+                                >Стиль управления:</label
+                            >
+                            <input
+                                type="text"
+                                id="managementStyle"
+                                name="managementStyle"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="leadership">Лидерские качества:</label>
+                            <input
+                                type="text"
+                                id="leadership"
+                                name="leadership"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="mobility">Мобильность:</label>
+                            <input
+                                type="text"
+                                id="mobility"
+                                name="mobility"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="businessTrips"
+                                >Командировки (возможность/желание):</label
+                            >
+                            <input
+                                type="text"
+                                id="businessTrips"
+                                name="businessTrips"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+
+                        <div class="profile-item">
+                            <label for="car">Наличие автомобиля:</label>
+                            <input
+                                type="text"
+                                id="car"
+                                name="car"
+                                placeholder="Введите значение"
+                            />
+                        </div>
+                    </div>
+
+                    <div id="additional-fields"></div>
+                    <button type="button" id="add-field-button">
+                        + Добавить пункт
+                    </button>
+                </fieldset>
+            </form>
+        </div>
+
+        <!-- Навигационный блок -->
+        <div class="recommendation-block">
+            <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+            <div class="recommendation-section">
+                <h4>Диагностика</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/survey_ai'">
+                        Перейти к диагностике
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Задачи</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/business'">
+                        Бизнес-цель
+                    </button>
+                    <button onclick="window.location.href='/tasks'">
+                        Задачи, план мероприятий и работ
+                    </button>
+                    <button onclick="window.location.href='/meeting_protocol'">
+                        Протокол совещания
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Персонал</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/employee_profile'">
+                        Портрет сотрудника
+                    </button>
+                    <button onclick="window.location.href='/three_plus_twenty'">
+                        Должностные обязанности
+                    </button>
+                    <button onclick="window.location.href='/adaptation_plan'">
+                        Адаптационный план
+                    </button>
+                    <button onclick="window.location.href='/job_description'">
+                        Должностная инструкция
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Система стимулирования</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/stimulation_system'"
+                    >
+                        Система стимулирования
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Бизнес-процессы</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/business_processes'"
+                    >
+                        Бизнес-процессы
+                    </button>
+                    <button onclick="window.location.href='/regulations_list'">
+                        Реестр корпоративных стандартов
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Организационная структура</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/organizational_structure'"
+                    >
+                        Организационная структура
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Дополнительно</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/question_answer'">
+                        Спроси АСТРу
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="recommendation-section">
-            <h4>Задачи</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business'">Бизнес-цель</button>
-                <button onclick="window.location.href='/tasks'">Задачи, план мероприятий и работ</button>
-                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Персонал</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/employee_profile'">Портрет сотрудника</button>
-                <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
-                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Система стимулирования</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Бизнес-процессы</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
-                <button onclick="window.location.href='/regulations_list'">Реестр корпоративных стандартов</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Организационная структура</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Дополнительно</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
-            </div>
-        </div>
-    </div>
-
-    <script defer src="{{ url_for('static', filename='employee_profile.js') }}"></script>
-
-</body>
-
+        <script
+            defer
+            src="{{ url_for('static', filename='employee_profile.js') }}"
+        ></script>
+    </body>
 </html>
