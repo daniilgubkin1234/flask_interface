@@ -1,175 +1,259 @@
 <!DOCTYPE html>
 <html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Список задач</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='tasks.css') }}"
+        />
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Список задач</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}">
-</head>
+    <body>
+        <form id="tasks-form">
+            <fieldset>
+                <legend id="plan-top">Составьте план работ</legend>
 
-<body>
-    <form id="tasks-form">
-        <fieldset>
-            <legend>Составьте план работ</legend>
-        
-            <label for="task">Задача:</label>
-            <input id="task" name="task" type="text" list="task-list" placeholder="Введите или выберите задачу"
-                required>
-            <datalist id="task-list"></datalist>
+                <label for="task">Задача:</label>
+                <input
+                    id="task"
+                    name="task"
+                    type="text"
+                    list="task-list"
+                    placeholder="Введите или выберите задачу"
+                    required
+                />
+                <datalist id="task-list"></datalist>
 
-            <label for="event">Мероприятие:</label>
-            <input id="event" name="event" type="text" list="event-list" placeholder="Введите или выберите мероприятие">
-            <datalist id="event-list"></datalist>
+                <label for="event">Мероприятие:</label>
+                <input
+                    id="event"
+                    name="event"
+                    type="text"
+                    list="event-list"
+                    placeholder="Введите или выберите мероприятие"
+                />
+                <datalist id="event-list"></datalist>
 
-            <label for="work">Работа/Поручение:</label>
-            <textarea id="work" name="work" placeholder="Введите описание работы/поручения"></textarea>
+                <label for="work">Работа/Поручение:</label>
+                <textarea
+                    id="work"
+                    name="work"
+                    placeholder="Введите описание работы/поручения"
+                ></textarea>
 
-            <label for="responsible">Ответственный:</label>
-            <input id="responsible" name="responsible" type="text" placeholder="Введите имя">
+                <label for="responsible">Ответственный:</label>
+                <input
+                    id="responsible"
+                    name="responsible"
+                    type="text"
+                    placeholder="Введите имя"
+                />
 
-            <label for="deadline">Срок:</label>
-            <input id="deadline" name="deadline" type="date">
+                <label for="deadline">Срок:</label>
+                <input id="deadline" name="deadline" type="date" />
 
-            <label for="result">Результат:</label>
-            <textarea id="result" name="result" placeholder="Введите ожидаемый результат"></textarea>
+                <label for="result">Результат:</label>
+                <textarea
+                    id="result"
+                    name="result"
+                    placeholder="Введите ожидаемый результат"
+                ></textarea>
 
-            <label for="resources">Ресурсы:</label>
-            <textarea id="resources" name="resources" placeholder="Введите необходимые ресурсы"></textarea>
+                <label for="resources">Ресурсы:</label>
+                <textarea
+                    id="resources"
+                    name="resources"
+                    placeholder="Введите необходимые ресурсы"
+                ></textarea>
 
-            <label for="coexecutors">Соисполнители:</label>
-            <input id="coexecutors" name="coexecutors" type="text" placeholder="Введите соисполнителей">
+                <label for="coexecutors">Соисполнители:</label>
+                <input
+                    id="coexecutors"
+                    name="coexecutors"
+                    type="text"
+                    placeholder="Введите соисполнителей"
+                />
 
-            <label for="comments">Комментарии:</label>
-            <textarea id="comments" name="comments" placeholder="Введите комментарии"></textarea>
+                <label for="comments">Комментарии:</label>
+                <textarea
+                    id="comments"
+                    name="comments"
+                    placeholder="Введите комментарии"
+                ></textarea>
 
-            <button id="submitTask" class="submit-btn">Отправить</button>
-            <button id="saveChanges" type="button" style="display: none;">Сохранить изменения</button>
+                <button id="submitTask" class="submit-btn">Отправить</button>
+                <button id="saveChanges" type="button" style="display: none">
+                    Сохранить изменения
+                </button>
+            </fieldset>
+        </form>
 
-        </fieldset>
-    </form>
+        <div class="filter-wrapper">
+            <select id="filter-column">
+                <option value="all">Все столбцы</option>
+                <option value="task">Задача</option>
+                <option value="event">Мероприятие</option>
+                <option value="work">Работа/Поручение</option>
+                <option value="responsible">Ответственный</option>
+                <option value="deadline">Срок</option>
+                <option value="result">Результат</option>
+                <option value="resources">Ресурсы</option>
+                <option value="coexecutors">Соисполнители</option>
+                <option value="comments">Комментарии</option>
+            </select>
+            <input type="text" id="filter-input" placeholder="Поиск..." />
+        </div>
 
+        <!--<h3>Таблица всех задач</h3>-->
+        <table id="tasks-table">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Задача</th>
+                    <th>Мероприятие</th>
+                    <th>Работа/Поручение</th>
+                    <th>Ответственный</th>
+                    <th>Срок</th>
+                    <th>Результат</th>
+                    <th>Ресурсы</th>
+                    <th>Соисполнители</th>
+                    <th>Комментарии</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr data-id="{{ task.id }}">
+                    <td>{{ task.id }}</td>
+                    <td>{{ task.task }}</td>
+                    <td>{{ task.event }}</td>
+                    <td>{{ task.work }}</td>
+                    <td>{{ task.responsible }}</td>
+                    <td>{{ task.deadline }}</td>
+                    <td>{{ task.result }}</td>
+                    <td>{{ task.resources }}</td>
+                    <td>{{ task.coexecutors }}</td>
+                    <td>{{ task.comments }}</td>
+                    <td class="task-actions">
+                        <button
+                            class="edit-task btn btn-primary"
+                            data-id="{{ task.id }}"
+                        >
+                            Редактироватьwewew
+                        </button>
+                        <button
+                            class="delete-task btn btn-danger"
+                            data-id="{{ task.id }}"
+                        >
+                            Удалить
+                        </button>
+                        <button
+                            class="duplicate-task btn btn-secondary"
+                            data-id="{{ task.id }}"
+                        >
+                            Дублировать
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    <div class="filter-wrapper">
-        <select id="filter-column">
-            <option value="all">Все столбцы</option>
-            <option value="task">Задача</option>
-            <option value="event">Мероприятие</option>
-            <option value="work">Работа/Поручение</option>
-            <option value="responsible">Ответственный</option>
-            <option value="deadline">Срок</option>
-            <option value="result">Результат</option>
-            <option value="resources">Ресурсы</option>
-            <option value="coexecutors">Соисполнители</option>
-            <option value="comments">Комментарии</option>
-        </select>
-        <input type="text" id="filter-input" placeholder="Поиск...">
-    </div>
+        <!-- Навигационный блок -->
+        <div class="recommendation-block">
+            <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
 
-    <!--<h3>Таблица всех задач</h3>-->
-    <table id="tasks-table">
-        <thead>
-            <tr>
-                <th>№</th>
-                <th>Задача</th>
-                <th>Мероприятие</th>
-                <th>Работа/Поручение</th>
-                <th>Ответственный</th>
-                <th>Срок</th>
-                <th>Результат</th>
-                <th>Ресурсы</th>
-                <th>Соисполнители</th>
-                <th>Комментарии</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for task in tasks %}
-            <tr data-id="{{ task.id }}">
-                <td>{{ task.id }}</td>
-                <td>{{ task.task }}</td>
-                <td>{{ task.event }}</td>
-                <td>{{ task.work }}</td>
-                <td>{{ task.responsible }}</td>
-                <td>{{ task.deadline }}</td>
-                <td>{{ task.result }}</td>
-                <td>{{ task.resources }}</td>
-                <td>{{ task.coexecutors }}</td>
-                <td>{{ task.comments }}</td>
-                <td class="task-actions">
-                    <button class="edit-task btn btn-primary" data-id="{{ task.id }}">Редактироватьwewew</button>
-                    <button class="delete-task btn btn-danger" data-id="{{ task.id }}">Удалить</button>
-                    <button class="copy-task btn btn-secondary" data-id="{{ task.id }}">Копировать</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+            <!-- Одна "секция" – под тонкой линией -->
+            <div class="recommendation-section">
+                <h4>Диагностика</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/survey_ai'">
+                        Перейти к диагностике
+                    </button>
+                </div>
+            </div>
 
-    </table>
+            <div class="recommendation-section">
+                <h4>Задачи</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/business'">
+                        Бизнес цель
+                    </button>
+                    <button onclick="window.location.href='/tasks'">
+                        Задачи, план мероприятий и работ
+                    </button>
+                    <button onclick="window.location.href='/meeting_protocol'">
+                        Протокол совещания
+                    </button>
+                </div>
+            </div>
 
-    <!-- Навигационный блок -->
-    <div class="recommendation-block">
-        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+            <div class="recommendation-section">
+                <h4>Персонал</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/employee_profile'">
+                        Портрет сотрудника
+                    </button>
+                    <button onclick="window.location.href='/three_plus_twenty'">
+                        Должностные обязанности
+                    </button>
+                    <button onclick="window.location.href='/adaptation_plan'">
+                        Адаптационный план
+                    </button>
+                    <button onclick="window.location.href='/job_description'">
+                        Должностная инструкция
+                    </button>
+                </div>
+            </div>
 
-        <!-- Одна "секция" – под тонкой линией -->
-        <div class="recommendation-section">
-            <h4>Диагностика</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
+            <div class="recommendation-section">
+                <h4>Система стимулирования</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/stimulation_system'"
+                    >
+                        Система стимулирования
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Бизнес-процессы</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/business_processes'"
+                    >
+                        Бизнес-процессы
+                    </button>
+                    <button onclick="window.location.href='/regulations_list'">
+                        Реестр корпоративных стандартов
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Организационная структура</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/organizational_structure'"
+                    >
+                        Организационная структура
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Дополнительно</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/question_answer'">
+                        Спроси АСТРу
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="recommendation-section">
-            <h4>Задачи</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business'">Бизнес цель</button>
-                <button onclick="window.location.href='/tasks'">Задачи, план мероприятий и работ</button>
-                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Персонал</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/employee_profile'">Портрет сотрудника</button>
-                <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
-                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Система стимулирования</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Бизнес-процессы</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
-                <button onclick="window.location.href='/regulations_list'">Реестр корпоративных стандартов</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Организационная структура</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Дополнительно</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="{{ url_for('static', filename='tasks.js') }}"></script>
-</body>
-
+        <script src="{{ url_for('static', filename='tasks.js') }}"></script>
+    </body>
 </html>

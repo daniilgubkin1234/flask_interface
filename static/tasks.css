@@ -1,13 +1,13 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #F0F0F0;
+    background-color: #f0f0f0;
     margin: 0;
     padding: 0;
     min-height: 100vh;
 }
 
 .container {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
     padding: 40px;
     margin: 40px auto;
     border-radius: 8px;
@@ -17,15 +17,16 @@ body {
     display: block; /* Убеждаемся, что контейнер занимает всю ширину */
 }
 
-h2, h3 {
+h2,
+h3 {
     text-align: center;
-    color: #2A63C2;
+    color: #2a63c2;
     margin-bottom: 30px;
     font-weight: bold;
 }
 
 fieldset {
-    border: 2px solid #2A63C2;
+    border: 2px solid #2a63c2;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
@@ -33,7 +34,7 @@ fieldset {
 
 legend {
     font-weight: bold;
-    color: #2A63C2;
+    color: #2a63c2;
     padding: 0 10px;
     font-size: 20px;
 }
@@ -54,16 +55,17 @@ textarea {
     font-size: 16px;
     resize: vertical;
     margin-top: 5px;
-    background-color: #FFFFFF;
+    background-color: #ffffff;
 }
 
 textarea:focus {
-    border-color: #2A63C2; /* Подсветка на фокусе */
+    border-color: #2a63c2; /* Подсветка на фокусе */
     box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
     outline: none;
 }
 
-input[type="text"], input[type="date"] {
+input[type="text"],
+input[type="date"] {
     padding: 10px; /* Равномерный отступ */
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -71,11 +73,11 @@ input[type="text"], input[type="date"] {
     box-sizing: border-box; /* Включаем отступы и ширину рамки в ширину элемента */
     font-size: 14px;
     margin-top: 5px;
-    background-color: #FFFFFF;
+    background-color: #ffffff;
 }
 
 input:focus {
-    border-color: #2A63C2;
+    border-color: #2a63c2;
     outline: none;
     box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
 }
@@ -93,7 +95,7 @@ input[list] {
 
 /* При фокусе */
 input[list]:focus {
-    border-color: #2A63C2;
+    border-color: #2a63c2;
     box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
     outline: none;
 }
@@ -130,9 +132,8 @@ datalist option:hover {
     background-color: #f0f0f0;
 }
 
-
 button {
-    background-color: #2A63C2;
+    background-color: #2a63c2;
     color: white;
     padding: 12px 20px;
     font-size: 16px;
@@ -144,16 +145,16 @@ button {
 }
 
 button:hover {
-    background-color: #1F4B8F;
+    background-color: #1f4b8f;
 }
 
-
-.edit-btn:hover, .delete-btn:hover{
-    background-color: #1F4B8F;
+.edit-btn:hover,
+.delete-btn:hover {
+    background-color: #1f4b8f;
 }
 
 .save-btn {
-    background-color: #2A63C2;
+    background-color: #2a63c2;
     color: white;
     padding: 12px 20px;
     font-size: 16px;
@@ -165,12 +166,12 @@ button:hover {
 }
 
 .save-btn:hover {
-    background-color: #1F4B8F;
+    background-color: #1f4b8f;
 }
 
 /* Контейнер для таблицы */
 .table-wrapper {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
     padding: 40px;
     margin: 20px auto; /* Центрируем таблицу и отступ от формы */
     border-radius: 8px;
@@ -185,7 +186,8 @@ button:hover {
     margin-bottom: 10px;
 }
 
-#filter-column, #filter-input {
+#filter-column,
+#filter-input {
     padding: 8px;
     font-size: 14px;
     margin-left: 5px;
@@ -204,7 +206,7 @@ button:hover {
 /* Заголовок таблицы */
 .table-title {
     text-align: center;
-    color: #2A63C2;
+    color: #2a63c2;
     margin-bottom: 20px;
     font-weight: bold;
 }
@@ -221,23 +223,22 @@ table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed; /* Фиксированная ширина колонок */
-   
 }
 td {
     word-wrap: break-word; /* Перенос длинных слов */
     overflow-wrap: break-word; /* Альтернативный способ переноса */
     white-space: normal; /* Разрешаем перенос строк */
 }
-th, td {
+th,
+td {
     border: 1px solid #ccc;
     padding: 10px;
     text-align: left;
     font-size: 14px;
-    
 }
 
 th {
-    background-color: #2A63C2;
+    background-color: #2a63c2;
     color: white;
     text-align: center;
 }
@@ -272,7 +273,7 @@ tr:hover {
 
 /* Стрелки сортировки */
 .sort-btn {
-    background-color: #2A63C2;
+    background-color: #2a63c2;
     color: white;
     padding: 12px 20px;
     font-size: 16px;
@@ -284,14 +285,12 @@ tr:hover {
 }
 
 .sort-btn.active {
-    color: #FFD700; /* Выделение активной стрелки */
+    color: #ffd700; /* Выделение активной стрелки */
 }
 
 .sort-btn:hover {
     color: #e0e0e0; /* Подсветка при наведении */
 }
-
-
 
 .filter-wrapper {
     display: flex;
@@ -300,7 +299,8 @@ tr:hover {
     margin-bottom: 10px;
 }
 
-#filter-column, #filter-input {
+#filter-column,
+#filter-input {
     padding: 8px;
     font-size: 14px;
     border: 1px solid #ccc;
@@ -321,13 +321,13 @@ tr:hover {
     margin-bottom: 10px;
     font-size: 18px;
     font-weight: bold;
-    color: #2A63C2;
+    color: #2a63c2;
     text-align: center;
 }
 
 /* Каждая секция (группа ссылок + заголовок) */
 .recommendation-section {
-    border-top: 1px solid #e0e0e0; 
+    border-top: 1px solid #e0e0e0;
     padding-top: 15px;
     margin-top: 15px;
     text-align: center;
@@ -352,7 +352,7 @@ tr:hover {
 /* Кнопки внутри блока рекомендаций.
    Можно сделать поменьше и компактнее, чем обычные. */
 .recommendation-block .button-row button {
-    background-color: #2A63C2;
+    background-color: #2a63c2;
     color: white;
     padding: 12px 20px;
     font-size: 16px;
@@ -365,5 +365,5 @@ tr:hover {
 
 /* Ховер-эффект на кнопках */
 .recommendation-block .button-row button:hover {
-    background-color: #1F4B8F;
+    background-color: #1f4b8f;
 }
