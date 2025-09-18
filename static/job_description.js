@@ -411,95 +411,87 @@ document.addEventListener("DOMContentLoaded", function () {
     // -------------------- инициализация --------------------
     let currentTptSig = "";
     let currentEmpSig = "";
-    let currentEmpId = ""; // связка ДИ ↔ профиль
+    let currentEmpId = "";
 
     const jdSelect = document.getElementById("jdEmployeeSelect");
     const jdImportBtn = document.getElementById("jdImportEmpBtn");
-
-    // чтение текущего состояния блока «Требования к кандидату» из формы,
-    // чтобы аккуратно решать: нужно ли перезаписывать и как считать подпись
-    function snapshotJDFromForm() {
-        const o = {};
-        (EMP_KEYS || []).forEach((k) => {
-            const el = byName(k);
-            o[k] = el ? (el.value || "").trim() : "";
-        });
-        // дополнительные пункты
-        o.additionalFields = Array.from(
-            document.querySelectorAll(
-                '#profileAdditionalFields input[name="additionalFields[]"]'
-            )
-        )
-            .map((i) => (i.value || "").trim())
-            .filter(Boolean);
-        // подпись предыдущего импорта портрета, если была
-        o.__empSig = currentEmpSig || "";
-        return o;
-    }
-
-    async function fetchEmployeeList() {
-        const res = await fetch("/api/employees");
-        if (!res.ok) return [];
-        const list = await res.json();
-        return Array.isArray(list) ? list : [];
-    }
-
-    function fillEmployeeSelect(list, preselectId = "") {
-        const opts = ['<option value="">— выберите профиль —</option>'].concat(
-            list.map(
-                (e) =>
-                    `<option value="${e._id}">${e.name || "(без ФИО)"}</option>`
-            )
-        );
-        jdSelect.innerHTML = opts.join("");
-        if (preselectId) jdSelect.value = preselectId;
-    }
-
-    async function fetchEmployeeById(id) {
-        if (!id) return null;
-        const res = await fetch(`/api/employees/${encodeURIComponent(id)}`);
-        if (!res.ok) return null;
-        return await res.json().catch(() => null);
-    }
 
     function autoSaveWithSign(extra = {}) {
         const ex = { ...extra };
         if (currentTptSig) ex.__tptSig = currentTptSig;
         if (currentEmpSig) ex.__empSig = currentEmpSig;
         if (currentEmpId) ex.__empId = currentEmpId;
-        autoSaveJobDescription(ex); // использует уже существующую функцию сохранения
+        autoSaveJobDescription(ex);
     }
 
-    // основной старт
     (async function initJD() {
-        const [jd, tpt, empList] = await Promise.all([
+        // добавили 4-й запрос — анкета пользователя
+        const [jd, tpt, empList, survey] = await Promise.all([
             fetch("/get_job_description")
                 .then((r) => r.json())
                 .catch(() => ({})),
             fetch("/get_three_plus_twenty")
                 .then((r) => r.json())
                 .catch(() => ({})),
-            fetchEmployeeList(),
+            fetch("/api/employees")
+                .then((r) => r.json())
+                .catch(() => []),
+            fetch("/get_user_survey")
+                .then((r) => r.json())
+                .catch(() => ({})),
         ]);
 
-        // 1) отрисовали сохранённую ДИ
+        // 1) рендерим то, что уже сохранено в ДИ
         applyJobDescriptionData(jd);
 
-        // 2) заполнили селект профилей
-        // пробуем восстановить связь: если в ДИ уже был сохранён __empId — используем его
-        currentEmpId = typeof jd?.__empId === "string" ? jd.__empId : "";
-        // если связи нет, а профилей ровно один — выберем его по умолчанию
-        if (!currentEmpId && empList.length === 1)
-            currentEmpId = empList[0]._id;
-        fillEmployeeSelect(empList, currentEmpId);
+        // 2) если company в ДИ пусто — берём из диагностики ответ на q2
+        try {
+            const companyInput = document.getElementById("company");
+            const hasJDCompany = (jd?.company || "").trim().length > 0;
+            const companyFromSurvey = (survey?.q2 || "").trim(); // «Как называется ваша компания?» (Диагностика)
+            if (!hasJDCompany && companyFromSurvey) {
+                companyInput.value = companyFromSurvey;
+                // сразу зафиксируем автосохранение, чтобы company попала в ДБ
+                autoSaveWithSign({ company: companyFromSurvey });
+            }
+        } catch (e) {
+            /* no-op */
+        }
 
-        // 3) «умный» импорт из 3+20
+        // 3) наполняем селект профилей
+        currentEmpId = typeof jd?.__empId === "string" ? jd.__empId : "";
+        if (!currentEmpId && Array.isArray(empList) && empList.length === 1) {
+            currentEmpId = empList[0]?._id || "";
+        }
+        if (Array.isArray(empList)) {
+            const opts = [
+                '<option value="">— выберите профиль —</option>',
+            ].concat(
+                empList.map(
+                    (e) =>
+                        `<option value="${e._id}">${
+                            e.name || "(без ФИО)"
+                        }</option>`
+                )
+            );
+            const sel = document.getElementById("jdEmployeeSelect");
+            if (sel) {
+                sel.innerHTML = opts.join("");
+                if (currentEmpId) sel.value = currentEmpId;
+            }
+        }
+
+        // 4) «умный» импорт из 3+20 (как и раньше)
         const tptRes = importFromTPTIfNeeded(jd, tpt);
         currentTptSig = tptRes.tptSig || currentTptSig;
 
-        // 4) «умный» импорт из выбранного портрета (если выбран)
+        // 5) «умный» импорт из выбранного портрета (как и раньше)
         if (currentEmpId) {
-            const empDoc = await fetchEmployeeById(currentEmpId);
+            const res = await fetch(
+                `/api/employees/${encodeURIComponent(currentEmpId)}`
+            ).catch(() => null);
+            const empDoc =
+                res && res.ok ? await res.json().catch(() => null) : null;
             if (empDoc) {
                 const empRes = importFromEMPIfNeeded(jd, empDoc);
                 currentEmpSig = empRes.empSig || currentEmpSig;
