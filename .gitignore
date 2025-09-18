@@ -1,15 +1,18 @@
-# виртуальное окружение
+﻿# Python
 venv/
-
-# Python bytecode
-pycache/
+.venv/
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# локальные файлы окружения
+# Env files
 .env
+.env.*
+*.env
 
-# тестовый app.py
-app_test.pyc
-
-# папка certs
-/certs/
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
