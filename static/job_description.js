@@ -8,32 +8,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function ensureInput(containerId, nameAttr, count) {
         const container = document.getElementById(containerId);
-        while (container.querySelectorAll(`input[name="${nameAttr}"]`).length < count) {
+        while (
+            container.querySelectorAll(`input[name="${nameAttr}"]`).length <
+            count
+        ) {
             const input = document.createElement("input");
             input.type = "text";
             input.name = nameAttr;
             input.placeholder =
-                nameAttr === "mainActivity[]" ? "Введите направление деятельности" : "Введите должностную обязанность";
+                nameAttr === "mainActivity[]"
+                    ? "Введите направление деятельности"
+                    : "Введите должностную обязанность";
             input.required = true;
             container.appendChild(input);
         }
     }
 
     function getValues(containerId, nameAttr) {
-        return Array.from(document.querySelectorAll(`#${containerId} input[name="${nameAttr}"]`)).map(i => i.value);
+        return Array.from(
+            document.querySelectorAll(
+                `#${containerId} input[name="${nameAttr}"]`
+            )
+        ).map((i) => i.value);
     }
 
     function setExact(containerId, nameAttr, values) {
         const container = document.getElementById(containerId);
         container.innerHTML = "";
-        (values && values.length ? values : [""]).forEach(v => {
+        (values && values.length ? values : [""]).forEach((v) => {
             const input = document.createElement("input");
             input.type = "text";
             input.name = nameAttr;
             input.placeholder =
-                nameAttr === "mainActivity[]" ? "Введите направление деятельности" : "Введите должностную обязанность";
+                nameAttr === "mainActivity[]"
+                    ? "Введите направление деятельности"
+                    : "Введите должностную обязанность";
             input.required = true;
-            input.value = (v ?? "");
+            input.value = v ?? "";
             container.appendChild(input);
         });
     }
@@ -42,7 +53,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function overwriteFirstN(containerId, nameAttr, values) {
         const n = values.length;
         ensureInput(containerId, nameAttr, n);
-        const inputs = document.querySelectorAll(`#${containerId} input[name="${nameAttr}"]`);
+        const inputs = document.querySelectorAll(
+            `#${containerId} input[name="${nameAttr}"]`
+        );
         for (let i = 0; i < n; i++) inputs[i].value = values[i] ?? "";
     }
 
@@ -52,7 +65,9 @@ document.addEventListener("DOMContentLoaded", function () {
         wrap.innerHTML = "";
 
         const items = Array.isArray(values)
-            ? values.map(v => (typeof v === "string" ? v.trim() : "")).filter(Boolean)
+            ? values
+                  .map((v) => (typeof v === "string" ? v.trim() : ""))
+                  .filter(Boolean)
             : [];
 
         if (items.length === 0) return; // никаких элементов -> никакой подписи
@@ -62,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
         label.textContent = "Дополнительные пункты:";
         wrap.appendChild(label);
 
-        items.forEach(v => {
+        items.forEach((v) => {
             const inp = document.createElement("input");
             inp.type = "text";
             inp.name = "additionalFields[]";
@@ -79,63 +94,109 @@ document.addEventListener("DOMContentLoaded", function () {
         if (typeof len === "number") while (r.length < len) r.push("");
         return r;
 
-        function aSafe(x) { return x.map(normStr); }
+        function aSafe(x) {
+            return x.map(normStr);
+        }
     };
 
     // ---- 3+20 ----
     function makeTPTNormalized(tpt) {
         return {
-            position: normStr(Array.isArray(tpt?.position) ? tpt.position[0] : ""),
+            position: normStr(
+                Array.isArray(tpt?.position) ? tpt.position[0] : ""
+            ),
             directions: normArr(tpt?.directions, 3),
             responsibilities: normArr(tpt?.responsibilities, 20),
         };
     }
     function makeJDSubsetNormalized(jd) {
-        const acts = Array.isArray(jd?.mainActivity) ? jd.mainActivity
-            : (Array.isArray(jd?.["mainActivity[]"]) ? jd["mainActivity[]"] : []);
-        const duties = Array.isArray(jd?.jobDuty) ? jd.jobDuty
-            : (Array.isArray(jd?.["jobDuty[]"]) ? jd["jobDuty[]"] : []);
+        const acts = Array.isArray(jd?.mainActivity)
+            ? jd.mainActivity
+            : Array.isArray(jd?.["mainActivity[]"])
+            ? jd["mainActivity[]"]
+            : [];
+        const duties = Array.isArray(jd?.jobDuty)
+            ? jd.jobDuty
+            : Array.isArray(jd?.["jobDuty[]"])
+            ? jd["jobDuty[]"]
+            : [];
         return {
             position: normStr(jd?.position || ""),
             directions: normArr(acts, 3),
             responsibilities: normArr(duties, 20),
             tptSig: jd?.__tptSig || "",
-            empSig: jd?.__empSig || ""
+            empSig: jd?.__empSig || "",
         };
     }
-    const eqArr = (a, b) => a.length === b.length && a.every((v, i) => normStr(v) === normStr(b[i]));
+    const eqArr = (a, b) =>
+        a.length === b.length &&
+        a.every((v, i) => normStr(v) === normStr(b[i]));
     function arraysPayloadEqual(a, b) {
-        return normStr(a.position) === normStr(b.position)
-            && eqArr(a.directions, b.directions)
-            && eqArr(a.responsibilities, b.responsibilities);
+        return (
+            normStr(a.position) === normStr(b.position) &&
+            eqArr(a.directions, b.directions) &&
+            eqArr(a.responsibilities, b.responsibilities)
+        );
     }
-    const computeTptSig = (obj) => JSON.stringify({
-        p: normStr(obj.position),
-        d: normArr(obj.directions, 3),
-        r: normArr(obj.responsibilities, 20)
-    });
+    const computeTptSig = (obj) =>
+        JSON.stringify({
+            p: normStr(obj.position),
+            d: normArr(obj.directions, 3),
+            r: normArr(obj.responsibilities, 20),
+        });
 
     // ---- EMP (портрет) ----
     const EMP_KEYS = [
-        "name", "gender", "age", "residence", "education", "speech", "languages", "pc", "appearance", "habits", "info",
-        "accuracy", "scrupulousness", "systemThinking", "decisiveness", "stressResistance", "otherQualities",
-        "independence", "organization", "responsibility", "managementStyle", "leadership", "mobility", "businessTrips", "car"
+        "name",
+        "gender",
+        "age",
+        "residence",
+        "education",
+        "speech",
+        "languages",
+        "pc",
+        "appearance",
+        "habits",
+        "info",
+        "accuracy",
+        "scrupulousness",
+        "systemThinking",
+        "decisiveness",
+        "stressResistance",
+        "otherQualities",
+        "independence",
+        "organization",
+        "responsibility",
+        "managementStyle",
+        "leadership",
+        "mobility",
+        "businessTrips",
+        "car",
     ];
 
     function makeEmpNormalized(emp) {
         const o = {};
-        EMP_KEYS.forEach(k => o[k] = normStr(emp?.[k] ?? ""));
-        o.additionalFields = Array.isArray(emp?.additionalFields) ? emp.additionalFields.map(normStr) : [];
+        EMP_KEYS.forEach((k) => (o[k] = normStr(emp?.[k] ?? "")));
+        o.additionalFields = Array.isArray(emp?.additionalFields)
+            ? emp.additionalFields.map(normStr)
+            : [];
         return o;
     }
-    const computeEmpSig = (e) => JSON.stringify({
-        ...EMP_KEYS.reduce((acc, k) => (acc[k] = normStr(e[k] ?? ""), acc), {}),
-        additionalFields: (e.additionalFields || []).map(normStr)
-    });
+    const computeEmpSig = (e) =>
+        JSON.stringify({
+            ...EMP_KEYS.reduce(
+                (acc, k) => ((acc[k] = normStr(e[k] ?? "")), acc),
+                {}
+            ),
+            additionalFields: (e.additionalFields || []).map(normStr),
+        });
 
     function hasMeaningfulEmpSection(jd) {
-        return EMP_KEYS.some(k => normStr(jd?.[k] || "") !== "")
-            || (Array.isArray(jd?.additionalFields) && jd.additionalFields.some(v => normStr(v) !== ""));
+        return (
+            EMP_KEYS.some((k) => normStr(jd?.[k] || "") !== "") ||
+            (Array.isArray(jd?.additionalFields) &&
+                jd.additionalFields.some((v) => normStr(v) !== ""))
+        );
     }
 
     // -------------------- рендер сохранённой ДИ --------------------
@@ -144,37 +205,57 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // общие (титульный и др.)
         [
-            "company", "position", "approval", "appointedBy", "documentPurpose", "replaces",
-            "activityGuide", "supervisor", "rights", "responsibility"
-        ].forEach(name => {
+            "company",
+            "position",
+            "approval",
+            "appointedBy",
+            "documentPurpose",
+            "replaces",
+            "activityGuide",
+            "supervisor",
+            "rights",
+            "responsibility",
+        ].forEach((name) => {
             const el = byName(name);
             if (el && data[name] !== undefined) el.value = data[name];
         });
 
         // блок 2 — читаем как новые имена, так и старые (обратная совместимость)
-        const mapOldToNew = { pcSkills: "pc", infoSkills: "info", decisionMaking: "independence" };
-        EMP_KEYS.forEach(name => {
+        const mapOldToNew = {
+            pcSkills: "pc",
+            infoSkills: "info",
+            decisionMaking: "independence",
+        };
+        EMP_KEYS.forEach((name) => {
             const el = byName(name);
             if (!el) return;
             if (data[name] !== undefined) el.value = data[name];
             else {
-                const old = Object.keys(mapOldToNew).find(k => mapOldToNew[k] === name);
+                const old = Object.keys(mapOldToNew).find(
+                    (k) => mapOldToNew[k] === name
+                );
                 if (old && data[old] !== undefined) el.value = data[old];
             }
         });
 
         // дополнительные пункты профиля
-        renderAdditionalFields(Array.isArray(data.additionalFields) ? data.additionalFields : []);
+        renderAdditionalFields(
+            Array.isArray(data.additionalFields) ? data.additionalFields : []
+        );
 
         // массивы разделов 3 и 4
         const mainActivities = Array.isArray(data.mainActivity)
             ? data.mainActivity
-            : (Array.isArray(data["mainActivity[]"]) ? data["mainActivity[]"] : []);
+            : Array.isArray(data["mainActivity[]"])
+            ? data["mainActivity[]"]
+            : [];
         setExact("mainActivities", "mainActivity[]", mainActivities);
 
         const jobDuties = Array.isArray(data.jobDuty)
             ? data.jobDuty
-            : (Array.isArray(data["jobDuty[]"]) ? data["jobDuty[]"] : []);
+            : Array.isArray(data["jobDuty[]"])
+            ? data["jobDuty[]"]
+            : [];
         setExact("jobDuties", "jobDuty[]", jobDuties);
     }
 
@@ -182,7 +263,10 @@ document.addEventListener("DOMContentLoaded", function () {
     function importFromTPTIfNeeded(jd, tpt) {
         const tptN = makeTPTNormalized(tpt);
         const jdN = makeJDSubsetNormalized(jd);
-        const tptIsEmpty = !tptN.position && !tptN.directions.some(x => x) && !tptN.responsibilities.some(x => x);
+        const tptIsEmpty =
+            !tptN.position &&
+            !tptN.directions.some((x) => x) &&
+            !tptN.responsibilities.some((x) => x);
         if (tptIsEmpty) return { imported: false, tptSig: jdN.tptSig };
 
         const newSig = computeTptSig(tptN);
@@ -203,7 +287,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function hasMeaningfulJD(jd) {
         const sub = makeJDSubsetNormalized(jd);
-        return !!(sub.position || sub.directions.some(x => x) || sub.responsibilities.some(x => x));
+        return !!(
+            sub.position ||
+            sub.directions.some((x) => x) ||
+            sub.responsibilities.some((x) => x)
+        );
     }
 
     function applyImportFromTPT(tptN) {
@@ -220,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const newEmpSig = computeEmpSig(empN);
 
         const empIsEmpty =
-            EMP_KEYS.every(k => !empN[k]) &&
+            EMP_KEYS.every((k) => !empN[k]) &&
             (!empN.additionalFields || empN.additionalFields.length === 0);
 
         if (empIsEmpty) return { imported: false, empSig: jdEmpSig };
@@ -240,7 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function applyImportFromEMP(empN) {
-        EMP_KEYS.forEach(name => {
+        EMP_KEYS.forEach((name) => {
             const el = byName(name);
             if (el) el.value = empN[name] || "";
         });
@@ -252,8 +340,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const jsonData = {};
 
         // разделы 3 и 4
-        jsonData.mainActivity = getValues("mainActivities", "mainActivity[]").map(v => v.trim());
-        jsonData.jobDuty = getValues("jobDuties", "jobDuty[]").map(v => v.trim());
+        jsonData.mainActivity = getValues(
+            "mainActivities",
+            "mainActivity[]"
+        ).map((v) => v.trim());
+        jsonData.jobDuty = getValues("jobDuties", "jobDuty[]").map((v) =>
+            v.trim()
+        );
 
         // собрать остальные поля формы
         const fd = new FormData(form);
@@ -274,28 +367,41 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch("/submit_job_description", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(jsonData)
-        }).catch(err => console.error("Не удалось сохранить должностную инструкцию:", err));
+            body: JSON.stringify(jsonData),
+        }).catch((err) =>
+            console.error("Не удалось сохранить должностную инструкцию:", err)
+        );
     }
 
     form.addEventListener("input", () => {
         const extra = {};
         if (currentTptSig) extra.__tptSig = currentTptSig;
         if (currentEmpSig) extra.__empSig = currentEmpSig;
+        if (currentEmpId) extra.__empId = currentEmpId;
         autoSaveJobDescription(extra);
     });
 
     // кнопки добавления строк
-    document.getElementById("addActivity").addEventListener("click", function () {
-        ensureInput("mainActivities", "mainActivity[]", getValues("mainActivities", "mainActivity[]").length + 1);
-        const extra = {};
-        if (currentTptSig) extra.__tptSig = currentTptSig;
-        if (currentEmpSig) extra.__empSig = currentEmpSig;
-        autoSaveJobDescription(extra);
-    });
+    document
+        .getElementById("addActivity")
+        .addEventListener("click", function () {
+            ensureInput(
+                "mainActivities",
+                "mainActivity[]",
+                getValues("mainActivities", "mainActivity[]").length + 1
+            );
+            const extra = {};
+            if (currentTptSig) extra.__tptSig = currentTptSig;
+            if (currentEmpSig) extra.__empSig = currentEmpSig;
+            autoSaveJobDescription(extra);
+        });
 
     document.getElementById("addDuty").addEventListener("click", function () {
-        ensureInput("jobDuties", "jobDuty[]", getValues("jobDuties", "jobDuty[]").length + 1);
+        ensureInput(
+            "jobDuties",
+            "jobDuty[]",
+            getValues("jobDuties", "jobDuty[]").length + 1
+        );
         const extra = {};
         if (currentTptSig) extra.__tptSig = currentTptSig;
         if (currentEmpSig) extra.__empSig = currentEmpSig;
@@ -305,30 +411,141 @@ document.addEventListener("DOMContentLoaded", function () {
     // -------------------- инициализация --------------------
     let currentTptSig = "";
     let currentEmpSig = "";
+    let currentEmpId = ""; // связка ДИ ↔ профиль
 
-    Promise.all([
-        fetch("/get_job_description").then(r => r.json()).catch(() => ({})),
-        fetch("/get_three_plus_twenty").then(r => r.json()).catch(() => ({})),
-        fetch("/get_employee").then(r => r.json()).catch(() => ({}))
-    ]).then(([jd, tpt, emp]) => {
-        // 1) отрисовали то, что сохранено в ДИ
+    const jdSelect = document.getElementById("jdEmployeeSelect");
+    const jdImportBtn = document.getElementById("jdImportEmpBtn");
+
+    // чтение текущего состояния блока «Требования к кандидату» из формы,
+    // чтобы аккуратно решать: нужно ли перезаписывать и как считать подпись
+    function snapshotJDFromForm() {
+        const o = {};
+        (EMP_KEYS || []).forEach((k) => {
+            const el = byName(k);
+            o[k] = el ? (el.value || "").trim() : "";
+        });
+        // дополнительные пункты
+        o.additionalFields = Array.from(
+            document.querySelectorAll(
+                '#profileAdditionalFields input[name="additionalFields[]"]'
+            )
+        )
+            .map((i) => (i.value || "").trim())
+            .filter(Boolean);
+        // подпись предыдущего импорта портрета, если была
+        o.__empSig = currentEmpSig || "";
+        return o;
+    }
+
+    async function fetchEmployeeList() {
+        const res = await fetch("/api/employees");
+        if (!res.ok) return [];
+        const list = await res.json();
+        return Array.isArray(list) ? list : [];
+    }
+
+    function fillEmployeeSelect(list, preselectId = "") {
+        const opts = ['<option value="">— выберите профиль —</option>'].concat(
+            list.map(
+                (e) =>
+                    `<option value="${e._id}">${e.name || "(без ФИО)"}</option>`
+            )
+        );
+        jdSelect.innerHTML = opts.join("");
+        if (preselectId) jdSelect.value = preselectId;
+    }
+
+    async function fetchEmployeeById(id) {
+        if (!id) return null;
+        const res = await fetch(`/api/employees/${encodeURIComponent(id)}`);
+        if (!res.ok) return null;
+        return await res.json().catch(() => null);
+    }
+
+    function autoSaveWithSign(extra = {}) {
+        const ex = { ...extra };
+        if (currentTptSig) ex.__tptSig = currentTptSig;
+        if (currentEmpSig) ex.__empSig = currentEmpSig;
+        if (currentEmpId) ex.__empId = currentEmpId;
+        autoSaveJobDescription(ex); // использует уже существующую функцию сохранения
+    }
+
+    // основной старт
+    (async function initJD() {
+        const [jd, tpt, empList] = await Promise.all([
+            fetch("/get_job_description")
+                .then((r) => r.json())
+                .catch(() => ({})),
+            fetch("/get_three_plus_twenty")
+                .then((r) => r.json())
+                .catch(() => ({})),
+            fetchEmployeeList(),
+        ]);
+
+        // 1) отрисовали сохранённую ДИ
         applyJobDescriptionData(jd);
 
-        // 2) «умный» импорт из 3+20
+        // 2) заполнили селект профилей
+        // пробуем восстановить связь: если в ДИ уже был сохранён __empId — используем его
+        currentEmpId = typeof jd?.__empId === "string" ? jd.__empId : "";
+        // если связи нет, а профилей ровно один — выберем его по умолчанию
+        if (!currentEmpId && empList.length === 1)
+            currentEmpId = empList[0]._id;
+        fillEmployeeSelect(empList, currentEmpId);
+
+        // 3) «умный» импорт из 3+20
         const tptRes = importFromTPTIfNeeded(jd, tpt);
         currentTptSig = tptRes.tptSig || currentTptSig;
 
-        // 3) «умный» импорт из Портрета
-        const empRes = importFromEMPIfNeeded(jd, emp);
+        // 4) «умный» импорт из выбранного портрета (если выбран)
+        if (currentEmpId) {
+            const empDoc = await fetchEmployeeById(currentEmpId);
+            if (empDoc) {
+                const empRes = importFromEMPIfNeeded(jd, empDoc);
+                currentEmpSig = empRes.empSig || currentEmpSig;
+                if (tptRes.imported || empRes.imported) autoSaveWithSign();
+            }
+        }
+    })();
+
+    // реакция на СМЕНУ ПРОФИЛЯ (без кнопки)
+    // если хотите импорт только по кнопке — закомментируйте этот блок и используйте обработчик jdImportBtn
+    jdSelect?.addEventListener("change", async () => {
+        currentEmpId = jdSelect.value || "";
+        if (!currentEmpId) return;
+
+        const empDoc = await fetchEmployeeById(currentEmpId);
+        if (!empDoc) return;
+
+        // берём текущее содержимое формы как «текущую ДИ»
+        const jdNow = snapshotJDFromForm();
+        const empRes = importFromEMPIfNeeded(jdNow, empDoc);
         currentEmpSig = empRes.empSig || currentEmpSig;
 
-        // 4) если был импорт — зафиксируем подписи
-        if (tptRes.imported || empRes.imported) {
-            const extra = {};
-            if (currentTptSig) extra.__tptSig = currentTptSig;
-            if (currentEmpSig) extra.__empSig = currentEmpSig;
-            autoSaveJobDescription(extra);
+        // зафиксируем связь ДИ ↔ профиль и подпись источника
+        autoSaveWithSign();
+    });
+
+    // импорт по кнопке (альтернативно/дополнительно)
+    jdImportBtn?.addEventListener("click", async () => {
+        const id = jdSelect.value || "";
+        if (!id) {
+            alert("Выберите профиль для импорта.");
+            return;
         }
+        const empDoc = await fetchEmployeeById(id);
+        if (!empDoc) {
+            alert("Не удалось загрузить профиль.");
+            return;
+        }
+
+        const jdNow = snapshotJDFromForm();
+        const empRes = importFromEMPIfNeeded(jdNow, empDoc);
+        currentEmpSig = empRes.empSig || currentEmpSig;
+        currentEmpId = id;
+
+        autoSaveWithSign();
+        alert("Данные профиля импортированы в ДИ.");
     });
 
     // submit
@@ -339,51 +556,66 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // --- 7. Встроенный "Адаптационный план" на странице ДИ ---
-document.addEventListener('DOMContentLoaded', () => {
-    const jdContainer = document.getElementById('jdTasksContainer');
+document.addEventListener("DOMContentLoaded", () => {
+    const jdContainer = document.getElementById("jdTasksContainer");
     if (!jdContainer) return;
 
     // Тот же стартовый шаблон из adaptation_plan.js (1:1)
     const AP_DEFAULT_TASKS = [
-        'Задача 1: Оформление на работу',
-        'Задача 2: Знакомство с коллективом, офисом, оргтехникой',
-        'Задача 3: Изучение информации о компании',
-        'Задача 4: Изучение стандартов компании',
-        'Задача 5: Участие в планерке',
-        'Задача 6: Уточнение адаптационного плана',
-        'Задача 7: Формирование плана работы на неделю',
-        'Задача 8: Просмотр видео-семинаров',
-        'Задача 9: Чтение книг из корпоративной библиотеки',
-        'Задача 10: Подведение итогов адаптации'
-    ].map(title => ({
-        title, time: '', resources: '', customTitle: null, feedbackMentor: '', feedbackEmployee: ''
+        "Задача 1: Оформление на работу",
+        "Задача 2: Знакомство с коллективом, офисом, оргтехникой",
+        "Задача 3: Изучение информации о компании",
+        "Задача 4: Изучение стандартов компании",
+        "Задача 5: Участие в планерке",
+        "Задача 6: Уточнение адаптационного плана",
+        "Задача 7: Формирование плана работы на неделю",
+        "Задача 8: Просмотр видео-семинаров",
+        "Задача 9: Чтение книг из корпоративной библиотеки",
+        "Задача 10: Подведение итогов адаптации",
+    ].map((title) => ({
+        title,
+        time: "",
+        resources: "",
+        customTitle: null,
+        feedbackMentor: "",
+        feedbackEmployee: "",
     }));
 
-    const templateTask = jdContainer.querySelector('fieldset.task').cloneNode(true);
-    const addButton = document.querySelector('#adaptationPlanJD .add-task-btn');
+    const templateTask = jdContainer
+        .querySelector("fieldset.task")
+        .cloneNode(true);
+    const addButton = document.querySelector("#adaptationPlanJD .add-task-btn");
 
     // Рендер набора задач в DOM (совместим с форматом adaptation_plan.js)
     function renderJDTasks(tasks) {
         // Сохраняем только первый шаблон, остальное удаляем
-        while (jdContainer.querySelectorAll('fieldset.task').length > 1) {
-            jdContainer.querySelectorAll('fieldset.task')[1].remove();
+        while (jdContainer.querySelectorAll("fieldset.task").length > 1) {
+            jdContainer.querySelectorAll("fieldset.task")[1].remove();
         }
         tasks.forEach((t, idx) => {
-            const el = idx === 0 ? jdContainer.querySelector('fieldset.task') : templateTask.cloneNode(true);
-            el.querySelector('legend').textContent = t.title || `Задача ${idx + 1}`;
+            const el =
+                idx === 0
+                    ? jdContainer.querySelector("fieldset.task")
+                    : templateTask.cloneNode(true);
+            el.querySelector("legend").textContent =
+                t.title || `Задача ${idx + 1}`;
 
             const timeEl = el.querySelector('input[name*="_time"]');
             const resEl = el.querySelector('textarea[name*="_resources"]');
-            const sumM = el.querySelector('textarea[name*="_summarize_by_mentor"]');
-            const sumE = el.querySelector('textarea[name*="_summarize_by_employee"]');
+            const sumM = el.querySelector(
+                'textarea[name*="_summarize_by_mentor"]'
+            );
+            const sumE = el.querySelector(
+                'textarea[name*="_summarize_by_employee"]'
+            );
 
-            if (timeEl) timeEl.value = t.time || '';
-            if (resEl) resEl.value = t.resources || '';
-            if (sumM) sumM.value = t.feedbackMentor || '';
-            if (sumE) sumE.value = t.feedbackEmployee || '';
+            if (timeEl) timeEl.value = t.time || "";
+            if (resEl) resEl.value = t.resources || "";
+            if (sumM) sumM.value = t.feedbackMentor || "";
+            if (sumE) sumE.value = t.feedbackEmployee || "";
 
             if (idx !== 0) {
-                const wrapper = jdContainer.querySelector('.add-task-wrapper');
+                const wrapper = jdContainer.querySelector(".add-task-wrapper");
                 jdContainer.insertBefore(el, wrapper);
             }
         });
@@ -392,14 +624,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function collectJDTasks() {
-        return Array.from(jdContainer.querySelectorAll('fieldset.task')).map(fs => ({
-            title: fs.querySelector('legend')?.textContent?.trim() || '',
-            time: fs.querySelector('input[name*="_time"]')?.value.trim() || '',
-            resources: fs.querySelector('textarea[name*="_resources"]')?.value.trim() || '',
-            customTitle: fs.querySelector('input[name*="_custom_title"]')?.value.trim() || null,
-            feedbackMentor: fs.querySelector('textarea[name*="_summarize_by_mentor"]')?.value.trim() || '',
-            feedbackEmployee: fs.querySelector('textarea[name*="_summarize_by_employee"]')?.value.trim() || ''
-        }));
+        return Array.from(jdContainer.querySelectorAll("fieldset.task")).map(
+            (fs) => ({
+                title: fs.querySelector("legend")?.textContent?.trim() || "",
+                time:
+                    fs.querySelector('input[name*="_time"]')?.value.trim() ||
+                    "",
+                resources:
+                    fs
+                        .querySelector('textarea[name*="_resources"]')
+                        ?.value.trim() || "",
+                customTitle:
+                    fs
+                        .querySelector('input[name*="_custom_title"]')
+                        ?.value.trim() || null,
+                feedbackMentor:
+                    fs
+                        .querySelector('textarea[name*="_summarize_by_mentor"]')
+                        ?.value.trim() || "",
+                feedbackEmployee:
+                    fs
+                        .querySelector(
+                            'textarea[name*="_summarize_by_employee"]'
+                        )
+                        ?.value.trim() || "",
+            })
+        );
     }
 
     // Лёгкий дебаунс автосохранения
@@ -408,30 +658,32 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
             const tasks = collectJDTasks();
-            fetch('/submit_adaptation_plan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tasks })
-            }).catch(() => { });
+            fetch("/submit_adaptation_plan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tasks }),
+            }).catch(() => {});
         }, 400);
     }
 
     function updateJDNumbers() {
-        jdContainer.querySelectorAll('fieldset.task').forEach((fs, i) => {
-            const title = fs.querySelector('legend')?.textContent || '';
+        jdContainer.querySelectorAll("fieldset.task").forEach((fs, i) => {
+            const title = fs.querySelector("legend")?.textContent || "";
             // если заголовок не кастомный — поддержим стандартный "Задача N:"
             if (/^Задача\s+\d+/.test(title)) {
-                fs.querySelector('legend').textContent = `Задача ${i + 1}: ${title.split(':').slice(1).join(':').trim()}`;
+                fs.querySelector("legend").textContent = `Задача ${
+                    i + 1
+                }: ${title.split(":").slice(1).join(":").trim()}`;
             }
         });
     }
 
     function bindJDDeletes() {
-        jdContainer.querySelectorAll('.delete-task-btn').forEach(btn => {
+        jdContainer.querySelectorAll(".delete-task-btn").forEach((btn) => {
             btn.onclick = () => {
-                const all = jdContainer.querySelectorAll('fieldset.task');
+                const all = jdContainer.querySelectorAll("fieldset.task");
                 if (all.length <= 1) return; // минимум одна должна остаться
-                btn.closest('fieldset.task')?.remove();
+                btn.closest("fieldset.task")?.remove();
                 updateJDNumbers();
                 autoSaveJD();
             };
@@ -439,8 +691,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Добавление новых задач (кнопки после 5/7/9 как на исходной странице)
-    addButton.addEventListener('click', () => {
-        const wrapper = jdContainer.querySelector('.add-task-wrapper');
+    addButton.addEventListener("click", () => {
+        const wrapper = jdContainer.querySelector(".add-task-wrapper");
         const newEl = templateTask.cloneNode(true);
         jdContainer.insertBefore(newEl, wrapper);
         updateJDNumbers();
@@ -449,12 +701,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Автосохранение при любой правке внутри блока
-    jdContainer.addEventListener('input', autoSaveJD);
+    jdContainer.addEventListener("input", autoSaveJD);
 
     // Загрузка из БД (как на adaptation_plan.js)
-    fetch('/get_adaptation_plan')
-        .then(r => r.json())
-        .then(tasks => {
+    fetch("/get_adaptation_plan")
+        .then((r) => r.json())
+        .then((tasks) => {
             const has = Array.isArray(tasks) && tasks.length > 0;
             renderJDTasks(has ? tasks : AP_DEFAULT_TASKS);
         })
