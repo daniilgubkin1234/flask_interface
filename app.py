@@ -277,58 +277,27 @@ def edit_task(task_id):
 @login_required
 def sync_tasks_from_sources():
     owner = ObjectId(current_user.id)
-
-    # --- Берём последнюю бизнес-цель и протокол ---
-    bg = business_goal_collection.find_one(
-        {"owner_id": owner}, sort=[("_id", -1)]
-    ) or {}
+    
     mp = meeting_protocol_collection.find_one(
         {"owner_id": owner}, sort=[("_id", -1)]
     ) or {}
 
     upserts = 0
 
-    # --- 1) Этапы реализации из бизнес-цели -> задачи ---
-    stages = (bg or {}).get("stages") or []
-    for idx, st in enumerate(stages):
-        task_doc = {
-            "task": (st.get("stageNumber") or "Этап").strip(),
-            "event": "Бизнес-цель",
-            "work": (st.get("stageDescription") or "").strip(),
-            "responsible": "",
-            "deadline": (st.get("stageDate") or "").strip(),
-            "result": "",
-            "resources": "",
-            "coexecutors": "",
-            "comments": "",
-            "owner_id": owner,
-            "origin": {"type": "business_goal_stage", "source_id": str(bg.get("_id")), "key": f"{idx}"}
-        }
-        tasks_collection.update_one(
-            {"owner_id": owner, "origin.type": "business_goal_stage",
-             "origin.source_id": str(bg.get("_id")), "origin.key": f"{idx}"},
-            {"$set": task_doc},
-            upsert=True
-        )
-        upserts += 1
-
     # --- 2) Следующие шаги из протокола -> задачи ---
     next_steps = (mp or {}).get("nextSteps") or []
     meeting_date = (mp or {}).get("meetingDate") or ""
     for idx, ns in enumerate(next_steps):
         task_doc = {
-            "task": (ns.get("task") or "Работа/поручение").strip(),
-            "event": f"Протокол совещания {meeting_date}".strip(),
-            "work": (ns.get("task") or "").strip(),
-            "responsible": (ns.get("executor") or "").strip(),
-            "deadline": (ns.get("deadline") or "").strip(),
-            "result": "",
-            "resources": "",
-            "coexecutors": "",
-            "comments": "",
-            "owner_id": owner,
-            "origin": {"type": "meeting_protocol_step", "source_id": str(mp.get("_id")), "key": f"{idx}"}
-        }
+    "task":        (ns.get("goal")     or "").strip(),   # Задача
+    "event":       (ns.get("event")    or "").strip(),   # Мероприятие
+    "work":        (ns.get("work")     or "").strip(),   # Работа/Поручение
+    "responsible": (ns.get("executor") or "").strip(),   # Исполнитель → Ответственный
+    "deadline":    (ns.get("deadline") or "").strip(),   # Срок
+    "result": "", "resources": "", "coexecutors": "", "comments": "",
+    "owner_id": owner,
+    "origin": {"type": "meeting_protocol_step", "source_id": str(mp.get("_id")), "key": f"{idx}"}
+}
         tasks_collection.update_one(
             {"owner_id": owner, "origin.type": "meeting_protocol_step",
              "origin.source_id": str(mp.get("_id")), "origin.key": f"{idx}"},

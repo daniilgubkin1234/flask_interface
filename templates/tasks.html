@@ -16,15 +16,17 @@
                 <legend id="plan-top">Составьте план работ</legend>
 
                 <label for="task">Задача:</label>
-                <input
-                    id="task"
-                    name="task"
-                    type="text"
-                    list="task-list"
-                    placeholder="Введите или выберите задачу"
-                    required
-                />
-                <datalist id="task-list"></datalist>
+                <select id="goal" name="task" required>
+  <option value="" disabled selected>Выберите задачу</option>
+  <option value="Финансы">Финансы</option>
+  <option value="Персонал">Персонал</option>
+  <option value="Продажи">Продажи</option>
+  <option value="Социальная ответственность">Социальная ответственность</option>
+  <option value="__other__">Другое…</option>
+</select>
+
+<!-- Появляется ТОЛЬКО если выбрано "Другое" -->
+<input id="goal-custom" type="text" placeholder="Введите свою задачу" style="display:none; margin-top:6px;">
 
                 <label for="event">Мероприятие:</label>
                 <input
@@ -126,7 +128,7 @@
             <tbody>
                 {% for task in tasks %}
                 <tr data-id="{{ task.id }}">
-                    <td>{{ task.id }}</td>
+                    <td>{{ loop.index }}</td>
                     <td>{{ task.task }}</td>
                     <td>{{ task.event }}</td>
                     <td>{{ task.work }}</td>
@@ -141,7 +143,7 @@
                             class="edit-task btn btn-primary"
                             data-id="{{ task.id }}"
                         >
-                            Редактироватьwewew
+                            Редактировать
                         </button>
                         <button
                             class="delete-task btn btn-danger"

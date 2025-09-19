@@ -367,3 +367,44 @@ tr:hover {
 .recommendation-block .button-row button:hover {
     background-color: #1f4b8f;
 }
+#goal {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+  margin-top: 5px;
+  background-color: #FFFFFF;
+}
+
+/* Фокус такой же, как у input/textarea */
+#goal:focus {
+  border-color: #2A63C2;
+  box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
+  outline: none;
+}
+
+/* 2) Поле "Другое": делаем таким же по виду, убираем inline-стиль из HTML */
+#goal-custom {
+  display: none;           /* скроется по умолчанию, JS покажет при выборе "__other__" */
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+  background-color: #FFFFFF;
+}
+
+#goal-custom:focus {
+  border-color: #2A63C2;
+  box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
+  outline: none;
+}
+
+/* 3) Псевдо-валидация: если ничего не выбрано (required), красим рамку */
+#goal:invalid {
+  border-color: #dc3545;
+}

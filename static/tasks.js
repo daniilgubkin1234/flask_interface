@@ -8,7 +8,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // -------- helpers --------
     const $ = (id) => document.getElementById(id);
+// ===== ЗАДАЧА: предустановленные значения + "Другое" =====
+const GOAL_PRESETS = [
+  "Финансы",
+  "Персонал",
+  "Продажи",
+  "Социальная ответственность",
+];
 
+const goalSelect = document.getElementById("goal");
+const goalCustom = document.getElementById("goal-custom");
+
+// показать/скрыть поле "Другое" в зависимости от выбора
+function toggleGoalCustom() {
+  const isOther = goalSelect.value === "__other__";
+  goalCustom.style.display = isOther ? "block" : "none";
+  goalCustom.required = isOther;       // если "Другое" — делаем поле обязательным
+  if (!isOther) goalCustom.value = ""; // если вернулись к предустановке — очищаем
+}
+if (goalSelect && goalCustom) {
+  goalSelect.addEventListener("change", toggleGoalCustom);
+}
+
+// получить значение "Задачи" с учётом "Другое"
+function getGoalValueFromUI() {
+  if (!goalSelect) return "";
+  return goalSelect.value === "__other__" ? (goalCustom.value || "").trim()
+                                          : goalSelect.value;
+}
+
+// выставить UI из произвольного значения (для режима "Редактировать")
+function setGoalUIFromValue(v) {
+  if (!goalSelect) return;
+  const clean = (v || "").trim();
+  if (GOAL_PRESETS.includes(clean)) {
+    goalSelect.value = clean;
+    toggleGoalCustom();
+  } else if (clean) {
+    goalSelect.value = "__other__";
+    toggleGoalCustom();
+    goalCustom.value = clean;
+  } else {
+    goalSelect.value = "";
+    toggleGoalCustom();
+  }
+}
     async function fetchJSON(url, options = {}) {
         const opts = {
             credentials: "same-origin",
@@ -117,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
             tbody.innerHTML = "";
 
             (tasks || []).forEach((t, i) => {
-                const id = t._id || "";
+                const id = t._id || t.id || "";
                 const tr = document.createElement("tr");
                 tr.setAttribute("data-id", id);
                 tr.innerHTML = `
@@ -180,23 +224,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Редактирование
         tbody.querySelectorAll(".edit-task").forEach((btn) => {
-            btn.onclick = () => {
-                const row = btn.closest("tr").children;
-                $("task").value = row[1].textContent;
-                $("event").value = row[2].textContent;
-                $("work").value = row[3].textContent;
-                $("responsible").value = row[4].textContent;
-                $("deadline").value = row[5].textContent;
-                $("result").value = row[6].textContent;
-                $("resources").value = row[7].textContent;
-                $("coexecutors").value = row[8].textContent;
-                $("comments").value = row[9].textContent;
+  btn.onclick = () => {
+    const cells = btn.closest("tr").children;
+    setGoalUIFromValue(cells[1].textContent.trim());
+    $("event").value       = cells[2].textContent;
+    $("task").value        = cells[3].textContent; // работа/поручение
+    $("responsible").value = cells[4].textContent;
+    $("deadline").value    = cells[5].textContent;
+    $("result").value      = cells[6].textContent;
+    $("resources").value   = cells[7].textContent;
+    $("coexecutors").value = cells[8].textContent;
+    $("comments").value    = cells[9].textContent;
 
-                saveBtn.dataset.id = btn.dataset.id || "";
-                submitBtn.style.display = "none";
-                saveBtn.style.display = "inline-block";
-            };
-        });
+    saveBtn.dataset.id = btn.dataset.id || "";
+    submitBtn.style.display = "none";
+    saveBtn.style.display = "inline-block";
+  };
+});
+
     }
 
     // ---------- обработчики формы ----------
@@ -266,19 +311,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function collectForm() {
-        return {
-            task: $("task").value,
-            event: $("event").value,
-            work: $("work").value,
-            responsible: $("responsible").value,
-            deadline: $("deadline").value,
-            result: $("result").value,
-            resources: $("resources").value,
-            coexecutors: $("coexecutors").value,
-            comments: $("comments").value,
-        };
-    }
-
+  return {
+    task: getGoalValueFromUI(),                         // ← здесь учтено "Другое"
+    event: document.getElementById("event").value,
+    work: document.getElementById("task").value,
+    responsible: document.getElementById("responsible").value,
+    deadline: document.getElementById("deadline").value,
+    result: document.getElementById("result").value,
+    resources: document.getElementById("resources").value,
+    coexecutors: document.getElementById("coexecutors").value,
+    comments: document.getElementById("comments").value,
+  };
+}
     // ---------- синхронизация ----------
     function bindSyncButton() {
         if (!syncBtn) return;
@@ -383,7 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document
                     .getElementById("plan-top")
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                document.getElementById("task")?.focus();
+                document.getElementById("goal")?.focus();
             } catch (e) {
                 alert(String(e.message || e));
             }
@@ -418,16 +462,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /** Заполняем форму данными */
     function fillFormFromPayload(p) {
-        $("task").value = p.task || "";
-        $("event").value = p.event || "";
-        $("work").value = p.work || "";
-        $("responsible").value = p.responsible || "";
-        $("deadline").value = p.deadline || "";
-        $("result").value = p.result || "";
-        $("resources").value = p.resources || "";
-        $("coexecutors").value = p.coexecutors || "";
-        $("comments").value = p.comments || "";
-    }
+  
+  setGoalUIFromValue(p.task || "");
+  $("event").value       = p.event || "";
+  $("work").value        = p.work || "";         
+  $("responsible").value = p.responsible || "";
+  $("deadline").value    = p.deadline || "";
+  $("result").value      = p.result || "";
+  $("resources").value   = p.resources || "";
+  $("coexecutors").value = p.coexecutors || "";
+  $("comments").value    = p.comments || "";
+}
 
     // ---------- фильтр ----------
     function bindFilter() {
@@ -485,10 +530,8 @@ document.addEventListener("DOMContentLoaded", () => {
     (async () => {
         await Promise.all([
             loadTasks(),
-            preloadStageNames(),
             preloadEventList(),
         ]);
-        bindSyncButton();
         bindDuplicateDelegation();
         bindFilter();
         bindFormHandlers();

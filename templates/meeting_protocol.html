@@ -2,146 +2,146 @@
 <html lang="ru">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Протокол совещания</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Протокол совещания</title>
 
-    <script defer src="{{ url_for('static', filename='meeting_protocol.js') }}"></script>\
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='meeting_protocol.css') }}">
+  <script defer src="{{ url_for('static', filename='meeting_protocol.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='meeting_protocol.css') }}">
 </head>
 
 <body>
-    <div class="container">
-        <h2>Протокол совещания</h2>
-        <form id="protocolForm" action="#">
+  <div class="container">
+    <h2>Протокол совещания</h2>
+    <form id="protocolForm" action="#">
 
-            <!-- Дата совещания -->
-            <fieldset>
-                <legend>Дата совещания</legend>
-                <label for="meetingDate">Дата совещания:</label>
-                <input type="date" id="meetingDate" name="meetingDate" required>
-            </fieldset>
+      <!-- Дата совещания -->
+      <fieldset>
+        <legend>Дата совещания</legend>
+        <label for="meetingDate">Дата совещания:</label>
+        <input type="date" id="meetingDate" name="meetingDate" required>
+      </fieldset>
 
-            <!-- Участники -->
-            <fieldset>
-                <legend>Участники</legend>
-                <div id="participantsSection">
-                    <div class="participant">
-                        <label for="participant_1">Участник 1:</label>
-                        <input type="text" id="participant_1" name="participant_1" placeholder="Введите имя участника"
-                            required>
-                    </div>
-                    <button type="button" id="addParticipant" class="primary-button">+ Добавить участника</button>
-                </div>
-            </fieldset>
+      <!-- Участники -->
+      <fieldset>
+        <legend>Участники</legend>
+        <div id="participantsSection">
+          <div class="participant">
+            <label for="participant_1">Участник 1:</label>
+            <input type="text" id="participant_1" name="participant_1" placeholder="Введите имя участника" required>
+          </div>
+          <button type="button" id="addParticipant" class="primary-button">+ Добавить участника</button>
+        </div>
+      </fieldset>
 
-            <!-- Результаты обсуждения -->
-            <fieldset>
-                <legend>Результаты обсуждения</legend>
-                <div id="discussionResultsSection">
-                    <div class="discussion-result">
-                        <label for="discussionResult_1">Результат 1:</label>
-                        <textarea id="discussionResult_1" name="discussionResult_1" rows="3"
-                            placeholder="Введите результат обсуждения" required></textarea>
-                    </div>
-                    <button type="button" id="addDiscussionResult">+ Добавить результат</button>
-                </div>
-            </fieldset>
+      <!-- Результаты обсуждения -->
+      <fieldset>
+        <legend>Результаты обсуждения</legend>
+        <div id="discussionResultsSection">
+          <div class="discussion-result">
+            <label for="discussionResult_1">Результат 1:</label>
+            <textarea id="discussionResult_1" name="discussionResult_1" rows="3" placeholder="Введите результат обсуждения" required></textarea>
+          </div>
+          <button type="button" id="addDiscussionResult">+ Добавить результат</button>
+        </div>
+      </fieldset>
 
-            <!-- Таблица следующих шагов -->
-            <fieldset>
-                <legend>Следующие шаги</legend>
-                <table id="nextStepsTable">
-                    <thead>
-                        <tr>
-                            <th>№</th>
-                            <th>Работа/Поручение</th>
-                            <th>Исполнитель</th>
-                            <th>Срок</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td><textarea name="task_1" rows="2" placeholder="Введите работу/поручение"
-                                    required></textarea></td>
-                            <td><input type="text" name="executor_1" placeholder="Введите исполнителя" required></td>
-                            <td><input type="date" name="deadline_1" required></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button type="button" id="addNextStep">+ Добавить шаг</button>
-            </fieldset>
+      <!-- Таблица следующих шагов -->
+      <fieldset>
+        <legend>Следующие шаги</legend>
+        <table id="nextStepsTable">
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Задача</th>
+              <th>Мероприятие</th>
+              <th>Работа/Поручение</th>
+              <th>Исполнитель</th>
+              <th>Срок</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><input type="text" name="goal_1" placeholder="Введите задачу"></td>
+              <td><input type="text" name="event_1" placeholder="Введите мероприятие"></td>
+              <td><textarea name="task_1" rows="2" placeholder="Введите работу/поручение" required></textarea></td>
+              <td><input type="text" name="executor_1" placeholder="Введите исполнителя" required></td>
+              <td><input type="date" name="deadline_1" required></td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" id="addNextStep">+ Добавить шаг</button>
+      </fieldset>
 
-            <!-- Отправить -->
-            <button type="submit" class="submit-button">Отправить</button>
-            <!-- Скачать .doc -->
-<button type="button" id="downloadProtocol" class="submit-btn" style="margin-top:10px;">
-    Загрузить протокол
-  </button>
-        </form>
+      <!-- Отправить -->
+      <button type="submit" class="submit-button">Отправить</button>
+
+      <!-- Скачать .doc -->
+      <button type="button" id="downloadProtocol" class="submit-btn" style="margin-top:10px;">
+        Загрузить протокол
+      </button>
+    </form>
+  </div>
+
+  <!-- Навигационный блок (без изменений) -->
+  <div class="recommendation-block">
+    <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+    <div class="recommendation-section">
+      <h4>Диагностика</h4>
+      <div class="button-row">
+        <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
+      </div>
     </div>
 
-    <!-- Навигационный блок -->
-    <div class="recommendation-block">
-        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
-        <div class="recommendation-section">
-            <h4>Диагностика</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Задачи</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business'">Бизнес цель</button>
-                <button onclick="window.location.href='/tasks'">Задачи, план мероприятий и работ</button>
-                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Персонал</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/employee_profile'">Портрет сотрудника</button>
-                <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
-                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Система стимулирования</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Бизнес-процессы</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
-                <button onclick="window.location.href='/regulations_list'">Реестр корпоративных стандартов</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Организационная структура</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Дополнительно</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
-            </div>
-        </div>
+    <div class="recommendation-section">
+      <h4>Задачи</h4>
+      <div class="button-row">
+        <button onclick="window.location.href='/business'">Бизнес цель</button>
+        <button onclick="window.location.href='/tasks'">Задачи, план мероприятий и работ</button>
+        <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
+      </div>
     </div>
+
+    <div class="recommendation-section">
+      <h4>Персонал</h4>
+      <div class="button-row">
+        <button onclick="window.location.href='/employee_profile'">Портрет сотрудника</button>
+        <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
+        <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
+        <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
+      </div>
+    </div>
+
+    <div class="recommendation-section">
+      <h4>Система стимулирования</h4>
+      <div class="button-row">
+        <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
+      </div>
+    </div>
+
+    <div class="recommendation-section">
+      <h4>Бизнес-процессы</h4>
+      <div class="button-row">
+        <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
+        <button onclick="window.location.href='/regulations_list'">Реестр корпоративных стандартов</button>
+      </div>
+    </div>
+
+    <div class="recommendation-section">
+      <h4>Организационная структура</h4>
+      <div class="button-row">
+        <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
+      </div>
+    </div>
+
+    <div class="recommendation-section">
+      <h4>Дополнительно</h4>
+      <div class="button-row">
+        <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>
