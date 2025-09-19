@@ -17,16 +17,23 @@
 
                 <label for="task">Задача:</label>
                 <select id="goal" name="task" required>
-  <option value="" disabled selected>Выберите задачу</option>
-  <option value="Финансы">Финансы</option>
-  <option value="Персонал">Персонал</option>
-  <option value="Продажи">Продажи</option>
-  <option value="Социальная ответственность">Социальная ответственность</option>
-  <option value="__other__">Другое…</option>
-</select>
+                    <option value="" disabled selected>Выберите задачу</option>
+                    <option value="Финансы">Финансы</option>
+                    <option value="Персонал">Персонал</option>
+                    <option value="Продажи">Продажи</option>
+                    <option value="Социальная ответственность">
+                        Социальная ответственность
+                    </option>
+                    <option value="__other__">Другое…</option>
+                </select>
 
-<!-- Появляется ТОЛЬКО если выбрано "Другое" -->
-<input id="goal-custom" type="text" placeholder="Введите свою задачу" style="display:none; margin-top:6px;">
+                <!-- Появляется ТОЛЬКО если выбрано "Другое" -->
+                <input
+                    id="goal-custom"
+                    type="text"
+                    placeholder="Введите свою задачу"
+                    style="display: none; margin-top: 6px"
+                />
 
                 <label for="event">Мероприятие:</label>
                 <input
