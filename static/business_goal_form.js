@@ -4,7 +4,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('businessForm');
     const addStageBtn = document.getElementById('addStageBtn');
     const table = document.getElementById('stagesTable').getElementsByTagName('tbody')[0];
+function ensureActionsCell(row) {
+  if (row.querySelector('.remove-stage')) return; // уже добавлена
+  const td = document.createElement('td');
+  td.className = 'actions';
+  td.innerHTML = `<button type="button" class="remove-stage" title="Удалить этап">Удалить</button>`;
+  row.appendChild(td);
+}
 
+// Делегирование клика по кнопке "Удалить" для всех строк (включая добавленные динамически)
+table.addEventListener('click', (e) => {
+  const btn = e.target.closest('.remove-stage');
+  if (!btn) return;
+  const tr = btn.closest('tr');
+  if (!tr) return;
+  if (confirm('Удалить этот этап?')) {
+    tr.remove();
+    // Удаление — это не "input"-событие, поэтому вручную дергаем автосохранение:
+    autoSaveBusinessGoal();
+  }
+});
     // --- 1. АВТОЗАГРУЗКА бизнес-цели пользователя ---
     fetch('/get_business_goal')
         .then(res => res.json())
@@ -39,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         `;
                         table.appendChild(row);
                     }
+                    ensureActionsCell(row);
                     row.querySelector("input[name='stageNumber[]']").value = stage.stageNumber || '';
                     row.querySelector("textarea[name='stageDescription[]']").value = stage.stageDescription || '';
                     row.querySelector("input[name='stageDate[]']").value = stage.stageDate || '';
@@ -91,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <td><input type="date" name="stageDate[]" required></td>
         `;
         table.appendChild(newRow);
+        ensureActionsCell(newRow);
         autoSaveBusinessGoal(); // автосохраняем сразу после добавления этапа
     });
 

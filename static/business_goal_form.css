@@ -17,6 +17,19 @@ body {
     width: 100%;
 }
 
+#stagesTable th.actions,
+#stagesTable td.actions { text-align:center; white-space:nowrap; width:1%; }
+
+.remove-stage{
+  background:#dc3545;
+  color:#fff;
+  border:none;
+  padding:6px 10px;
+  border-radius:4px;
+  cursor:pointer;
+}
+.remove-stage:hover{ background:#b02a37; }
+
 h2 {
     text-align: center;
     color: #2A63C2;
