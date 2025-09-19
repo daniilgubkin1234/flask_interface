@@ -7,18 +7,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteBtn = document.getElementById("deleteEmployeeBtn");
     const submitAllBtn = document.getElementById("submitAllBtn");
     const addFieldButton = document.getElementById("add-field-button");
-    const additionalFieldsContainer = document.getElementById("additional-fields");
+    const additionalFieldsContainer =
+        document.getElementById("additional-fields");
 
     // ❶ Запретить любой автосабмит формы (Enter, implicit submit и т.п.)
     form.addEventListener("submit", (e) => e.preventDefault());
 
     // --- State
-    let employees = [];     // кэш списка
-    let currentId = null;   // _id выбранного сотрудника
+    let employees = []; // кэш списка
+    let currentId = null; // _id выбранного сотрудника
 
     // --- Utils
-    function getVal(id) { return document.getElementById(id)?.value?.trim() || ""; }
-    function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v ?? ""; }
+    function getVal(id) {
+        return document.getElementById(id)?.value?.trim() || "";
+    }
+    function setVal(id, v) {
+        const el = document.getElementById(id);
+        if (el) el.value = v ?? "";
+    }
 
     function readForm() {
         const data = {
@@ -47,12 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
             mobility: getVal("mobility"),
             businessTrips: getVal("businessTrips"),
             car: getVal("car"),
-            additionalFields: []
+            additionalFields: [],
         };
-        additionalFieldsContainer.querySelectorAll("input[name='custom_field']").forEach(input => {
-            const v = (input.value || "").trim();
-            if (v) data.additionalFields.push(v);
-        });
+        additionalFieldsContainer
+            .querySelectorAll("input[name='custom_field']")
+            .forEach((input) => {
+                const v = (input.value || "").trim();
+                if (v) data.additionalFields.push(v);
+            });
         return data;
     }
 
@@ -84,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setVal("car", data.car);
 
         additionalFieldsContainer.innerHTML = "";
-        (data.additionalFields || []).forEach(val => addCustomField(val));
+        (data.additionalFields || []).forEach((val) => addCustomField(val));
     }
 
     function clearForm() {
@@ -94,7 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- Список
     function sortByNameRu(a, b) {
-        return (a.name || "").localeCompare(b.name || "", "ru", { sensitivity: "base" });
+        return (a.name || "").localeCompare(b.name || "", "ru", {
+            sensitivity: "base",
+        });
     }
 
     async function loadEmployees() {
@@ -102,7 +112,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch("/api/employees");
             if (!res.ok) {
                 const text = await res.text().catch(() => "");
-                alert(`Ошибка загрузки списка (GET /api/employees): HTTP ${res.status}\n${text}`);
+                alert(
+                    `Ошибка загрузки списка (GET /api/employees): HTTP ${res.status}\n${text}`
+                );
                 return;
             }
             const list = await res.json();
@@ -114,14 +126,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderSelect() {
-        const opts = ['<option value="">— выберите профиль —</option>']
-            .concat(employees.map(e => `<option value="${e._id}">${escapeHtml(e.name || "(без ФИО)")}</option>`));
+        const opts = ['<option value="">— выберите профиль —</option>'].concat(
+            employees.map(
+                (e) =>
+                    `<option value="${e._id}">${escapeHtml(
+                        e.name || "(без ФИО)"
+                    )}</option>`
+            )
+        );
         employeeSelect.innerHTML = opts.join("");
         if (currentId) employeeSelect.value = currentId;
     }
 
     function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[m]));
+        return String(s).replace(
+            /[&<>"']/g,
+            (m) =>
+                ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;",
+                }[m])
+        );
     }
 
     // --- CRUD
@@ -144,18 +172,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch("/api/employees", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...payload, _manual: true })  // явный флаг ручного сохранения
+                body: JSON.stringify({ ...payload, _manual: true }), // явный флаг ручного сохранения
             });
 
             if (!res.ok) {
                 const text = await res.text().catch(() => "");
-                alert(`Ошибка сохранения (create): HTTP ${res.status}\n${text}`);
+                alert(
+                    `Ошибка сохранения (create): HTTP ${res.status}\n${text}`
+                );
                 return;
             }
 
             let data = null;
-            try { data = await res.json(); }
-            catch {
+            try {
+                data = await res.json();
+            } catch {
                 const text = await res.text().catch(() => "");
                 alert(`Сервер вернул не-JSON (create):\n${text}`);
                 return;
@@ -167,25 +198,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 employeeSelect.value = currentId;
                 alert("Портрет создан и сохранён.");
             } else {
-                alert("Не удалось сохранить портрет (create): нет _id в ответе.");
+                alert(
+                    "Не удалось сохранить портрет (create): нет _id в ответе."
+                );
             }
         } else {
             // UPDATE -> PUT /api/employees/:id
-            const res = await fetch(`/api/employees/${encodeURIComponent(currentId)}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...payload, _manual: true })  // явный флаг ручного сохранения
-            });
+            const res = await fetch(
+                `/api/employees/${encodeURIComponent(currentId)}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ...payload, _manual: true }), // явный флаг ручного сохранения
+                }
+            );
 
             if (!res.ok) {
                 const text = await res.text().catch(() => "");
-                alert(`Ошибка сохранения (update): HTTP ${res.status}\n${text}`);
+                alert(
+                    `Ошибка сохранения (update): HTTP ${res.status}\n${text}`
+                );
                 return;
             }
 
             let data = null;
-            try { data = await res.json(); }
-            catch {
+            try {
+                data = await res.json();
+            } catch {
                 const text = await res.text().catch(() => "");
                 alert(`Сервер вернул не-JSON (update):\n${text}`);
                 return;
@@ -202,11 +241,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function deleteCurrent() {
-        if (!currentId) { alert("Сначала выберите портрет для удаления."); return; }
+        if (!currentId) {
+            alert("Сначала выберите портрет для удаления.");
+            return;
+        }
         const who = getVal("name") || "без ФИО";
         if (!confirm(`Удалить портрет «${who}»? Действие необратимо.`)) return;
 
-        const res = await fetch(`/api/employees/${encodeURIComponent(currentId)}`, { method: "DELETE" });
+        const res = await fetch(
+            `/api/employees/${encodeURIComponent(currentId)}`,
+            { method: "DELETE" }
+        );
         if (!res.ok) {
             const text = await res.text().catch(() => "");
             alert(`Ошибка удаления: HTTP ${res.status}\n${text}`);
@@ -223,7 +268,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function openById(id) {
-        if (!id) { clearForm(); return; }
+        if (!id) {
+            clearForm();
+            return;
+        }
         const res = await fetch(`/api/employees/${encodeURIComponent(id)}`);
         if (!res.ok) {
             const text = await res.text().catch(() => "");
@@ -231,7 +279,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         const data = await res.json().catch(() => null);
-        if (!data || data.error) { alert("Не удалось загрузить портрет."); return; }
+        if (!data || data.error) {
+            alert("Не удалось загрузить портрет.");
+            return;
+        }
         currentId = data._id;
         fillForm(data);
     }
@@ -263,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addFieldButton.addEventListener("click", () => addCustomField());
 
     // --- События панели
-    employeeSelect.addEventListener("change", e => openById(e.target.value));
+    employeeSelect.addEventListener("change", (e) => openById(e.target.value));
     newBtn.addEventListener("click", () => {
         employeeSelect.value = "";
         clearForm();
@@ -276,17 +327,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const resList = await fetch("/api/employees");
         if (!resList.ok) {
             const text = await resList.text().catch(() => "");
-            alert(`Не удалось получить список перед отправкой: HTTP ${resList.status}\n${text}`);
+            alert(
+                `Не удалось получить список перед отправкой: HTTP ${resList.status}\n${text}`
+            );
             return;
         }
         const list = await resList.json().catch(() => []);
         const res = await fetch("/api/employees:submit", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ employees: Array.isArray(list) ? list : [] })
+            body: JSON.stringify({
+                employees: Array.isArray(list) ? list : [],
+            }),
         });
         const data = await res.json().catch(() => ({}));
-        if (data && data.ok) alert(`Все портреты отправлены (кол-во: ${data.count}).`);
+        if (data && data.ok)
+            alert(`Все портреты отправлены (кол-во: ${data.count}).`);
         else alert("Не удалось отправить все портреты.");
     });
 

@@ -500,22 +500,31 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     })();
 
-    // реакция на СМЕНУ ПРОФИЛЯ (без кнопки)
-    // если хотите импорт только по кнопке — закомментируйте этот блок и используйте обработчик jdImportBtn
+    // ВЫБОР ПРОФИЛЯ: всегда импортируем поля портрета в раздел 2 ДИ и сохраняем связь
     jdSelect?.addEventListener("change", async () => {
         currentEmpId = jdSelect.value || "";
         if (!currentEmpId) return;
 
-        const empDoc = await fetchEmployeeById(currentEmpId);
-        if (!empDoc) return;
+        try {
+            const res = await fetch(
+                `/api/employees/${encodeURIComponent(currentEmpId)}`
+            );
+            if (!res.ok)
+                return alert(
+                    `Не удалось загрузить профиль: HTTP ${res.status}`
+                );
+            const empDoc = await res.json();
 
-        // берём текущее содержимое формы как «текущую ДИ»
-        const jdNow = snapshotJDFromForm();
-        const empRes = importFromEMPIfNeeded(jdNow, empDoc);
-        currentEmpSig = empRes.empSig || currentEmpSig;
+            // Нормализуем и применяем ВСЕ поля портрета в раздел 2
+            const empN = makeEmpNormalized(empDoc); // функция уже есть выше в файле
+            applyImportFromEMP(empN); // функция уже есть выше в файле
 
-        // зафиксируем связь ДИ ↔ профиль и подпись источника
-        autoSaveWithSign();
+            // Обновляем подписи источника для автосейва
+            currentEmpSig = computeEmpSig(empN);
+            autoSaveWithSign(); // сохранит __empId и __empSig
+        } catch (e) {
+            alert("Ошибка загрузки профиля: " + (e?.message || e));
+        }
     });
 
     // импорт по кнопке (альтернативно/дополнительно)
