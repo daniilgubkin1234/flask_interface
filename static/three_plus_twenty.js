@@ -173,4 +173,109 @@ window.addEventListener("beforeunload", () => {
       alert("Данные успешно сохранены!");
     });
   })();
+   // --- Экспорт .doc по кнопке "Загрузить должностные обязанности" ---
+  const downloadTptBtn = document.getElementById('downloadThreePlusTwenty');
+  if (downloadTptBtn) {
+    downloadTptBtn.addEventListener('click', () => {
+      const data = collectThreePlusTwentyData();
+      const html = buildThreePlusTwentyDocHTML(data);
+      const datePart = new Date().toISOString().slice(0,10).replaceAll('-', '.');
+      downloadDoc(html, `Должностные_обязанности_${datePart}.doc`);
+    });
+  }
+
+  // Собираем данные формы "3+20"
+  function collectThreePlusTwentyData() {
+    const position = document.getElementById('position_name')?.value?.trim() || '';
+
+    const directions = [
+      document.getElementById('direction_1')?.value?.trim() || '',
+      document.getElementById('direction_2')?.value?.trim() || '',
+      document.getElementById('direction_3')?.value?.trim() || ''
+    ].filter(Boolean);
+
+    const responsibilities = Array.from({ length: 20 }, (_, i) =>
+      document.getElementById(`responsibility_${i + 1}`)?.value?.trim() || ''
+    ).filter(Boolean);
+
+    return { position, directions, responsibilities };
+  }
+
+  // Генерация HTML для Word (.doc)
+  function buildThreePlusTwentyDocHTML(d) {
+    const esc = (s) => String(s)
+      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+
+    const dirRows = (d.directions.length ? d.directions : ['','',''])
+      .slice(0,3)
+      .map((val, idx) => `
+        <tr>
+          <td style="width:40px;">${idx+1}</td>
+          <td>${esc(val || '')}</td>
+        </tr>
+      `).join('');
+
+    const respRows = (d.responsibilities.length ? d.responsibilities : Array.from({length:20},()=>'')) 
+      .slice(0,20)
+      .map((val, idx) => `
+        <tr>
+          <td style="width:40px;">${idx+1}</td>
+          <td>${esc(val || '')}</td>
+        </tr>
+      `).join('');
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Должностные обязанности (3+20)</title>
+<style>
+  body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.35; }
+  h1   { text-align:center; font-size:18pt; margin:0 0 12pt; }
+  h2   { font-size:14pt; margin:12pt 0 6pt; }
+  p    { margin:0 0 6pt; }
+  table { width:100%; border-collapse:collapse; margin:8pt 0; }
+  th, td { border:1px solid #000; padding:6pt; vertical-align:top; }
+  th { text-align:center; }
+</style>
+</head>
+<body>
+  <h1>Должностные обязанности (3+20)</h1>
+
+  <p><b>Должность:</b> ${esc(d.position)}</p>
+
+  <h2>Основные направления (3)</h2>
+  <table>
+    <thead>
+      <tr><th style="width:40px;">№</th><th>Направление</th></tr>
+    </thead>
+    <tbody>
+      ${dirRows}
+    </tbody>
+  </table>
+
+  <h2>Должностные обязанности (до 20)</h2>
+  <table>
+    <thead>
+      <tr><th style="width:40px;">№</th><th>Обязанность</th></tr>
+    </thead>
+    <tbody>
+      ${respRows}
+    </tbody>
+  </table>
+</body>
+</html>`;
+  }
+
+  // Утилита скачивания .doc (как в business_goal_form.js)
+  function downloadDoc(htmlString, filename) {
+    const blob = new Blob([htmlString], { type: "application/msword;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
 });

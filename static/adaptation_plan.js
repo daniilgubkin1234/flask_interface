@@ -231,4 +231,76 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(() => alert('Адаптационный план успешно сохранён'))
             .catch(() => alert('Произошла ошибка при сохранении плана'));
     });
+    // --- 7) Экспорт .doc по кнопке "Загрузить адаптационный план" ---
+const downloadAPBtn = document.getElementById('downloadAdaptationPlan');
+if (downloadAPBtn) {
+  downloadAPBtn.addEventListener('click', () => {
+    const tasks = collectTasksFromDOM(); // уже есть в файле
+    const html  = buildAdaptationPlanDocHTML(tasks);
+    const datePart = new Date().toISOString().slice(0,10).replaceAll('-', '.');
+    downloadDoc(html, `Адаптационный_план_${datePart}.doc`);
+  });
+}
+
+// Генерация HTML-документа для Word
+function buildAdaptationPlanDocHTML(tasks) {
+  const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+
+  const rows = (tasks?.length ? tasks : [])
+    .map((t, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${esc(t.title)}</td>
+        <td>${esc(t.time)}</td>
+        <td>${esc(t.resources)}</td>
+        <td>${esc(t.feedbackMentor)}</td>
+        <td>${esc(t.feedbackEmployee)}</td>
+      </tr>
+    `).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Адаптационный план</title>
+<style>
+  body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.35; }
+  h1   { text-align:center; font-size:18pt; margin:0 0 12pt; }
+  table { width:100%; border-collapse:collapse; margin:8pt 0; }
+  th, td { border:1px solid #000; padding:6pt; vertical-align:top; }
+  th { text-align:center; }
+</style>
+</head>
+<body>
+  <h1>Адаптационный план</h1>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40px;">№</th>
+        <th>Задача</th>
+        <th style="width:15%;">Время на подготовку</th>
+        <th>Ресурсы</th>
+        <th>Итоги наставником</th>
+        <th>Итоги сотрудником</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+</body>
+</html>`;
+}
+
+// Универсальная функция скачивания .doc (как в business_goal_form.js)
+function downloadDoc(htmlString, filename) {
+  const blob = new Blob([htmlString], { type: "application/msword;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
 });

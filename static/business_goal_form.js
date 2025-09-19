@@ -114,7 +114,128 @@ table.addEventListener('click', (e) => {
         ensureActionsCell(newRow);
         autoSaveBusinessGoal(); // автосохраняем сразу после добавления этапа
     });
+// --- 5. Экспорт .doc по кнопке "Загрузить бизнес-цель" ---
+const downloadBGBtn = document.getElementById('downloadBusinessGoal');
+if (downloadBGBtn) {
+  downloadBGBtn.addEventListener('click', () => {
+    const data = collectBusinessGoalData();
+    const html = buildBusinessGoalDocHTML(data);
+    const datePart = (data.startDate || new Date().toISOString().slice(0,10)).replaceAll('-', '.');
+    downloadDoc(html, `Бизнес_цель_${datePart}.doc`);
+  });
+}
 
+// Собираем данные формы (аналогично autoSaveBusinessGoal, но без запроса на сервер)
+function collectBusinessGoalData() {
+  const stages = [];
+  const rows = document.querySelectorAll('#stagesTable tbody tr');
+  rows.forEach(r => {
+    stages.push({
+      stageNumber: r.querySelector("input[name='stageNumber[]']")?.value?.trim() || '',
+      stageDescription: r.querySelector("textarea[name='stageDescription[]']")?.value?.trim() || '',
+      stageDate: r.querySelector("input[name='stageDate[]']")?.value || ''
+    });
+  });
+
+  return {
+    financeRevenue: document.getElementById('financeRevenue')?.value?.trim() || '',
+    financeProfit:  document.getElementById('financeProfit')?.value?.trim()  || '',
+    personnelCount: document.getElementById('personnelCount')?.value?.trim() || '',
+    averageSalary:  document.getElementById('averageSalary')?.value?.trim()  || '',
+    clientBase:     document.getElementById('clientBase')?.value?.trim()     || '',
+    conversionRate: document.getElementById('conversionRate')?.value?.trim() || '',
+    taxes:          document.getElementById('taxes')?.value?.trim()          || '',
+    treePlanting:   document.getElementById('treePlanting')?.value?.trim()   || '',
+    startDate:      document.getElementById('startDate')?.value              || '',
+    stages
+  };
+}
+
+// Генерим HTML для .doc
+function buildBusinessGoalDocHTML(d) {
+  const esc = (s) => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  const formatDateRU = (iso) => {
+    if (!iso) return '';
+    const [y,m,da] = iso.split('-'); return `${da}.${m}.${y}`;
+  };
+
+  const stagesRows = (d.stages?.length ? d.stages : [{stageNumber:'',stageDescription:'',stageDate:''}])
+    .map((s,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td>${esc(s.stageNumber)}</td>
+        <td>${esc(s.stageDescription)}</td>
+        <td>${esc(formatDateRU(s.stageDate))}</td>
+      </tr>
+    `).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Бизнес-цель</title>
+<style>
+  body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.35; }
+  h1   { text-align:center; font-size:18pt; margin:0 0 12pt; }
+  h2   { font-size:14pt; margin:12pt 0 6pt; }
+  table { width:100%; border-collapse:collapse; margin:8pt 0; }
+  th, td { border:1px solid #000; padding:6pt; vertical-align:top; }
+  th { text-align:center; }
+  .meta p { margin:0 0 6pt; }
+</style>
+</head>
+<body>
+  <h1>Бизнес-цель</h1>
+
+  <div class="meta">
+    <p><b>Дата старта:</b> ${esc(formatDateRU(d.startDate))}</p>
+  </div>
+
+  <h2>Финансы</h2>
+  <p><b>Выручка:</b> ${esc(d.financeRevenue)}</p>
+  <p><b>Прибыль:</b> ${esc(d.financeProfit)}</p>
+
+  <h2>Персонал</h2>
+  <p><b>Количество человек:</b> ${esc(d.personnelCount)}</p>
+  <p><b>Средняя ЗП, руб./мес.:</b> ${esc(d.averageSalary)}</p>
+
+  <h2>Продажи</h2>
+  <p><b>Клиентская база, чел.:</b> ${esc(d.clientBase)}</p>
+  <p><b>Конверсия, %:</b> ${esc(d.conversionRate)}</p>
+
+  <h2>Социальная ответственность</h2>
+  <p><b>Уплата налогов, руб./год:</b> ${esc(d.taxes)}</p>
+  <p><b>Другое:</b> ${esc(d.treePlanting)}</p>
+
+  <h2>Этапы реализации</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40px;">№</th>
+        <th>Название этапа</th>
+        <th>Описание этапа</th>
+        <th style="width:18%;">Дата</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${stagesRows}
+    </tbody>
+  </table>
+</body>
+</html>`;
+}
+
+// Скачивание .doc
+function downloadDoc(htmlString, filename) {
+  const blob = new Blob([htmlString], { type: "application/msword;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
     // --- 4. САБМИТ ФОРМЫ ---
     form.addEventListener('submit', function (e) {
         e.preventDefault();
