@@ -445,16 +445,18 @@ document.addEventListener("DOMContentLoaded", function () {
         applyJobDescriptionData(jd);
 
         // 2) если company в ДИ пусто — берём из диагностики ответ на q2
+        // 2) company синхронизируем с диагностикой (q2) всегда, если значение поменялось
         try {
             const companyInput = document.getElementById("company");
-            const hasJDCompany = (jd?.company || "").trim().length > 0;
-            const companyFromSurvey = (survey?.q2 || "").trim(); // «Как называется ваша компания?» (Диагностика)
-            if (!hasJDCompany && companyFromSurvey) {
+            const companyFromSurvey = (survey?.q2 || "").trim(); // «Как называется ваша компания?»
+            const current = (companyInput?.value || "").trim();
+
+            if (companyFromSurvey && companyFromSurvey !== current) {
                 companyInput.value = companyFromSurvey;
-                // сразу зафиксируем автосохранение, чтобы company попала в ДБ
+                // фиксируем в БД сразу, чтобы ДИ хранила актуальное имя из диагностики
                 autoSaveWithSign({ company: companyFromSurvey });
             }
-        } catch (e) {
+        } catch (_) {
             /* no-op */
         }
 
