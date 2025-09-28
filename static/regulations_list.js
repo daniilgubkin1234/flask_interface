@@ -106,7 +106,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
                 map.set(parsed.key, g);
             }
-            g.docs[parsed.fmt] = doc;
+            const fmt = parsed.fmt;
+            const existing = g.docs[fmt];
+            const newTs = doc.uploaded_at
+                ? Date.parse(doc.uploaded_at) || 0
+                : 0;
+            const oldTs =
+                existing && existing.uploaded_at
+                    ? Date.parse(existing.uploaded_at) || 0
+                    : -1;
+
+            if (!existing || newTs > oldTs) {
+                g.docs[fmt] = doc;
+            }
+
+            // остальные агрегаты оставляем как были
+            g.ids.push(doc._id);
+            g.size += doc.size || 0;
+            const curMax = g.uploaded_at ? Date.parse(g.uploaded_at) || 0 : 0;
+            g.uploaded_at = new Date(Math.max(curMax, newTs)).toISOString();
             g.ids.push(doc._id);
             g.size += doc.size || 0;
             const tCur = g.uploaded_at ? new Date(g.uploaded_at).getTime() : 0;
@@ -298,8 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     const prev = tr.querySelector(".previewBtn");
                     prev?.addEventListener("click", () => {
                         previewTitle.textContent =
-                            btn.dataset.title || "Предпросмотр";
-                        previewFrame.src = btn.dataset.url;
+                            prev.dataset.title || "Предпросмотр";
+                        previewFrame.src = prev.dataset.url;
                         previewWrap.style.display = "block";
                         previewCloseBtn?.focus();
                     });
