@@ -418,6 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const addRowBtn = document.getElementById("addRow");
     const saveRegsBtn = document.getElementById("saveRegs");
 
+    // утилиты
     function topRows() {
         return Array.from(regsTbody?.children || []).filter(
             (el) => el.tagName === "TR"
@@ -429,70 +430,82 @@ document.addEventListener("DOMContentLoaded", () => {
             if (cell) cell.textContent = i + 1;
         });
     }
-    function bindDeleteBtn(btn) {
-        if (!btn) return;
-        btn.classList.add("btn", "btn-danger");
-        btn.addEventListener("click", () => {
-            const tr = btn.closest("tr");
-            if (tr && tr.parentElement) tr.parentElement.removeChild(tr);
-            syncRowNumbers();
+
+    // создатели строк
+    function createDocRow(doc = { title: "", external_id: "" }) {
+        const r = document.createElement("tr");
+        r.innerHTML = `
+    <td><input type="text" class="doc-name" placeholder="Название" value="${(
+        doc.title || ""
+    ).replace(/"/g, "&quot;")}"></td>
+    <td><input type="text" class="doc-id" placeholder="ID или URL" value="${(
+        doc.external_id || ""
+    ).replace(/"/g, "&quot;")}"></td>
+    <td><button class="btn btn-danger deleteRow" type="button">Удалить</button></td>
+  `;
+        // удаление строки документа
+        r.querySelector(".deleteRow").addEventListener("click", () => {
+            r.remove();
         });
-    }
-    function bindInnerDocs(row) {
-        const addBtn = row.querySelector(".addDocRow");
-        if (addBtn) addBtn.classList.add("btn");
-        addBtn?.addEventListener("click", () => {
-            const tbody = row.querySelector(".docs-rows");
-            const r = document.createElement("tr");
-            r.innerHTML = `
-        <td><input type="text" class="doc-name" placeholder="Название"></td>
-        <td><input type="text" class="doc-id" placeholder="ID или URL"></td>
-        <td><button class="btn btn-danger deleteRow" type="button">Удалить</button></td>
-      `;
-            tbody.appendChild(r);
-            bindDeleteBtn(r.querySelector(".deleteRow"));
-        });
-        row.querySelectorAll(".deleteRow").forEach(bindDeleteBtn);
+        return r;
     }
 
-    function createRegRow() {
+    function createRegRow(
+        reg = { name: "", documents: [{ title: "", external_id: "" }] }
+    ) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-      <td class="row-number"></td>
-      <td>
-        <input type="text" class="reg-name" placeholder="Наименование регламента">
-      </td>
-      <td>
-        <table class="table inner-table">
-          <thead>
-            <tr>
-              <th>Название</th>
-              <th>ID/внешняя ссылка</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody class="docs-rows">
-            <tr>
-              <td><input type="text" class="doc-name" placeholder="Название"></td>
-              <td><input type="text" class="doc-id" placeholder="ID или URL"></td>
-              <td><button class="btn btn-danger deleteRow" type="button">Удалить</button></td>
-            </tr>
-          </tbody>
-        </table>
-        <button class="btn addDocRow" type="button">Добавить документ</button>
-      </td>
-    `;
-        bindInnerDocs(tr);
+    <td class="row-number"></td>
+    <td>
+      <input type="text" class="reg-name" placeholder="Наименование регламента" value="${(
+          reg.name || ""
+      ).replace(/"/g, "&quot;")}">
+    </td>
+    <td>
+      <table class="table inner-table">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>ID/внешняя ссылка</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody class="docs-rows"></tbody>
+      </table>
+      <button class="btn addDocRow" type="button">Добавить документ</button>
+    </td>
+  `;
+
+        // наполнить документы
+        const docsTbody = tr.querySelector(".docs-rows");
+        const docs =
+            Array.isArray(reg.documents) && reg.documents.length
+                ? reg.documents
+                : [{ title: "", external_id: "" }];
+        docs.forEach((d) => docsTbody.appendChild(createDocRow(d)));
+
+        // обработчик «Добавить документ»
+        const addDocBtn = tr.querySelector(".addDocRow");
+        addDocBtn.addEventListener("click", () => {
+            docsTbody.appendChild(createDocRow());
+        });
+
         return tr;
     }
 
-    addRowBtn?.addEventListener("click", () => {
-        const tr = createRegRow();
-        regsTbody.appendChild(tr);
+    // рендер реестра из данных
+    function renderRegistry(items = []) {
+        regsTbody.textContent = "";
+        if (!Array.isArray(items) || !items.length) {
+            regsTbody.appendChild(createRegRow()); // пустая строка по умолчанию
+        } else {
+            items.forEach((reg) => regsTbody.appendChild(createRegRow(reg)));
+        }
         syncRowNumbers();
-    });
+    }
 
-    saveRegsBtn?.addEventListener("click", async () => {
+    // собрать данные из DOM
+    function collectRegistry() {
         const regs = [];
         topRows().forEach((tr) => {
             const name = tr.querySelector(".reg-name")?.value.trim();
@@ -506,7 +519,35 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             regs.push({ name, documents: docs });
         });
+        return regs;
+    }
 
+    // загрузка сохранённого реестра
+    async function loadRegistry() {
+        try {
+            const res = await fetch("/get_regulations_list");
+            const data = await res.json();
+            if (data.success) {
+                renderRegistry(data.items || []);
+            } else {
+                console.error(data.error || "Ошибка загрузки реестра");
+                renderRegistry([]);
+            }
+        } catch (e) {
+            console.error(e);
+            renderRegistry([]);
+        }
+    }
+
+    // добавление новой строки
+    addRowBtn?.addEventListener("click", () => {
+        regsTbody.appendChild(createRegRow());
+        syncRowNumbers();
+    });
+
+    // сохранение реестра
+    saveRegsBtn?.addEventListener("click", async () => {
+        const regs = collectRegistry();
         try {
             const res = await fetch("/save_regulations_list", {
                 method: "POST",
@@ -516,6 +557,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             if (data.success) {
                 alert("Перечень сохранён");
+                await loadRegistry(); // перерисуем, чтобы зафиксировать авто-нумерацию и актуальное состояние
             } else {
                 alert(data.error || "Ошибка при сохранении");
             }
@@ -525,11 +567,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // инициализация
     if (regsTbody) {
-        Array.from(regsTbody.querySelectorAll("tr")).forEach((tr) =>
-            bindInnerDocs(tr)
-        );
-        syncRowNumbers();
+        loadRegistry(); // первичная загрузка
     }
 
     // первичная загрузка файлов
