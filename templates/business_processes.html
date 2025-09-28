@@ -1,134 +1,190 @@
 <!DOCTYPE html>
 <html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Бизнес-процессы</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='business_processes.css') }}"
+        />
+        <script src="https://unpkg.com/bpmn-js/dist/bpmn-modeler.development.js"></script>
+        <script src="{{ url_for('static', filename='business_processes.js') }}"></script>
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Бизнес-процессы</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='business_processes.css') }}">
-    <script src="https://unpkg.com/bpmn-js/dist/bpmn-modeler.development.js"></script>
-    <script src="{{ url_for('static', filename='business_processes.js') }}"></script>
-</head>
+    <body>
+        <div class="container">
+            <h2>Бизнес-процессы</h2>
+            <div class="bp-name-block">
+                <label for="bpName" class="bp-name-label"
+                    >Название бизнес-процесса</label
+                >
+                <input
+                    id="bpName"
+                    type="text"
+                    class="bp-name-input"
+                    placeholder="Например: Обработка заказа"
+                />
+                <div class="bp-name-hint">
+                    Это название попадёт в реестр регламентов и в имена файлов
+                    схемы.
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="bpTable">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Название шага</th>
+                            <th>Тип шага</th>
+                            <th>
+                                Кто отвечает<br /><span
+                                    style="font-weight: normal; font-size: 12px"
+                                    >(роль для дорожки/схемы)</span
+                                >
+                            </th>
+                            <th>Следующие шаги</th>
+                            <th>Комментарии, примечания</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="rowNum">N1</td>
+                            <td><input type="text" class="stepNameField" /></td>
+                            <td>
+                                <select class="stepTypeField">
+                                    <option value="start">Старт</option>
+                                    <option value="task" selected>
+                                        Действие
+                                    </option>
+                                    <option value="gateway">Развилка</option>
+                                    <option value="end">Завершение</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="roleField" /></td>
+                            <td>
+                                <select class="nextField">
+                                    <option value="">—</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="commentsField" /></td>
+                            <td><button class="deleteRow">Удалить</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button id="addRow">Добавить строку</button>
+            <button id="saveBP">Сохранить бизнес-процессы</button>
+            <button id="buildDiagram">Построить BPMN</button>
+            <button id="exportBPMN">Экспортировать BPMN XML</button>
+            <button id="resetToAutoLayout">
+                Сбросить на автолэйаут из таблицы
+            </button>
+            <button id="toggleMode">Режим: Просмотр</button>
 
-<body>
-    
-    
-    <div class="container">
-        <h2>Бизнес-процессы</h2>
-        <div class="bp-name-block">
-            <label for="bpName" class="bp-name-label">Название бизнес-процесса</label>
-            <input id="bpName" type="text" class="bp-name-input" placeholder="Например: Обработка заказа">
-            <div class="bp-name-hint">Это название попадёт в реестр регламентов и в имена файлов схемы.</div>
-          </div>
-        <div class="table-wrapper">
-            <table id="bpTable">
-                <thead>
-                    <tr>
-                        <th>№</th>
-                        <th>Название шага</th>
-                        <th>Тип шага</th>
-                        <th>Кто отвечает<br><span style="font-weight:normal;font-size:12px">(роль для
-                                дорожки/схемы)</span></th>
-                        <th>Следующие шаги</th>
-                        <th>Комментарии, примечания</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="rowNum">N1</td>
-                        <td><input type="text" class="stepNameField"></td>
-                        <td>
-                            <select class="stepTypeField">
-                                <option value="start">Старт</option>
-                                <option value="task" selected>Задача</option>
-                                <option value="gateway">Развилка</option>
-                                <option value="end">Завершение</option>
-                            </select>
-                        </td>
-                        <td><input type="text" class="roleField"></td>
-                        <td>
-                            <select class="nextField">
-                                <option value="">—</option>
-                                
-                            </select>
-                        </td>
-                        <td><input type="text" class="commentsField"></td>
-                        <td><button class="deleteRow">Удалить</button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <button id="addRow">Добавить строку</button>
-        <button id="saveBP">Сохранить бизнес-процессы</button>
-        <button id="buildDiagram">Построить BPMN</button>
-        <button id="exportBPMN">Экспортировать BPMN XML</button>
-        <button id="resetToAutoLayout">Сбросить на автолэйаут из таблицы</button>
-        <button id="toggleMode">Режим: Просмотр</button>
-        
-        <div class="diagram-wrapper">
-            <h3>Схема процесса</h3>
-            <div id="bpmnContainer" style="width:100%;height:600px;border:1px solid #888;margin-top:10px"></div>
-        </div>
-    </div>
-    <!-- Навигационный блок -->
-    <div class="recommendation-block">
-        <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
-        <div class="recommendation-section">
-            <h4>Диагностика</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/survey_ai'">Перейти к диагностике</button>
+            <div class="diagram-wrapper">
+                <h3>Схема процесса</h3>
+                <div
+                    id="bpmnContainer"
+                    style="
+                        width: 100%;
+                        height: 600px;
+                        border: 1px solid #888;
+                        margin-top: 10px;
+                    "
+                ></div>
             </div>
         </div>
+        <!-- Навигационный блок -->
+        <div class="recommendation-block">
+            <h3>📌 Рекомендуем осуществить работу с другими блоками:</h3>
+            <div class="recommendation-section">
+                <h4>Диагностика</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/survey_ai'">
+                        Перейти к диагностике
+                    </button>
+                </div>
+            </div>
 
-        <div class="recommendation-section">
-            <h4>Задачи</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business'">Бизнес цель</button>
-                <button onclick="window.location.href='/tasks'">Задачи, план мероприятий и работ</button>
-                <button onclick="window.location.href='/meeting_protocol'">Протокол совещания</button>
+            <div class="recommendation-section">
+                <h4>Задачи</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/business'">
+                        Бизнес цель
+                    </button>
+                    <button onclick="window.location.href='/tasks'">
+                        Задачи, план мероприятий и работ
+                    </button>
+                    <button onclick="window.location.href='/meeting_protocol'">
+                        Протокол совещания
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Персонал</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/employee_profile'">
+                        Портрет сотрудника
+                    </button>
+                    <button onclick="window.location.href='/three_plus_twenty'">
+                        Должностные обязанности
+                    </button>
+                    <button onclick="window.location.href='/adaptation_plan'">
+                        Адаптационный план
+                    </button>
+                    <button onclick="window.location.href='/job_description'">
+                        Должностная инструкция
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Система стимулирования</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/stimulation_system'"
+                    >
+                        Система стимулирования
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Бизнес-процессы</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/business_processes'"
+                    >
+                        Бизнес-процессы
+                    </button>
+                    <button onclick="window.location.href='/regulations_list'">
+                        Реестр корпоративных стандартов
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Организационная структура</h4>
+                <div class="button-row">
+                    <button
+                        onclick="window.location.href='/organizational_structure'"
+                    >
+                        Организационная структура
+                    </button>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h4>Дополнительно</h4>
+                <div class="button-row">
+                    <button onclick="window.location.href='/question_answer'">
+                        Спроси АСТРу
+                    </button>
+                </div>
             </div>
         </div>
-
-        <div class="recommendation-section">
-            <h4>Персонал</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/employee_profile'">Портрет сотрудника</button>
-                <button onclick="window.location.href='/three_plus_twenty'">Должностные обязанности</button>
-                <button onclick="window.location.href='/adaptation_plan'">Адаптационный план</button>
-                <button onclick="window.location.href='/job_description'">Должностная инструкция</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Система стимулирования</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/stimulation_system'">Система стимулирования</button>
-
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Бизнес-процессы</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/business_processes'">Бизнес-процессы</button>
-                <button onclick="window.location.href='/regulations_list'">Реестр корпоративных стандартов</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Организационная структура</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/organizational_structure'">Организационная структура</button>
-            </div>
-        </div>
-
-        <div class="recommendation-section">
-            <h4>Дополнительно</h4>
-            <div class="button-row">
-                <button onclick="window.location.href='/question_answer'">Спроси АСТРу</button>
-            </div>
-        </div>
-    </div>
-</body>
+    </body>
 </html>
