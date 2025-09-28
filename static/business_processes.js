@@ -2,6 +2,11 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- DOM
+  document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
+
   const tbody = document.getElementById("bpTable")?.getElementsByTagName("tbody")[0];
   const addRowBtn = document.getElementById("addRow");
   const buildBtn = document.getElementById("buildDiagram");

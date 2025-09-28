@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.querySelector('#orgTable tbody');
     const addBtn = document.getElementById('addRow');
     const sendBtn = document.getElementById('submitData');
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
     // --- кэш из 3+20 ---
     let tptMap = {};   // { lowercasedPosition: ["направление 1","направление 2","направление 3"] }

@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("protocolForm").addEventListener("submit", function (event) {
         event.preventDefault();
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
         const meetingData = {
             date: document.getElementById("meetingDate").value,

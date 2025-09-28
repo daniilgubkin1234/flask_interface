@@ -1,7 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("stimulation-form");
 
-    // Количество базовых строк (фиксированных) в каждой секции
+    // --- 1. Переключение бокового меню с анимацией
+    document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
+
+    // --- 2. Количество базовых строк (фиксированных) в каждой секции
     const BASE_ROWS_COUNT = {
         material: 7,
         nonmaterial: 4,
@@ -17,56 +23,56 @@ document.addEventListener("DOMContentLoaded", function () {
         originalRows[section] = tbody.innerHTML;
     });
 
-    // --- 1. Загрузка данных из БД ---
+    // --- 3. Загрузка данных из БД ---
     fetch("/get_stimulation_system", { credentials: "same-origin" })
-  .then(res => res.ok ? res.json() : Promise.resolve({}))
-  .then(data => {
-    if (!data || Object.keys(data).length === 0) return;
+        .then(res => res.ok ? res.json() : Promise.resolve({}))
+        .then(data => {
+            if (!data || Object.keys(data).length === 0) return;
 
-    // 1) Сначала сбрасываем секции к базовым строкам и поднимаем пользовательские
-    Object.keys(BASE_ROWS_COUNT).forEach(section => {
-      const items = data[section];
-      const tbody = document.getElementById(section + "-body");
-      if (!tbody) return;
+            // Сбрасываем секции к базовым строкам и добавляем пользовательские
+            Object.keys(BASE_ROWS_COUNT).forEach(section => {
+                const items = data[section];
+                const tbody = document.getElementById(section + "-body");
+                if (!tbody) return;
 
-      // сброс до базовых
-      tbody.innerHTML = originalRows[section];
+                // Сброс до базовых
+                tbody.innerHTML = originalRows[section];
 
-      // дорисовать пользовательские строки
-      if (Array.isArray(items)) {
-        items.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.dataset.original = "false";
-          tr.innerHTML = `
-            <td><input type="text" value="${(item.name || "").replace(/"/g, '&quot;')}" placeholder="Введите название"></td>
-            <td><input type="text" value="${(item.value || "").replace(/"/g, '&quot;')}" placeholder="Введите описание/значение"></td>
-            <td><button type="button" class="delete-row-btn" title="Удалить пункт"></button></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-    });
+                // Добавляем пользовательские строки
+                if (Array.isArray(items)) {
+                    items.forEach(item => {
+                        const tr = document.createElement("tr");
+                        tr.dataset.original = "false";
+                        tr.innerHTML = `
+                            <td><input type="text" value="${(item.name || "").replace(/"/g, '&quot;')}" placeholder="Введите название"></td>
+                            <td><input type="text" value="${(item.value || "").replace(/"/g, '&quot;')}" placeholder="Введите описание/значение"></td>
+                            <td><button type="button" class="delete-row-btn" title="Удалить пункт"></button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
 
-    // 2) Теперь подставляем значения в базовые именованные поля
-    form.querySelectorAll('input[name]').forEach(input => {
-      if (Object.prototype.hasOwnProperty.call(data, input.name) &&
-          data[input.name] !== undefined && data[input.name] !== null) {
-        input.value = data[input.name];
-      }
-    });
-  })
-  .catch(() => {});
+            // Заполняем базовые поля значениями
+            form.querySelectorAll('input[name]').forEach(input => {
+                if (Object.prototype.hasOwnProperty.call(data, input.name) &&
+                    data[input.name] !== undefined && data[input.name] !== null) {
+                    input.value = data[input.name];
+                }
+            });
+        })
+        .catch(() => {});
 
-    // --- 2. Автосохранение ---
+    // --- 4. Автосохранение данных ---
     function collectData() {
         const data = {};
 
-        // Сохраняем ВСЕ значения именованных полей (базовые строки)
+        // Сохраняем все значения именованных полей
         form.querySelectorAll('input[name]').forEach(input => {
             data[input.name] = input.value.trim();
         });
 
-        // Сохраняем пользовательские строки: всегда кладем массив (даже пустой)
+        // Сохраняем пользовательские строки
         Object.keys(BASE_ROWS_COUNT).forEach(section => {
             const tbody = document.getElementById(section + "-body");
             const rows = Array.from(tbody.rows);
@@ -80,13 +86,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     sectionData.push({ name, value });
                 }
             }
-            data[section] = sectionData; // ВАЖНО: отправляем даже пустой массив
+            data[section] = sectionData; // Отправляем даже пустой массив
         });
 
         return data;
     }
 
-    // без дебаунса — как у тебя
+    // Автосохранение при изменении данных
     function autoSaveStimulationSystem() {
         fetch("/save_stimulation_system", {
             method: "POST",
@@ -98,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("input", autoSaveStimulationSystem);
     form.addEventListener("change", autoSaveStimulationSystem);
 
-    // --- 3. Добавление пользовательской строки ---
+    // --- 5. Добавление пользовательской строки ---
     document.querySelectorAll(".add-row-btn").forEach(btn => {
         btn.addEventListener("click", () => {
             const section = btn.dataset.section;
@@ -115,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // --- 4. Удаление пользовательской строки ---
+    // --- 6. Удаление пользовательской строки ---
     document.querySelectorAll("table").forEach(table => {
         table.addEventListener("click", e => {
             if (e.target.classList.contains("delete-row-btn")) {
@@ -124,14 +130,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 const section = tbody.id.replace('-body', '');
                 const baseCount = BASE_ROWS_COUNT[section];
                 const rowIndex = Array.from(tbody.rows).indexOf(tr);
-                if (rowIndex < baseCount) return; // нельзя удалять базовые
+                if (rowIndex < baseCount) return; // Нельзя удалять базовые строки
                 tr.remove();
                 autoSaveStimulationSystem();
             }
         });
     });
 
-    // --- 5. Сабмит формы ---
+    // --- 7. Сабмит формы ---
     form.addEventListener("submit", async function (e) {
         e.preventDefault();
         await fetch("/save_stimulation_system", {
@@ -139,7 +145,15 @@ document.addEventListener("DOMContentLoaded", function () {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(collectData())
         });
-        // НИЧЕГО НЕ СБРАСЫВАЕМ — данные остаются на странице
         alert("Данные успешно сохранены!");
+    });
+
+    // --- 8. Переключение сворачивания/разворачивания секций с анимацией
+    const sections = document.querySelectorAll('.recommendation-section');
+    sections.forEach(function(section) {
+        const title = section.querySelector('h4');
+        title.addEventListener('click', function() {
+            section.classList.toggle('collapsed');  // Плавно сворачиваем/разворачиваем блок
+        });
     });
 });

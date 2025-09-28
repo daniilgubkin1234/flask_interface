@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const block4Result = document.getElementById('block4-result');
     const block5Result = document.getElementById('block5-result');
     const form = document.getElementById('survey-form');
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
     // --- 1. АВТОЗАГРУЗКА ОТВЕТОВ ---
     fetch('/get_user_survey')

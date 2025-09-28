@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('businessForm');
     const addStageBtn = document.getElementById('addStageBtn');
     const table = document.getElementById('stagesTable').getElementsByTagName('tbody')[0];
+    document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
+
 function ensureActionsCell(row) {
   if (row.querySelector('.remove-stage')) return; // уже добавлена
   const td = document.createElement('td');

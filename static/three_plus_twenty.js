@@ -1,5 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("threePlusTwentyForm");
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
   // ---------------- helpers ----------------
   const $ = (id) => document.getElementById(id);

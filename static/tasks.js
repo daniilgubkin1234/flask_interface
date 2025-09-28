@@ -5,6 +5,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = document.getElementById("submitTask");
     const saveBtn = document.getElementById("saveChanges");
     const syncBtn = document.getElementById("syncSources");
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
     // -------- helpers --------
     const $ = (id) => document.getElementById(id);

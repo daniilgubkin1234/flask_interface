@@ -2,6 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('adaptationForm');
     const tasksContainer = document.getElementById('tasksContainer');
     const addButtons = document.querySelectorAll('.add-task-btn');
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
     // ---------- 0) Стартовый шаблон из 10 задач ----------
     const DEFAULT_TASKS = [

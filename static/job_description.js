@@ -2,6 +2,10 @@
 
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("jobDescriptionForm");
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
     // -------------------- helpers --------------------
     const byName = (n) => document.getElementsByName(n)[0];

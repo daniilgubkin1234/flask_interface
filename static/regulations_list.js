@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const docFile = document.getElementById('docFile');
   const docTitle = document.getElementById('docTitle');
   const uploadMsg = document.getElementById('uploadMsg');
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
   const uploadedTbody = document.querySelector('#uploadedTable tbody');
   const previewWrap = document.getElementById('preview');

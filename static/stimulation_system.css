@@ -150,14 +150,14 @@ button:hover {
     background: #b71c1c;
 }
 
-/* Center button container */
+/* Center button container 
 .button-container {
     display: flex;
     justify-content: center;
     margin-top: 20px;
 }
 
-/* Recommendation block (navigation) */
+/* Recommendation block (navigation) 
 .recommendation-block {
     background: #fafafa;
     padding: 20px;
@@ -209,4 +209,117 @@ button:hover {
 
 .recommendation-block .button-row button:hover {
     background: #1F4B8F;
+}
+*/
+/* Боковое меню с плавной анимацией скрытия/показа */
+.recommendation-block {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Скрываем меню за экраном */
+    width: 250px;
+    background: #fafafa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    
+    overflow-y: auto;
+    z-index: 1000;
+    padding-top: 20px;
+    transition: left 0.5s ease-in-out; /* Плавный переход для анимации */
+    height: calc(100vh - 40px); 
+}
+
+/* Когда меню показывается */
+.recommendation-block.show {
+    left: 0; /* Меню плавно выезжает */
+}
+.recommendation-block .button-row button {
+    background: #2A63C2;
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s;
+}
+/* Кнопка для скрытия/показа бокового меню */
+.toggle-sidebar {
+    position: absolute;  /* Закрепить кнопку внутри меню */
+    top: 20px;  /* Расположение от верхнего края */
+    right: 10px;  /* Кнопка прикреплена к правому краю меню */
+    background-color: #2A63C2;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    z-index: 2000; /* Убедитесь, что кнопка будет всегда сверху */
+}
+
+/* Изменение цвета кнопки при наведении */
+.toggle-sidebar:hover {
+    background-color: #1F4B8F;
+}
+
+/* Стрелка на кнопке для скрытия/показа меню */
+.toggle-sidebar::after {
+    
+    transition: transform 0.3s ease;
+}
+
+/* Когда меню открыто, стрелка поворачивается влево */
+.recommendation-block.show + .toggle-sidebar::after {
+    content: '◁';  /* Стрелка влево, когда меню открыто */
+    transform: rotate(180deg);
+}
+
+
+/* Когда блок сворачивается */
+.recommendation-section.collapsed {
+    max-height: 0;
+    padding-top: 0;
+}
+
+/* Кнопки внутри секций */
+.recommendation-section button {
+    display: inline-block;
+    margin-top: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+.recommendation-block {
+    height: calc(100vh - 20px);  /* Full height minus some padding */
+    overflow-y: auto; /* Ensure scrolling for content */
+}
+/* Добавляем для блоков с кнопками */
+.recommendation-section h4 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+.recommendation-block .button-row button {
+    background: #2A63C2;
+    color: #fff;
+    padding: 16px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+/* Responsiveness for smaller screens */
+@media screen and (max-width: 768px) {
+    .recommendation-block {
+        width: 100%;  /* Full width for smaller screens */
+        height: auto;  /* Automatic height on mobile */
+        padding-top: 20px;  /* Adjust padding */
+    }
+    body {
+        margin-left: 0;  /* Reset for mobile */
+    }
 }

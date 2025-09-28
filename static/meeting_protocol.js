@@ -2,6 +2,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Селекторы и счётчики ---
   const form = document.getElementById("protocolForm");
   const meetingDate = document.getElementById("meetingDate");
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+    });
 
   const participantsSection = document.getElementById("participantsSection");
   const addParticipantButton = document.getElementById("addParticipant");
