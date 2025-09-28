@@ -97,44 +97,37 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             let g = map.get(parsed.key);
             if (!g) {
-                g = {
-                    baseTitle: parsed.baseTitle,
-                    docs: {},
-                    ids: [],
-                    size: 0,
-                    uploaded_at: null,
-                };
+                g = { baseTitle: parsed.baseTitle, docs: {}, ids: [] };
                 map.set(parsed.key, g);
             }
-            const fmt = parsed.fmt;
-            const existing = g.docs[fmt];
-            const newTs = doc.uploaded_at
-                ? Date.parse(doc.uploaded_at) || 0
-                : 0;
-            const oldTs =
-                existing && existing.uploaded_at
-                    ? Date.parse(existing.uploaded_at) || 0
-                    : -1;
 
-            if (!existing || newTs > oldTs) {
+            const fmt = parsed.fmt;
+            const ts = doc.uploaded_at ? Date.parse(doc.uploaded_at) || 0 : 0;
+            const cur = g.docs[fmt];
+            const curTs =
+                cur && cur.uploaded_at ? Date.parse(cur.uploaded_at) || 0 : -1;
+
+            // оставляем только САМЫЙ НОВЫЙ файл каждого формата
+            if (!cur || ts > curTs) {
                 g.docs[fmt] = doc;
             }
 
-            // остальные агрегаты оставляем как были
+            // для кнопки "Удалить всё" копим ВСЕ id версии данного набора
             g.ids.push(doc._id);
-            g.size += doc.size || 0;
-            const curMax = g.uploaded_at ? Date.parse(g.uploaded_at) || 0 : 0;
-            g.uploaded_at = new Date(Math.max(curMax, newTs)).toISOString();
-            g.ids.push(doc._id);
-            g.size += doc.size || 0;
-            const tCur = g.uploaded_at ? new Date(g.uploaded_at).getTime() : 0;
-            const tNew = doc.uploaded_at
-                ? new Date(doc.uploaded_at).getTime()
-                : 0;
-            g.uploaded_at = new Date(Math.max(tCur, tNew)).toISOString();
         });
 
-        const groups = Array.from(map.values());
+        // финализируем агрегаты: размер/дата ТОЛЬКО по свежим версиям форматов
+        const groups = Array.from(map.values()).map((g) => {
+            const selected = Object.values(g.docs);
+            g.size = selected.reduce((sum, d) => sum + (d.size || 0), 0);
+            const maxTs = Math.max(
+                0,
+                ...selected.map((d) => Date.parse(d.uploaded_at) || 0)
+            );
+            g.uploaded_at = maxTs ? new Date(maxTs).toISOString() : null;
+            return g;
+        });
+
         let rowIdx = 0;
 
         const mkTd = (html, cls, isHtml = true) => {
