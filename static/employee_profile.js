@@ -12,7 +12,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ❶ Запретить любой автосабмит формы (Enter, implicit submit и т.п.)
     form.addEventListener("submit", (e) => e.preventDefault());
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+        const sidebar = document.querySelector('.recommendation-block');
+        const button = document.querySelector('.toggle-sidebar');
+        
+        // Одновременно применяем классы для синхронной анимации
+        sidebar.classList.toggle('show');
+        button.classList.toggle('menu-open');
+    });
 
+    // --- 2. Закрытие меню при клике вне области
+    document.addEventListener('click', function(e) {
+        const sidebar = document.querySelector('.recommendation-block');
+        const button = document.querySelector('.toggle-sidebar');
+        
+        if (sidebar.classList.contains('show') && 
+            !sidebar.contains(e.target) && 
+            !button.contains(e.target)) {
+            sidebar.classList.remove('show');
+            button.classList.remove('menu-open');
+        }
+    });
     // --- State
     let employees = []; // кэш списка
     let currentId = null; // _id выбранного сотрудника

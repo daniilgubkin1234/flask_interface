@@ -132,27 +132,6 @@ datalist option:hover {
     background-color: #f0f0f0;
 }
 
-button {
-    background-color: #2a63c2;
-    color: white;
-    padding: 12px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 20px;
-}
-
-button:hover {
-    background-color: #1f4b8f;
-}
-
-.edit-btn:hover,
-.delete-btn:hover {
-    background-color: #1f4b8f;
-}
-
 .save-btn {
     background-color: #2a63c2;
     color: white;
@@ -270,9 +249,71 @@ tr:hover {
     justify-content: center; /* Центрируем стрелки */
     gap: 5px; /* Отступ между стрелками */
 }
+#saveChanges,
+#submitTask,
+.edit-task, 
+.btn, 
+.btn-primary,
+.btn-danger,
+.btn-secondary {
+    background-color: #2a63c2;
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    display: inline-block;
+}
+.submit-btn {
+    background-color: #2a63c2;
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+    display: inline-block;
+}
+
+.submit-btn:hover {
+    background-color: #1f4b8f;
+}
+/* Ховеры для обычных кнопок */
+#saveChanges:hover,
+#submitTask:hover,
+.edit-task:hover, 
+.btn:hover, 
+.btn-primary:hover,
+.btn-danger:hover,
+.btn-secondary:hover {
+    background-color: #1f4b8f;
+}
+
+/* Специфичные стили для опасных кнопок */
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* Стили для вторичных кнопок */
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
 
 /* Стрелки сортировки */
-.sort-btn {
+.sort-btn{
     background-color: #2a63c2;
     color: white;
     padding: 12px 20px;
@@ -322,45 +363,95 @@ tr:hover {
     z-index: 1000;
     padding-top: 20px;
     transition: left 0.5s ease-in-out; /* Плавный переход для анимации */
-    height: calc(100vh - 40px); 
+    height: 100%;
 }
 
 /* Когда меню показывается */
 .recommendation-block.show {
     left: 0; /* Меню плавно выезжает */
 }
-
+.recommendation-block .button-row button {
+    background: #2A63C2;
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+* {
+    box-sizing: border-box;
+}
 /* Кнопка для скрытия/показа бокового меню */
 .toggle-sidebar {
-    position: absolute;  /* Закрепить кнопку внутри меню */
-    top: 20px;  /* Расположение от верхнего края */
-    right: 10px;  /* Кнопка прикреплена к правому краю меню */
-    background-color: #2A63C2;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    z-index: 2000; /* Убедитесь, что кнопка будет всегда сверху */
+    position: fixed !important;
+    top: 20px !important;
+    left: 20px !important;
+    background-color: #2A63C2  !important;
+    border: none !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 2000 !important;
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
 }
+.toggle-sidebar svg {
+    width: 20px !important;
+    height: 20px !important;
+    fill: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.toggle-sidebar.menu-open {
+    left: 270px !important;
+    background-color: #1F4B8F !important;
+}
+
+.toggle-sidebar.menu-open svg {
+    transform: rotate(180deg) !important;
+}
+
+.toggle-sidebar:hover {
+    background-color: #1F4B8F !important;
+    transform: scale(1.08) !important;
+}
+/* Изменение цвета кнопки при наведении */
+.toggle-sidebar:hover {
+    background-color: #1F4B8F !important;
+}
+
+
+/* Когда меню открыто - превращаем в стрелку */
+.toggle-sidebar.menu-open {
+    left: 270px;
+    background-color: #1F4B8F;
+}
+
 
 /* Изменение цвета кнопки при наведении */
 .toggle-sidebar:hover {
     background-color: #1F4B8F;
+    transform: scale(1.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Активное состояние при нажатии */
+.toggle-sidebar:active {
+    transform: scale(0.95);
 }
 
 /* Стрелка на кнопке для скрытия/показа меню */
 .toggle-sidebar::after {
-    
     transition: transform 0.3s ease;
 }
 
-/* Когда меню открыто, стрелка поворачивается влево */
-.recommendation-block.show + .toggle-sidebar::after {
-    content: '◁';  /* Стрелка влево, когда меню открыто */
-    transform: rotate(180deg);
-}
 
 
 /* Когда блок сворачивается */
@@ -377,7 +468,7 @@ tr:hover {
     width: 100%;
 }
 .recommendation-block {
-    height: calc(100vh - 20px);  /* Full height minus some padding */
+      /* Full height minus some padding */
     overflow-y: auto; /* Ensure scrolling for content */
 }
 /* Добавляем для блоков с кнопками */
@@ -386,6 +477,17 @@ tr:hover {
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
+}
+.recommendation-block .button-row button {
+    background: #2A63C2;
+    color: #fff;
+    padding: 16px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
 }
 
 /* Responsiveness for smaller screens */
@@ -398,30 +500,24 @@ tr:hover {
     body {
         margin-left: 0;  /* Reset for mobile */
     }
+    
+.recommendation-block {
+        transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1); /* Чуть быстрее на мобильных */
+    }
+    
+    .toggle-sidebar {
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .toggle-sidebar::before {
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .toggle-sidebar.menu-open {
+        left: calc(100% - 50px);
+    }
 }
 
-
-/* Ряд кнопок */
-.button-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap; /* если кнопок много, они перенесутся */
-    justify-content: center;
-}
-
-/* Кнопки внутри блока рекомендаций.
-   Можно сделать поменьше и компактнее, чем обычные. */
-.recommendation-block .button-row button {
-    background-color: #2a63c2;
-    color: white;
-    padding: 12px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 20px;
-}
 
 #goal {
   padding: 10px;

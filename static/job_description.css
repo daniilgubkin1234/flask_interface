@@ -250,45 +250,95 @@ button:hover {
     z-index: 1000;
     padding-top: 20px;
     transition: left 0.5s ease-in-out; /* Плавный переход для анимации */
-    height: calc(100vh - 40px); 
+    height: 100%;
 }
 
 /* Когда меню показывается */
 .recommendation-block.show {
     left: 0; /* Меню плавно выезжает */
 }
-
+.recommendation-block .button-row button {
+    background: #2A63C2;
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+* {
+    box-sizing: border-box;
+}
 /* Кнопка для скрытия/показа бокового меню */
 .toggle-sidebar {
-    position: absolute;  /* Закрепить кнопку внутри меню */
-    top: 20px;  /* Расположение от верхнего края */
-    right: 10px;  /* Кнопка прикреплена к правому краю меню */
+    position: fixed;
+    top: 20px;
+    left: 20px;
     background-color: #2A63C2;
-    color: white;
-    padding: 10px;
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    z-index: 2000; /* Убедитесь, что кнопка будет всегда сверху */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2000;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+.toggle-sidebar svg {
+    width: 20px;
+    height: 20px;
+    fill: white;
+    transition: all 0.3s ease;
 }
 
+.toggle-sidebar.menu-open {
+    left: 270px;
+    background-color: #1F4B8F;
+}
+
+.toggle-sidebar.menu-open svg {
+    transform: rotate(180deg);
+}
+
+.toggle-sidebar:hover {
+    background-color: #1F4B8F;
+    transform: scale(1.08);
+}
 /* Изменение цвета кнопки при наведении */
 .toggle-sidebar:hover {
     background-color: #1F4B8F;
 }
 
+
+/* Когда меню открыто - превращаем в стрелку */
+.toggle-sidebar.menu-open {
+    left: 270px;
+    background-color: #1F4B8F;
+}
+
+
+/* Изменение цвета кнопки при наведении */
+.toggle-sidebar:hover {
+    background-color: #1F4B8F;
+    transform: scale(1.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Активное состояние при нажатии */
+.toggle-sidebar:active {
+    transform: scale(0.95);
+}
+
 /* Стрелка на кнопке для скрытия/показа меню */
 .toggle-sidebar::after {
-    
     transition: transform 0.3s ease;
 }
 
-/* Когда меню открыто, стрелка поворачивается влево */
-.recommendation-block.show + .toggle-sidebar::after {
-    content: '◁';  /* Стрелка влево, когда меню открыто */
-    transform: rotate(180deg);
-}
 
 
 /* Когда блок сворачивается */
@@ -305,7 +355,7 @@ button:hover {
     width: 100%;
 }
 .recommendation-block {
-    height: calc(100vh - 20px);  /* Full height minus some padding */
+      /* Full height minus some padding */
     overflow-y: auto; /* Ensure scrolling for content */
 }
 /* Добавляем для блоков с кнопками */
@@ -326,6 +376,7 @@ button:hover {
     margin-top: 10px;
     transition: background 0.2s;
 }
+
 /* Responsiveness for smaller screens */
 @media screen and (max-width: 768px) {
     .recommendation-block {
@@ -336,4 +387,21 @@ button:hover {
     body {
         margin-left: 0;  /* Reset for mobile */
     }
+    
+.recommendation-block {
+        transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1); /* Чуть быстрее на мобильных */
+    }
+    
+    .toggle-sidebar {
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .toggle-sidebar::before {
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .toggle-sidebar.menu-open {
+        left: calc(100% - 50px);
+    }
 }
+

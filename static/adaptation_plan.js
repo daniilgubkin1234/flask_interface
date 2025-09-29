@@ -2,11 +2,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('adaptationForm');
     const tasksContainer = document.getElementById('tasksContainer');
     const addButtons = document.querySelectorAll('.add-task-btn');
-document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+    
+    // ИСПРАВЛЕНИЕ: убрать лишнюю букву 'd'
+    document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         const sidebar = document.querySelector('.recommendation-block');
-        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+        const button = document.querySelector('.toggle-sidebar');
+        
+        sidebar.classList.toggle('show');
+        button.classList.toggle('menu-open');
     });
 
+    // Закрытие меню при клике вне области
+    document.addEventListener('click', function(e) {
+        const sidebar = document.querySelector('.recommendation-block');
+        const button = document.querySelector('.toggle-sidebar');
+        
+        if (sidebar.classList.contains('show') && 
+            !sidebar.contains(e.target) && 
+            !button.contains(e.target)) {
+            sidebar.classList.remove('show');
+            button.classList.remove('menu-open');
+        }
+    });
     // ---------- 0) Стартовый шаблон из 10 задач ----------
     const DEFAULT_TASKS = [
         'Задача 1: Оформление на работу',

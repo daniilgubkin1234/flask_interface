@@ -1,10 +1,26 @@
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("stimulation-form");
 
-    // --- 1. Переключение бокового меню с анимацией
-    document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+
+document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         const sidebar = document.querySelector('.recommendation-block');
-        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+        const button = document.querySelector('.toggle-sidebar');
+        
+        sidebar.classList.toggle('show');
+        button.classList.toggle('menu-open');
+    });
+
+    // Закрытие меню при клике вне области
+    document.addEventListener('click', function(e) {
+        const sidebar = document.querySelector('.recommendation-block');
+        const button = document.querySelector('.toggle-sidebar');
+        
+        if (sidebar.classList.contains('show') && 
+            !sidebar.contains(e.target) && 
+            !button.contains(e.target)) {
+            sidebar.classList.remove('show');
+            button.classList.remove('menu-open');
+        }
     });
 
     // --- 2. Количество базовых строк (фиксированных) в каждой секции

@@ -7,7 +7,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const syncBtn = document.getElementById("syncSources");
 document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         const sidebar = document.querySelector('.recommendation-block');
-        sidebar.classList.toggle('show');  // Плавно показываем/скрываем меню
+        const button = document.querySelector('.toggle-sidebar');
+        
+        // Одновременно применяем классы для синхронной анимации
+        sidebar.classList.toggle('show');
+        button.classList.toggle('menu-open');
+    });
+
+    // --- 2. Закрытие меню при клике вне области
+    document.addEventListener('click', function(e) {
+        const sidebar = document.querySelector('.recommendation-block');
+        const button = document.querySelector('.toggle-sidebar');
+        
+        if (sidebar.classList.contains('show') && 
+            !sidebar.contains(e.target) && 
+            !button.contains(e.target)) {
+            sidebar.classList.remove('show');
+            button.classList.remove('menu-open');
+        }
     });
 
     // -------- helpers --------
@@ -232,7 +249,7 @@ function setGoalUIFromValue(v) {
     const cells = btn.closest("tr").children;
     setGoalUIFromValue(cells[1].textContent.trim());
     $("event").value       = cells[2].textContent;
-    $("task").value        = cells[3].textContent; // работа/поручение
+    $("work").value        = cells[3].textContent; // работа/поручение
     $("responsible").value = cells[4].textContent;
     $("deadline").value    = cells[5].textContent;
     $("result").value      = cells[6].textContent;
@@ -318,7 +335,7 @@ function setGoalUIFromValue(v) {
   return {
     task: getGoalValueFromUI(),                         // ← здесь учтено "Другое"
     event: document.getElementById("event").value,
-    work: document.getElementById("task").value,
+    work: document.getElementById("work").value,
     responsible: document.getElementById("responsible").value,
     deadline: document.getElementById("deadline").value,
     result: document.getElementById("result").value,

@@ -6,9 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Система стимулирования</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='stimulation_system.css') }}">
+    <script src="{{ url_for('static', filename='stimulation_system.js') }}"></script>
 </head>
 
 <body>
+    <button class="toggle-sidebar">
+        <svg viewBox="0 0 24 24">
+         <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+    </button>
     <div class="container">
         <h2>Система стимулирования</h2>
         <form id="stimulation-form">
@@ -188,7 +194,7 @@
             </div>
         </form>
     </div>
-    <button class="toggle-sidebar">☰</button>
+    
 
     <!-- Навигационный блок -->
     <div class="recommendation-block">
@@ -249,7 +255,7 @@
             </div>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='stimulation_system.js') }}"></script>
+    
 </body>
 
 </html>
