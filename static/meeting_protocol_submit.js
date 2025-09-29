@@ -1,28 +1,11 @@
+// Заменить весь файл на этот код
 document.addEventListener("DOMContentLoaded", function () {
+    // Убрать дублирующий код управления боковым меню
+    // (он уже есть в meeting_protocol.js)
+    
     document.getElementById("protocolForm").addEventListener("submit", function (event) {
         event.preventDefault();
-document.querySelector('.toggle-sidebar').addEventListener('click', function() {
-        const sidebar = document.querySelector('.recommendation-block');
-        const button = document.querySelector('.toggle-sidebar');
         
-        // Одновременно применяем классы для синхронной анимации
-        sidebar.classList.toggle('show');
-        button.classList.toggle('menu-open');
-    });
-
-    // --- 2. Закрытие меню при клике вне области
-    document.addEventListener('click', function(e) {
-        const sidebar = document.querySelector('.recommendation-block');
-        const button = document.querySelector('.toggle-sidebar');
-        
-        if (sidebar.classList.contains('show') && 
-            !sidebar.contains(e.target) && 
-            !button.contains(e.target)) {
-            sidebar.classList.remove('show');
-            button.classList.remove('menu-open');
-        }
-    });
-
         const meetingData = {
             date: document.getElementById("meetingDate").value,
             participants: [],
@@ -47,28 +30,20 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         // Сбор шагов из таблицы
         document.querySelectorAll("#nextStepsTable tbody tr").forEach(row => {
             const columns = row.querySelectorAll("td");
-            if (columns.length === 4) {
+            if (columns.length === 6) { // Обновлено для 6 колонок
                 meetingData.nextSteps.push({
-                    task: columns[1].querySelector("textarea").value.trim(),
-                    executor: columns[2].querySelector("input").value.trim(),
-                    deadline: columns[3].querySelector("input").value.trim()
+                    goal: columns[1].querySelector("input").value.trim(),
+                    event: columns[2].querySelector("input").value.trim(),
+                    work: columns[3].querySelector("textarea").value.trim(),
+                    executor: columns[4].querySelector("input").value.trim(),
+                    deadline: columns[5].querySelector("input").value.trim()
                 });
             }
         });
 
         console.log("Отправляемые данные:", meetingData);
 
-        fetch("/save_meeting_protocol", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(meetingData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Ответ сервера:", data);
-            alert("Протокол успешно сохранен!");
-            document.getElementById("protocolForm").reset();
-        })
-        .catch(error => console.error("Ошибка при отправке:", error));
+        // URL определяется в основном meeting_protocol.js
+        // Этот файл можно упростить или удалить, перенеся логику в основной
     });
 });

@@ -571,6 +571,90 @@ def get_meeting_protocol():
     )
     return jsonify(doc if doc else {})
 
+# Добавить в раздел протоколов совещания
+
+@app.route("/get_meeting_protocols_list", methods=["GET"])
+@login_required
+def get_meeting_protocols_list():
+    """Получить список всех протоколов пользователя"""
+    docs = list(meeting_protocol_collection.find(
+        {"owner_id": ObjectId(current_user.id)},
+        projection={"_id": 1, "meetingDate": 1, "protocolName": 1}  # ДОБАВЛЯЕМ protocolName
+    ).sort("_id", -1))  # Сортировка по убыванию ID (новые сначала)
+    
+    protocols = []
+    for doc in docs:
+        protocols.append({
+            "_id": str(doc["_id"]),
+            "date": doc.get("meetingDate", ""),
+            "protocolName": doc.get("protocolName", ""),  # ДОБАВЛЯЕМ
+            "title": doc.get("protocolName") or f"Протокол от {doc.get('meetingDate', '')}"
+        })
+    
+    return jsonify({"protocols": protocols})
+@app.route("/get_meeting_protocol/<protocol_id>", methods=["GET"])
+@login_required
+def get_meeting_protocol_by_id(protocol_id):
+    """Получить конкретный протокол по ID"""
+    try:
+        oid = ObjectId(protocol_id)
+    except:
+        return jsonify({"error": "Invalid protocol ID"}), 400
+
+    doc = meeting_protocol_collection.find_one(
+        {"_id": oid, "owner_id": ObjectId(current_user.id)}
+    )
+    if doc:
+        doc["_id"] = str(doc["_id"])
+        return jsonify(doc)
+    return jsonify({"error": "Protocol not found"}), 404
+
+@app.route("/update_meeting_protocol", methods=["POST"])
+@login_required
+def update_meeting_protocol():
+    """Обновить существующий протокол"""
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data"}), 400
+
+    protocol_id = data.get("_id")
+    if not protocol_id:
+        return jsonify({"error": "Protocol ID required"}), 400
+
+    try:
+        oid = ObjectId(protocol_id)
+    except:
+        return jsonify({"error": "Invalid protocol ID"}), 400
+
+    # Удаляем _id из данных для обновления
+    data.pop("_id", None)
+    
+    result = meeting_protocol_collection.update_one(
+        {"_id": oid, "owner_id": ObjectId(current_user.id)},
+        {"$set": data}
+    )
+    
+    if result.matched_count:
+        return jsonify({"message": "Protocol updated successfully", "protocol_id": protocol_id})
+    return jsonify({"error": "Protocol not found"}), 404
+
+@app.route("/delete_meeting_protocol/<protocol_id>", methods=["DELETE"])
+@login_required
+def delete_meeting_protocol(protocol_id):
+    """Удалить протокол по ID"""
+    try:
+        oid = ObjectId(protocol_id)
+    except:
+        return jsonify({"error": "Invalid protocol ID"}), 400
+
+    result = meeting_protocol_collection.delete_one({
+        "_id": oid, 
+        "owner_id": ObjectId(current_user.id)
+    })
+    if result.deleted_count:
+        return jsonify({"message": "Protocol deleted successfully"})
+    return jsonify({"error": "Protocol not found"}), 404
+
 # -------------------------------------------------------------------------
 # 14.  Система стимулирования
 # -------------------------------------------------------------------------
