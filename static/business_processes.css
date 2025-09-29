@@ -1,14 +1,14 @@
 /* Общий фон и шрифт */
 body {
     font-family: Arial, sans-serif;
-    background-color: #F0F0F0;
+    background-color: #f0f0f0;
     margin: 0;
     padding: 0;
 }
 
 /* Контейнер-обёртка, как в ваших примерах */
 .container {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
     padding: 40px;
     margin: 40px auto;
     border-radius: 8px;
@@ -22,7 +22,7 @@ body {
 /* Заголовок h2 */
 h2 {
     text-align: center;
-    color: #2A63C2;
+    color: #2a63c2;
     margin-bottom: 30px;
 }
 
@@ -48,7 +48,7 @@ td {
 }
 
 th {
-    background-color: #2A63C2;
+    background-color: #2a63c2;
     color: white;
     font-weight: bold;
 }
@@ -75,56 +75,44 @@ button {
 }
 
 #addRow {
-    background-color: #2A63C2;
+    background-color: #2a63c2;
     margin-top: 10px;
 }
 
 #addRow:hover {
-    background-color: #1F4B8F;
+    background-color: #1f4b8f;
     transition: background-color 0.3s;
 }
 
 #buildDiagram {
-    background-color: #2A63C2;
-    margin: 15px auto 0;
-    display: block;
-    text-align: center;
-    width: 200px;
+    background-color: #2a63c2;
     font-weight: bold;
 }
+
 #saveBP {
-    background-color: #2A63C2;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    width: 260px;
-    display: block;
-    text-align: center;
+    background-color: #2a63c2;
     font-weight: bold;
     transition: background-color 0.3s;
-    margin-left: auto;    /* центрирование */
-    margin-right: auto;   /* центрирование */
 }
+
 #saveBP:hover {
-    background-color: #1F4B8F;
+    background-color: #1f4b8f;
 }
 
 #exportBPMN,
 #toggleMode,
 #sendToRegulations,
 #resetToAutoLayout {
-    background-color: #2A63C2;
-    margin-top: 10px;
+    background-color: #2a63c2;
     text-align: center;
     font-weight: bold;
-    width: auto;
-    margin-right: 10px;
 }
 
 #exportBPMN:hover,
 #toggleMode:hover,
 #sendToRegulations:hover,
 #buildDiagram:hover {
-    background-color: #1F4B8F;
+    background-color: #1f4b8f;
     transition: background-color 0.3s;
 }
 
@@ -139,7 +127,7 @@ input {
 
 input:focus {
     outline: none;
-    border-color: #2A63C2;
+    border-color: #2a63c2;
     box-shadow: 0 0 5px rgba(42, 99, 194, 0.5);
 }
 
@@ -151,7 +139,7 @@ input:focus {
     /* одинаково слева и справа */
     background: #fafafa;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, .05);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     overflow-x: auto;
     overflow-y: hidden;
     width: 100%;
@@ -174,44 +162,62 @@ input:focus {
     background: none;
 }
 /* Блок названия бизнес-процесса */
-.bp-name-block{
+.bp-name-block {
     margin: 0 0 18px 0;
-  }
-  
-  .bp-name-label{
-    display:block;
-    font-weight:600;
-    color:#333;
-    margin-bottom:6px;
-  }
-  
-  .bp-name-input{
-    max-width:560px;
-    width:100%;
-    padding:10px 12px;
-    border:1px solid #ccc;
-    border-radius:6px;
-    background:#fff;
-    transition: box-shadow .2s, border-color .2s;
-    box-sizing:border-box;
-  }
-  
-  .bp-name-input::placeholder{
-    color:#9aa3b2;
-  }
-  
-  .bp-name-input:focus{
-    outline:none;
-    border-color:#2A63C2;
-    box-shadow:0 0 0 3px rgba(42,99,194,.15);
-  }
-  
-  .bp-name-hint{
-    margin-top:6px;
-    font-size:12px;
-    color:#6b7280;
-  }
-  
+}
+
+.bp-name-label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.bp-name-input {
+    max-width: 560px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.bp-name-input::placeholder {
+    color: #9aa3b2;
+}
+
+.bp-name-input:focus {
+    outline: none;
+    border-color: #2a63c2;
+    box-shadow: 0 0 0 3px rgba(42, 99, 194, 0.15);
+}
+
+.bp-name-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Кнопки действий одной линией */
+.bp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 15px;
+}
+.bp-actions button {
+    display: inline-block;
+    margin: 0; /* расстояния задаём через gap */
+    width: auto; /* без фикс. ширины */
+    background-color: #2a63c2;
+    font-weight: bold;
+}
+.bp-actions button:hover {
+    background-color: #1f4b8f;
+}
 
 /* Скрытие баннера */
 .bjs-powered-by {
@@ -238,12 +244,16 @@ input:focus {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    
+
     overflow-y: auto;
     z-index: 1000;
     padding-top: 20px;
     transition: left 0.5s ease-in-out; /* Плавный переход для анимации */
+<<<<<<< HEAD
     height: 100%;
+=======
+    height: calc(100vh - 40px);
+>>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
 }
 
 /* Когда меню показывается */
@@ -266,10 +276,19 @@ input:focus {
 }
 /* Кнопка для скрытия/показа бокового меню */
 .toggle-sidebar {
+<<<<<<< HEAD
     position: fixed;
     top: 20px;
     left: 20px;
     background-color: #2A63C2;
+=======
+    position: absolute; /* Закрепить кнопку внутри меню */
+    top: 20px; /* Расположение от верхнего края */
+    right: 10px; /* Кнопка прикреплена к правому краю меню */
+    background-color: #2a63c2;
+    color: white;
+    padding: 10px;
+>>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
     border: none;
     border-radius: 50%;
     cursor: pointer;
@@ -304,7 +323,7 @@ input:focus {
 }
 /* Изменение цвета кнопки при наведении */
 .toggle-sidebar:hover {
-    background-color: #1F4B8F;
+    background-color: #1f4b8f;
 }
 
 
@@ -332,7 +351,14 @@ input:focus {
     transition: transform 0.3s ease;
 }
 
-
+<<<<<<< HEAD
+=======
+/* Когда меню открыто, стрелка поворачивается влево */
+.recommendation-block.show + .toggle-sidebar::after {
+    content: "◁"; /* Стрелка влево, когда меню открыто */
+    transform: rotate(180deg);
+}
+>>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
 
 /* Когда блок сворачивается */
 .recommendation-section.collapsed {
@@ -348,7 +374,11 @@ input:focus {
     width: 100%;
 }
 .recommendation-block {
+<<<<<<< HEAD
       /* Full height minus some padding */
+=======
+    height: calc(100vh - 20px); /* Full height minus some padding */
+>>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
     overflow-y: auto; /* Ensure scrolling for content */
 }
 /* Добавляем для блоков с кнопками */
@@ -359,7 +389,7 @@ input:focus {
     cursor: pointer;
 }
 .recommendation-block .button-row button {
-    background: #2A63C2;
+    background: #2a63c2;
     color: #fff;
     padding: 16px 20px;
     font-size: 16px;
@@ -373,12 +403,12 @@ input:focus {
 /* Responsiveness for smaller screens */
 @media screen and (max-width: 768px) {
     .recommendation-block {
-        width: 100%;  /* Full width for smaller screens */
-        height: auto;  /* Automatic height on mobile */
-        padding-top: 20px;  /* Adjust padding */
+        width: 100%; /* Full width for smaller screens */
+        height: auto; /* Automatic height on mobile */
+        padding-top: 20px; /* Adjust padding */
     }
     body {
-        margin-left: 0;  /* Reset for mobile */
+        margin-left: 0; /* Reset for mobile */
     }
     
 .recommendation-block {

@@ -18,6 +18,7 @@ import time
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
 from prometheus_flask_exporter import PrometheusMetrics
+from pymongo import ReturnDocument
 # -------------------------------------------------------------------------
 # 1.  Загрузка переменных окружения
 # -------------------------------------------------------------------------
@@ -1037,6 +1038,21 @@ def get_regulation_files():
         })
     return jsonify({"success": True, "items": result})
 
+@app.get('/get_regulations_list')
+@login_required
+def get_regulations_list():
+    """
+    Возвращаем сохранённый реестр для текущего пользователя.
+    Берём самый свежий документ по updated_at, а не по _id.
+    """
+    doc = regulations_collection.find_one(
+        {"owner_id": ObjectId(current_user.id)},
+        sort=[("updated_at", -1), ("_id", -1)]
+    ) or {}
+    items = doc.get("items") or doc.get("regulations") or []
+    return jsonify({"success": True, "items": items})
+
+
 
 @app.route('/delete_regulation_file/<doc_id>', methods=['DELETE'])
 @login_required
@@ -1067,19 +1083,32 @@ def get_regulation_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=False)
 
 
-@app.route('/save_regulations_list', methods=['POST'])
+@app.post('/save_regulations_list')
 @login_required
 def save_regulations_list():
-    data = request.get_json()
-    if not data or 'regulations' not in data:
-        return jsonify({"success": False, "error": "Нет данных"}), 400
-    # --- OAuth: добавлено ---
-    data["owner_id"] = ObjectId(current_user.id)
-    try:
-        regulations_collection.insert_one(data)
-        return jsonify({"success": True, "message": "Перечень регламентов сохранён!"}), 201
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    """
+    Сохраняем реестр одним документом на пользователя.
+    После upsert удаляем старые дубликаты с тем же owner_id.
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    regs = payload.get('regulations', [])
+    owner = ObjectId(current_user.id)
+
+    # upsert и получить обновлённый документ
+    doc = regulations_collection.find_one_and_update(
+        {"owner_id": owner},
+        {"$set": {"items": regs, "updated_at": datetime.utcnow()}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER
+    )
+
+    # подчистить дубликаты (если остались со старых версий)
+    regulations_collection.delete_many({
+        "owner_id": owner,
+        "_id": {"$ne": doc["_id"]}
+    })
+
+    return jsonify({"success": True})
 
 # -------------------------------------------------------------------------
 # 20.  Вопрос-ответ

@@ -298,42 +298,31 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================
     // 3) Построить BPMN: приоритет — сохранённая редакторская версия
     // =========================================================
+    // 3) Построить BPMN: ВСЕГДА заново из таблицы (игнорируем сохранённую редакторскую версию)
     buildBtn?.addEventListener("click", async () => {
         const rows = getTableRowsData();
         if (rows.length === 0) {
             alert("Заполните таблицу.");
             return;
         }
-        const bpName = (bpNameInput?.value || "").trim();
-        let restored = false;
+        try {
+            // Сбрасываем локальное состояние редакторской версии,
+            // чтобы гарантированно строить из таблицы
+            lastXml = "";
+            isDirty = false;
 
-        if (bpName) {
-            try {
-                const got = await loadEditedXmlFromServer(bpName);
-                if (got.found && got.xml) {
-                    await ensureModelerWithXml(got.xml);
-                    lastXml = got.xml;
-                    isDirty = false;
-                    restored = true;
-                    alert("Загружена сохранённая версия схемы из редактора.");
-                }
-            } catch (e) {
-                /* ignore */
-            }
-        }
+            // Строим XML по таблице и отдаём bpmn-js на автоукладку
+            const xmlBuilt = buildBpmnXml(rows);
+            await ensureModelerWithXml(xmlBuilt);
 
-        if (!restored) {
-            const xml = buildBpmnXml(rows);
-            try {
-                await ensureModelerWithXml(xml);
-                const saved = await bpmnModeler.saveXML({ format: true });
-                lastXml = saved.xml;
-                isDirty = false;
-                alert("Диаграмма построена.");
-            } catch (e) {
-                console.error(e);
-                alert("Не удалось построить диаграмму: " + (e.message || e));
-            }
+            // Фиксируем текущую (сгенерённую) версию в lastXml
+            const saved = await bpmnModeler.saveXML({ format: true });
+            lastXml = saved.xml;
+
+            alert("Диаграмма перестроена по текущей таблице.");
+        } catch (e) {
+            console.error(e);
+            alert("Не удалось построить диаграмму: " + (e.message || e));
         }
     });
 
