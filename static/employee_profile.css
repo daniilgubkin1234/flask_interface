@@ -273,7 +273,8 @@ button.danger:hover {
     border-radius: 4px;
     cursor: pointer;
     margin-top: 20px;
-     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100% !important;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 * {
     box-sizing: border-box;

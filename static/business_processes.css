@@ -249,11 +249,7 @@ input:focus {
     z-index: 1000;
     padding-top: 20px;
     transition: left 0.5s ease-in-out; /* Плавный переход для анимации */
-<<<<<<< HEAD
     height: 100%;
-=======
-    height: calc(100vh - 40px);
->>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
 }
 
 /* Когда меню показывается */
@@ -276,19 +272,10 @@ input:focus {
 }
 /* Кнопка для скрытия/показа бокового меню */
 .toggle-sidebar {
-<<<<<<< HEAD
     position: fixed;
     top: 20px;
     left: 20px;
     background-color: #2A63C2;
-=======
-    position: absolute; /* Закрепить кнопку внутри меню */
-    top: 20px; /* Расположение от верхнего края */
-    right: 10px; /* Кнопка прикреплена к правому краю меню */
-    background-color: #2a63c2;
-    color: white;
-    padding: 10px;
->>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
     border: none;
     border-radius: 50%;
     cursor: pointer;
@@ -351,14 +338,6 @@ input:focus {
     transition: transform 0.3s ease;
 }
 
-<<<<<<< HEAD
-=======
-/* Когда меню открыто, стрелка поворачивается влево */
-.recommendation-block.show + .toggle-sidebar::after {
-    content: "◁"; /* Стрелка влево, когда меню открыто */
-    transform: rotate(180deg);
-}
->>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
 
 /* Когда блок сворачивается */
 .recommendation-section.collapsed {
@@ -374,11 +353,7 @@ input:focus {
     width: 100%;
 }
 .recommendation-block {
-<<<<<<< HEAD
       /* Full height minus some padding */
-=======
-    height: calc(100vh - 20px); /* Full height minus some padding */
->>>>>>> 71c664e8664b17b99ffcffb519033a60dc4e44ff
     overflow-y: auto; /* Ensure scrolling for content */
 }
 /* Добавляем для блоков с кнопками */
