@@ -242,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // минимальная валидация
         if (!payload.name) {
-            alert("Укажите ФИО.");
+            alert("Укажите Наименование должности.");
             return;
         }
         const ageNum = Number(payload.age);
