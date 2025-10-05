@@ -504,7 +504,66 @@ def get_survey_results(survey_id):
 # (ниже аналогичные изменения: owner_id + @login_required)
 # -------------------------------------------------------------------------
 
+@app.route("/api/adaptation_plans/positions", methods=["GET"])
+@login_required
+def ap_positions_list():
+    """Список названий должностей, под которые есть планы у пользователя."""
+    owner = ObjectId(current_user.id)
+    cursor = adaptation_plans_collection.find(
+        {"owner_id": owner},
+        projection={"_id": 0, "position": 1}
+    )
+    names = []
+    for d in cursor:
+        pos = (d.get("position") or "").strip()
+        if pos and pos not in names:
+            names.append(pos)
+    names.sort(key=lambda s: s.lower())
+    return jsonify(names), 200
 
+@app.route("/api/adaptation_plans/by_position", methods=["GET"])
+@login_required
+def ap_get_by_position():
+    """Получить план по названию должности (последняя версия)."""
+    position = (request.args.get("position") or "").strip()
+    if not position:
+        return jsonify({"error": "position required"}), 400
+    owner = ObjectId(current_user.id)
+    doc = adaptation_plans_collection.find_one(
+        {"owner_id": owner, "position": position},
+        sort=[("updated_at", -1), ("_id", -1)],
+        projection={"_id": 0, "tasks": 1, "position": 1, "updated_at": 1}
+    )
+    if not doc:
+        return jsonify({"position": position, "tasks": []}), 200
+    return jsonify(doc), 200
+
+@app.route("/api/adaptation_plans", methods=["POST"])
+@login_required
+def ap_upsert():
+    """
+    Upsert по паре (owner_id, position). Тело: { position: str, tasks: [...] }.
+    Если записи нет — создаём; если есть — перезаписываем задачи и updated_at.
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    position = (payload.get("position") or "").strip()
+    tasks    = payload.get("tasks")
+    if not position or not isinstance(tasks, list):
+        return jsonify({"ok": False, "error": "position (str) and tasks (list) are required"}), 400
+
+    owner = ObjectId(current_user.id)
+    doc = adaptation_plans_collection.find_one_and_update(
+        {"owner_id": owner, "position": position},
+        {"$set": {
+            "owner_id": owner,
+            "position": position,
+            "tasks": tasks,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True,
+        return_document=ReturnDocument.AFTER
+    )
+    return jsonify({"ok": True, "position": position, "updated_at": doc.get("updated_at").isoformat()+"Z"}), 200
 @app.route("/adaptation_plan")
 @login_required
 def adaptation_plan():

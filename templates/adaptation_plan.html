@@ -18,6 +18,18 @@
     <form id="adaptationForm">
         <div class="container">
             <h2>Адаптационный план</h2>
+             <fieldset class="task">
+        <legend>Должность</legend>
+        <label for="positionInput">Наименование должности:</label>
+        <input list="positionList" id="positionInput" name="positionInput" placeholder="Например: Менеджер по продажам" autocomplete="off" />
+        <datalist id="positionList"></datalist>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <button type="button" id="createNewPlanBtn">Создать новый план</button>
+          <button type="button" id="loadSelectedPlanBtn">Загрузить выбранный</button>
+        </div>
+        <p class="hint">Выберите уже сохранённый план из списка или введите новую должность и нажмите «Создать новый план». Планы хранятся отдельно по каждой должности.</p>
+      </fieldset>
             <div id="tasksContainer">
                 <!-- Задачи 1-5 -->
                 <fieldset class="task">
@@ -193,7 +205,6 @@
 
             </div>
             <button id="submitButton" type="submit">Отправить</button>
-            <button id="resetToDefault" type="reset" class="secondary">Восстановить шаблон</button>
             <button id="downloadAdaptationPlan" type="button" class="secondary">
   Загрузить адаптационный план
 </button>
