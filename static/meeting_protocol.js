@@ -22,7 +22,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextStepsTable      = document.getElementById('nextStepsTable');
   const nextStepsTbody      = nextStepsTable.querySelector('tbody');
   const addNextStepBtn      = document.getElementById('addNextStep');
+// === ХЭНДЛЕР ГАМБУРГЕРА/САЙДБАРА ===
+const sidebarToggleBtn = document.querySelector('.toggle-sidebar');
+const sidebar = document.querySelector('.recommendation-block');
 
+if (sidebarToggleBtn && sidebar) {
+  // открыть/закрыть по клику на кнопку
+  sidebarToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sidebar.classList.toggle('show');         // CSS: .recommendation-block.show { left: 0 }
+    sidebarToggleBtn.classList.toggle('menu-open'); // CSS сдвигает кнопку вправо и вращает иконку
+  });
+
+  // клик вне меню — закрыть
+  document.addEventListener('click', (e) => {
+    if (!sidebar.classList.contains('show')) return;
+    const clickInsideSidebar = sidebar.contains(e.target);
+    const clickOnToggle = sidebarToggleBtn.contains(e.target);
+    if (!clickInsideSidebar && !clickOnToggle) {
+      sidebar.classList.remove('show');
+      sidebarToggleBtn.classList.remove('menu-open');
+    }
+  });
+
+  // ESC — закрыть
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+      sidebar.classList.remove('show');
+      sidebarToggleBtn.classList.remove('menu-open');
+    }
+  });
+}
   // ===== Глобальные =====
   let protocolsList = [];
   let currentProtocolId = null;
