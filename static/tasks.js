@@ -244,12 +244,12 @@ function setGoalUIFromValue(v) {
         });
 
         // Редактирование
-        tbody.querySelectorAll(".edit-task").forEach((btn) => {
+    tbody.querySelectorAll(".edit-task").forEach((btn) => {
   btn.onclick = () => {
     const cells = btn.closest("tr").children;
     setGoalUIFromValue(cells[1].textContent.trim());
     $("event").value       = cells[2].textContent;
-    $("work").value        = cells[3].textContent; // работа/поручение
+    $("work").value        = cells[3].textContent;
     $("responsible").value = cells[4].textContent;
     $("deadline").value    = cells[5].textContent;
     $("result").value      = cells[6].textContent;
@@ -260,9 +260,11 @@ function setGoalUIFromValue(v) {
     saveBtn.dataset.id = btn.dataset.id || "";
     submitBtn.style.display = "none";
     saveBtn.style.display = "inline-block";
+
+    // Добавьте эту строку для прокрутки вверх:
+    document.getElementById('plan-top').scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 });
-
     }
 
     // ---------- обработчики формы ----------

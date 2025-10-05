@@ -1,738 +1,880 @@
-// job_description.js — полная версия
-
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("jobDescriptionForm");
-document.querySelector('.toggle-sidebar').addEventListener('click', function() {
-        const sidebar = document.querySelector('.recommendation-block');
-        const button = document.querySelector('.toggle-sidebar');
-        
-        // Одновременно применяем классы для синхронной анимации
-        sidebar.classList.toggle('show');
-        button.classList.toggle('menu-open');
-    });
-
-    // --- 2. Закрытие меню при клике вне области
-    document.addEventListener('click', function(e) {
-        const sidebar = document.querySelector('.recommendation-block');
-        const button = document.querySelector('.toggle-sidebar');
-        
-        if (sidebar.classList.contains('show') && 
-            !sidebar.contains(e.target) && 
-            !button.contains(e.target)) {
-            sidebar.classList.remove('show');
-            button.classList.remove('menu-open');
-        }
-    });
-
-    // -------------------- helpers --------------------
-    const byName = (n) => document.getElementsByName(n)[0];
-
-    function ensureInput(containerId, nameAttr, count) {
-        const container = document.getElementById(containerId);
-        while (
-            container.querySelectorAll(`input[name="${nameAttr}"]`).length <
-            count
-        ) {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.name = nameAttr;
-            input.placeholder =
-                nameAttr === "mainActivity[]"
-                    ? "Введите направление деятельности"
-                    : "Введите должностную обязанность";
-            input.required = true;
-            container.appendChild(input);
-        }
-    }
-
-    function getValues(containerId, nameAttr) {
-        return Array.from(
-            document.querySelectorAll(
-                `#${containerId} input[name="${nameAttr}"]`
-            )
-        ).map((i) => i.value);
-    }
-
-    function setExact(containerId, nameAttr, values) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = "";
-        (values && values.length ? values : [""]).forEach((v) => {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.name = nameAttr;
-            input.placeholder =
-                nameAttr === "mainActivity[]"
-                    ? "Введите направление деятельности"
-                    : "Введите должностную обязанность";
-            input.required = true;
-            input.value = v ?? "";
-            container.appendChild(input);
-        });
-    }
-
-    // Перезаписывает первые N значений, не удаляя лишние строки пользователя
-    function overwriteFirstN(containerId, nameAttr, values) {
-        const n = values.length;
-        ensureInput(containerId, nameAttr, n);
-        const inputs = document.querySelectorAll(
-            `#${containerId} input[name="${nameAttr}"]`
-        );
-        for (let i = 0; i < n; i++) inputs[i].value = values[i] ?? "";
-    }
-
-    // Подпись и рендер «Дополнительных пунктов»
-    function renderAdditionalFields(values) {
-        const wrap = document.getElementById("profileAdditionalFields");
-        wrap.innerHTML = "";
-
-        const items = Array.isArray(values)
-            ? values
-                  .map((v) => (typeof v === "string" ? v.trim() : ""))
-                  .filter(Boolean)
-            : [];
-
-        if (items.length === 0) return; // никаких элементов -> никакой подписи
-
-        const label = document.createElement("label");
-        label.id = "additionalFieldsLabel";
-        label.textContent = "Дополнительные пункты:";
-        wrap.appendChild(label);
-
-        items.forEach((v) => {
-            const inp = document.createElement("input");
-            inp.type = "text";
-            inp.name = "additionalFields[]";
-            inp.value = v;
-            wrap.appendChild(inp);
-        });
-    }
-
-    // Нормализация
-    const normStr = (s) => (typeof s === "string" ? s.trim() : "");
-    const normArr = (arr, len) => {
-        const a = Array.isArray(arr) ? aSafe(arr) : [];
-        const r = typeof len === "number" ? a.slice(0, len) : a.slice();
-        if (typeof len === "number") while (r.length < len) r.push("");
-        return r;
-
-        function aSafe(x) {
-            return x.map(normStr);
-        }
-    };
-
-    // ---- 3+20 ----
-    function makeTPTNormalized(tpt) {
-        return {
-            position: normStr(
-                Array.isArray(tpt?.position) ? tpt.position[0] : ""
-            ),
-            directions: normArr(tpt?.directions, 3),
-            responsibilities: normArr(tpt?.responsibilities, 20),
-        };
-    }
-    function makeJDSubsetNormalized(jd) {
-        const acts = Array.isArray(jd?.mainActivity)
-            ? jd.mainActivity
-            : Array.isArray(jd?.["mainActivity[]"])
-            ? jd["mainActivity[]"]
-            : [];
-        const duties = Array.isArray(jd?.jobDuty)
-            ? jd.jobDuty
-            : Array.isArray(jd?.["jobDuty[]"])
-            ? jd["jobDuty[]"]
-            : [];
-        return {
-            position: normStr(jd?.position || ""),
-            directions: normArr(acts, 3),
-            responsibilities: normArr(duties, 20),
-            tptSig: jd?.__tptSig || "",
-            empSig: jd?.__empSig || "",
-        };
-    }
-    const eqArr = (a, b) =>
-        a.length === b.length &&
-        a.every((v, i) => normStr(v) === normStr(b[i]));
-    function arraysPayloadEqual(a, b) {
-        return (
-            normStr(a.position) === normStr(b.position) &&
-            eqArr(a.directions, b.directions) &&
-            eqArr(a.responsibilities, b.responsibilities)
-        );
-    }
-    const computeTptSig = (obj) =>
-        JSON.stringify({
-            p: normStr(obj.position),
-            d: normArr(obj.directions, 3),
-            r: normArr(obj.responsibilities, 20),
-        });
-
-    // ---- EMP (портрет) ----
-    const EMP_KEYS = [
-        "name",
-        "gender",
-        "age",
-        "residence",
-        "education",
-        "speech",
-        "languages",
-        "pc",
-        "appearance",
-        "habits",
-        "info",
-        "accuracy",
-        "scrupulousness",
-        "systemThinking",
-        "decisiveness",
-        "stressResistance",
-        "otherQualities",
-        "independence",
-        "organization",
-        "responsibility",
-        "managementStyle",
-        "leadership",
-        "mobility",
-        "businessTrips",
-        "car",
-    ];
-
-    function makeEmpNormalized(emp) {
-        const o = {};
-        EMP_KEYS.forEach((k) => (o[k] = normStr(emp?.[k] ?? "")));
-        o.additionalFields = Array.isArray(emp?.additionalFields)
-            ? emp.additionalFields.map(normStr)
-            : [];
-        return o;
-    }
-    const computeEmpSig = (e) =>
-        JSON.stringify({
-            ...EMP_KEYS.reduce(
-                (acc, k) => ((acc[k] = normStr(e[k] ?? "")), acc),
-                {}
-            ),
-            additionalFields: (e.additionalFields || []).map(normStr),
-        });
-
-    function hasMeaningfulEmpSection(jd) {
-        return (
-            EMP_KEYS.some((k) => normStr(jd?.[k] || "") !== "") ||
-            (Array.isArray(jd?.additionalFields) &&
-                jd.additionalFields.some((v) => normStr(v) !== ""))
-        );
-    }
-
-    // -------------------- рендер сохранённой ДИ --------------------
-    function applyJobDescriptionData(data) {
-        if (!data || Object.keys(data).length === 0) return;
-
-        // общие (титульный и др.)
-        [
-            "company",
-            "position",
-            "approval",
-            "appointedBy",
-            "documentPurpose",
-            "replaces",
-            "activityGuide",
-            "supervisor",
-            "rights",
-            "responsibility",
-        ].forEach((name) => {
-            const el = byName(name);
-            if (el && data[name] !== undefined) el.value = data[name];
-        });
-
-        // блок 2 — читаем как новые имена, так и старые (обратная совместимость)
-        const mapOldToNew = {
-            pcSkills: "pc",
-            infoSkills: "info",
-            decisionMaking: "independence",
-        };
-        EMP_KEYS.forEach((name) => {
-            const el = byName(name);
-            if (!el) return;
-            if (data[name] !== undefined) el.value = data[name];
-            else {
-                const old = Object.keys(mapOldToNew).find(
-                    (k) => mapOldToNew[k] === name
-                );
-                if (old && data[old] !== undefined) el.value = data[old];
-            }
-        });
-
-        // дополнительные пункты профиля
-        renderAdditionalFields(
-            Array.isArray(data.additionalFields) ? data.additionalFields : []
-        );
-
-        // массивы разделов 3 и 4
-        const mainActivities = Array.isArray(data.mainActivity)
-            ? data.mainActivity
-            : Array.isArray(data["mainActivity[]"])
-            ? data["mainActivity[]"]
-            : [];
-        setExact("mainActivities", "mainActivity[]", mainActivities);
-
-        const jobDuties = Array.isArray(data.jobDuty)
-            ? data.jobDuty
-            : Array.isArray(data["jobDuty[]"])
-            ? data["jobDuty[]"]
-            : [];
-        setExact("jobDuties", "jobDuty[]", jobDuties);
-    }
-
-    // -------------------- импорт из 3+20 (с проверкой) --------------------
-    function importFromTPTIfNeeded(jd, tpt) {
-        const tptN = makeTPTNormalized(tpt);
-        const jdN = makeJDSubsetNormalized(jd);
-        const tptIsEmpty =
-            !tptN.position &&
-            !tptN.directions.some((x) => x) &&
-            !tptN.responsibilities.some((x) => x);
-        if (tptIsEmpty) return { imported: false, tptSig: jdN.tptSig };
-
-        const newSig = computeTptSig(tptN);
-
-        if (!hasMeaningfulJD(jd)) {
-            applyImportFromTPT(tptN);
-            return { imported: true, tptSig: newSig };
-        }
-        if (jdN.tptSig && jdN.tptSig === newSig) {
-            return { imported: false, tptSig: jdN.tptSig };
-        }
-        if (arraysPayloadEqual(jdN, tptN)) {
-            return { imported: false, tptSig: jdN.tptSig || newSig };
-        }
-        applyImportFromTPT(tptN);
-        return { imported: true, tptSig: newSig };
-    }
-
-    function hasMeaningfulJD(jd) {
-        const sub = makeJDSubsetNormalized(jd);
-        return !!(
-            sub.position ||
-            sub.directions.some((x) => x) ||
-            sub.responsibilities.some((x) => x)
-        );
-    }
-
-    function applyImportFromTPT(tptN) {
-        const positionEl = document.getElementById("position");
-        if (positionEl) positionEl.value = tptN.position;
-        overwriteFirstN("mainActivities", "mainActivity[]", tptN.directions);
-        overwriteFirstN("jobDuties", "jobDuty[]", tptN.responsibilities);
-    }
-
-    // -------------------- импорт из Портрета (с проверкой) --------------------
-    function importFromEMPIfNeeded(jd, emp) {
-        const empN = makeEmpNormalized(emp);
-        const jdEmpSig = jd?.__empSig || "";
-        const newEmpSig = computeEmpSig(empN);
-
-        const empIsEmpty =
-            EMP_KEYS.every((k) => !empN[k]) &&
-            (!empN.additionalFields || empN.additionalFields.length === 0);
-
-        if (empIsEmpty) return { imported: false, empSig: jdEmpSig };
-
-        if (!hasMeaningfulEmpSection(jd)) {
-            applyImportFromEMP(empN);
-            return { imported: true, empSig: newEmpSig };
-        }
-
-        if (jdEmpSig && jdEmpSig === newEmpSig) {
-            return { imported: false, empSig: jdEmpSig };
-        }
-
-        // отличия есть — перезаписываем блок 2 полностью
-        applyImportFromEMP(empN);
-        return { imported: true, empSig: newEmpSig };
-    }
-
-    function applyImportFromEMP(empN) {
-        EMP_KEYS.forEach((name) => {
-            const el = byName(name);
-            if (el) el.value = empN[name] || "";
-        });
-        renderAdditionalFields(empN.additionalFields || []);
-    }
-
-    // -------------------- автосохранение --------------------
-    function autoSaveJobDescription(extra = {}) {
-        const jsonData = {};
-
-        // разделы 3 и 4
-        jsonData.mainActivity = getValues(
-            "mainActivities",
-            "mainActivity[]"
-        ).map((v) => v.trim());
-        jsonData.jobDuty = getValues("jobDuties", "jobDuty[]").map((v) =>
-            v.trim()
-        );
-
-        // собрать остальные поля формы
-        const fd = new FormData(form);
-        for (const [key, value] of fd.entries()) {
-            if (key === "mainActivity[]" || key === "jobDuty[]") continue;
-            if (key === "additionalFields[]") {
-                if (!jsonData.additionalFields) jsonData.additionalFields = [];
-                jsonData.additionalFields.push(value);
-                continue;
-            }
-            if (jsonData[key] === undefined) jsonData[key] = value;
-            else if (Array.isArray(jsonData[key])) jsonData[key].push(value);
-            else jsonData[key] = [jsonData[key], value];
-        }
-
-        Object.assign(jsonData, extra); // подписи источников
-
-        fetch("/submit_job_description", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(jsonData),
-        }).catch((err) =>
-            console.error("Не удалось сохранить должностную инструкцию:", err)
-        );
-    }
-
-    form.addEventListener("input", () => {
-        const extra = {};
-        if (currentTptSig) extra.__tptSig = currentTptSig;
-        if (currentEmpSig) extra.__empSig = currentEmpSig;
-        if (currentEmpId) extra.__empId = currentEmpId;
-        autoSaveJobDescription(extra);
-    });
-
-    // кнопки добавления строк
-    document
-        .getElementById("addActivity")
-        .addEventListener("click", function () {
-            ensureInput(
-                "mainActivities",
-                "mainActivity[]",
-                getValues("mainActivities", "mainActivity[]").length + 1
-            );
-            const extra = {};
-            if (currentTptSig) extra.__tptSig = currentTptSig;
-            if (currentEmpSig) extra.__empSig = currentEmpSig;
-            autoSaveJobDescription(extra);
-        });
-
-    document.getElementById("addDuty").addEventListener("click", function () {
-        ensureInput(
-            "jobDuties",
-            "jobDuty[]",
-            getValues("jobDuties", "jobDuty[]").length + 1
-        );
-        const extra = {};
-        if (currentTptSig) extra.__tptSig = currentTptSig;
-        if (currentEmpSig) extra.__empSig = currentEmpSig;
-        autoSaveJobDescription(extra);
-    });
-
-    // -------------------- инициализация --------------------
-    let currentTptSig = "";
-    let currentEmpSig = "";
-    let currentEmpId = "";
-
-    const jdSelect = document.getElementById("jdEmployeeSelect");
-    const jdImportBtn = document.getElementById("jdImportEmpBtn");
-
-    function autoSaveWithSign(extra = {}) {
-        const ex = { ...extra };
-        if (currentTptSig) ex.__tptSig = currentTptSig;
-        if (currentEmpSig) ex.__empSig = currentEmpSig;
-        if (currentEmpId) ex.__empId = currentEmpId;
-        autoSaveJobDescription(ex);
-    }
-
-    (async function initJD() {
-        // добавили 4-й запрос — анкета пользователя
-        const [jd, tpt, empList, survey] = await Promise.all([
-            fetch("/get_job_description")
-                .then((r) => r.json())
-                .catch(() => ({})),
-            fetch("/get_three_plus_twenty")
-                .then((r) => r.json())
-                .catch(() => ({})),
-            fetch("/api/employees")
-                .then((r) => r.json())
-                .catch(() => []),
-            fetch("/get_user_survey")
-                .then((r) => r.json())
-                .catch(() => ({})),
-        ]);
-
-        // 1) рендерим то, что уже сохранено в ДИ
-        applyJobDescriptionData(jd);
-
-        // 2) если company в ДИ пусто — берём из диагностики ответ на q2
-        // 2) company синхронизируем с диагностикой (q2) всегда, если значение поменялось
-        try {
-            const companyInput = document.getElementById("company");
-            const companyFromSurvey = (survey?.q2 || "").trim(); // «Как называется ваша компания?»
-            const current = (companyInput?.value || "").trim();
-
-            if (companyFromSurvey && companyFromSurvey !== current) {
-                companyInput.value = companyFromSurvey;
-                // фиксируем в БД сразу, чтобы ДИ хранила актуальное имя из диагностики
-                autoSaveWithSign({ company: companyFromSurvey });
-            }
-        } catch (_) {
-            /* no-op */
-        }
-
-        // 3) наполняем селект профилей
-        currentEmpId = typeof jd?.__empId === "string" ? jd.__empId : "";
-        if (!currentEmpId && Array.isArray(empList) && empList.length === 1) {
-            currentEmpId = empList[0]?._id || "";
-        }
-        if (Array.isArray(empList)) {
-            const opts = [
-                '<option value="">— выберите профиль —</option>',
-            ].concat(
-                empList.map(
-                    (e) =>
-                        `<option value="${e._id}">${
-                            e.name || "(без ФИО)"
-                        }</option>`
-                )
-            );
-            const sel = document.getElementById("jdEmployeeSelect");
-            if (sel) {
-                sel.innerHTML = opts.join("");
-                if (currentEmpId) sel.value = currentEmpId;
-            }
-        }
-
-        // 4) «умный» импорт из 3+20 (как и раньше)
-        const tptRes = importFromTPTIfNeeded(jd, tpt);
-        currentTptSig = tptRes.tptSig || currentTptSig;
-
-        // 5) «умный» импорт из выбранного портрета (как и раньше)
-        if (currentEmpId) {
-            const res = await fetch(
-                `/api/employees/${encodeURIComponent(currentEmpId)}`
-            ).catch(() => null);
-            const empDoc =
-                res && res.ok ? await res.json().catch(() => null) : null;
-            if (empDoc) {
-                const empRes = importFromEMPIfNeeded(jd, empDoc);
-                currentEmpSig = empRes.empSig || currentEmpSig;
-                if (tptRes.imported || empRes.imported) autoSaveWithSign();
-            }
-        }
-    })();
-
-    // ВЫБОР ПРОФИЛЯ: всегда импортируем поля портрета в раздел 2 ДИ и сохраняем связь
-    jdSelect?.addEventListener("change", async () => {
-        currentEmpId = jdSelect.value || "";
-        if (!currentEmpId) return;
-
-        try {
-            const res = await fetch(
-                `/api/employees/${encodeURIComponent(currentEmpId)}`
-            );
-            if (!res.ok)
-                return alert(
-                    `Не удалось загрузить профиль: HTTP ${res.status}`
-                );
-            const empDoc = await res.json();
-
-            // Нормализуем и применяем ВСЕ поля портрета в раздел 2
-            const empN = makeEmpNormalized(empDoc); // функция уже есть выше в файле
-            applyImportFromEMP(empN); // функция уже есть выше в файле
-
-            // Обновляем подписи источника для автосейва
-            currentEmpSig = computeEmpSig(empN);
-            autoSaveWithSign(); // сохранит __empId и __empSig
-        } catch (e) {
-            alert("Ошибка загрузки профиля: " + (e?.message || e));
-        }
-    });
-
-    // импорт по кнопке (альтернативно/дополнительно)
-    jdImportBtn?.addEventListener("click", async () => {
-        const id = jdSelect.value || "";
-        if (!id) {
-            alert("Выберите профиль для импорта.");
-            return;
-        }
-        const empDoc = await fetchEmployeeById(id);
-        if (!empDoc) {
-            alert("Не удалось загрузить профиль.");
-            return;
-        }
-
-        const jdNow = snapshotJDFromForm();
-        const empRes = importFromEMPIfNeeded(jdNow, empDoc);
-        currentEmpSig = empRes.empSig || currentEmpSig;
-        currentEmpId = id;
-
-        autoSaveWithSign();
-        alert("Данные профиля импортированы в ДИ.");
-    });
-
-    // submit
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        alert("Должностная инструкция сохранена!");
-    });
-});
-
-// --- 7. Встроенный "Адаптационный план" на странице ДИ ---
 document.addEventListener("DOMContentLoaded", () => {
-    const jdContainer = document.getElementById("jdTasksContainer");
-    if (!jdContainer) return;
+    // --- Селекторы и счётчики ---
+    const form = document.getElementById("protocolForm");
+    const protocolName = document.getElementById("protocolName");
+    const meetingDate = document.getElementById("meetingDate");
+    
+    // Переменные для автосохранения в localStorage
+    let autoSaveTimeout = null;
+    const AUTO_SAVE_DELAY = 1000; // 1 секунда
+    const STORAGE_KEY = 'jobDescriptionDraft';
+    
+    // Управление боковым меню
+    document
+        .querySelector(".toggle-sidebar")
+        .addEventListener("click", function () {
+            const sidebar = document.querySelector(".recommendation-block");
+            const button = document.querySelector(".toggle-sidebar");
 
-    // Тот же стартовый шаблон из adaptation_plan.js (1:1)
-    const AP_DEFAULT_TASKS = [
-        "Задача 1: Оформление на работу",
-        "Задача 2: Знакомство с коллективом, офисом, оргтехникой",
-        "Задача 3: Изучение информации о компании",
-        "Задача 4: Изучение стандартов компании",
-        "Задача 5: Участие в планерке",
-        "Задача 6: Уточнение адаптационного плана",
-        "Задача 7: Формирование плана работы на неделю",
-        "Задача 8: Просмотр видео-семинаров",
-        "Задача 9: Чтение книг из корпоративной библиотеки",
-        "Задача 10: Подведение итогов адаптации",
-    ].map((title) => ({
-        title,
-        time: "",
-        resources: "",
-        customTitle: null,
-        feedbackMentor: "",
-        feedbackEmployee: "",
-    }));
+            // Одновременно применяем классы для синхронной анимации
+            sidebar.classList.toggle("show");
+            button.classList.toggle("menu-open");
+        });
 
-    const templateTask = jdContainer
-        .querySelector("fieldset.task")
-        .cloneNode(true);
-    const addButton = document.querySelector("#adaptationPlanJD .add-task-btn");
+    // Закрытие меню при клике вне области
+    document.addEventListener("click", function (e) {
+        const sidebar = document.querySelector(".recommendation-block");
+        const button = document.querySelector(".toggle-sidebar");
 
-    // Рендер набора задач в DOM (совместим с форматом adaptation_plan.js)
-    function renderJDTasks(tasks) {
-        // Сохраняем только первый шаблон, остальное удаляем
-        while (jdContainer.querySelectorAll("fieldset.task").length > 1) {
-            jdContainer.querySelectorAll("fieldset.task")[1].remove();
+        if (
+            sidebar.classList.contains("show") &&
+            !sidebar.contains(e.target) &&
+            !button.contains(e.target)
+        ) {
+            sidebar.classList.remove("show");
+            button.classList.remove("menu-open");
         }
-        tasks.forEach((t, idx) => {
-            const el =
-                idx === 0
-                    ? jdContainer.querySelector("fieldset.task")
-                    : templateTask.cloneNode(true);
-            el.querySelector("legend").textContent =
-                t.title || `Задача ${idx + 1}`;
+    });
 
-            const timeEl = el.querySelector('input[name*="_time"]');
-            const resEl = el.querySelector('textarea[name*="_resources"]');
-            const sumM = el.querySelector(
-                'textarea[name*="_summarize_by_mentor"]'
+    const participantsSection = document.getElementById("participantsSection");
+    const addParticipantButton = document.getElementById("addParticipant");
+    let participantCount = 1;
+
+    const discussionResultsSection = document.getElementById(
+        "discussionResultsSection"
+    );
+    const addDiscussionResultButton = document.getElementById(
+        "addDiscussionResult"
+    );
+    let discussionResultCount = 1;
+
+    const nextStepsTable = document
+        .getElementById("nextStepsTable")
+        .querySelector("tbody");
+    const addNextStepButton = document.getElementById("addNextStep");
+    let nextStepCount = 1;
+
+    // --- Новые переменные для управления протоколами ---
+    let currentProtocolId = null;
+    let protocolsList = [];
+    const protocolSelector = document.getElementById("protocolSelector");
+    const newProtocolBtn = document.getElementById("newProtocolBtn");
+    const deleteProtocolBtn = document.getElementById("deleteProtocolBtn");
+
+    // --- Функции для работы с localStorage ---
+    function saveToLocalStorage() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            const protocolData = collectProtocolData();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                ...protocolData,
+                _timestamp: new Date().toISOString(),
+                _currentProtocolId: currentProtocolId
+            }));
+            console.log("Данные автосохранены в localStorage");
+        }, AUTO_SAVE_DELAY);
+    }
+
+    function loadFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                // Проверяем, не устарели ли данные (больше 24 часов)
+                const savedTime = new Date(data._timestamp);
+                const currentTime = new Date();
+                const hoursDiff = (currentTime - savedTime) / (1000 * 60 * 60);
+                
+                if (hoursDiff < 24) { // Данные актуальны менее 24 часов
+                    return data;
+                } else {
+                    // Удаляем устаревшие данные
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки из localStorage:", error);
+        }
+        return null;
+    }
+
+    function clearLocalStorage() {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log("Данные очищены из localStorage");
+    }
+
+    function restoreFromDraft() {
+        const draft = loadFromLocalStorage();
+        if (draft && confirm('Обнаружены несохраненные данные. Восстановить их?')) {
+            loadProtocolData(draft);
+            return true;
+        }
+        return false;
+    }
+
+    // --- 1. Загрузка списка протоколов ---
+    function loadProtocolsList() {
+        fetch("/get_meeting_protocols_list")
+            .then((res) => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
+            .then((data) => {
+                protocolsList = data.protocols || [];
+                updateProtocolSelector();
+                updateDeleteButtonState();
+
+                // Если есть протоколы, загружаем последний, иначе создаем новый
+                if (protocolsList.length > 0) {
+                    loadSelectedProtocol(protocolsList[0]._id);
+                } else {
+                    createNewProtocol();
+                }
+            })
+            .catch((error) => {
+                console.error("Ошибка загрузки списка протоколов:", error);
+                protocolsList = [];
+                updateProtocolSelector();
+                updateDeleteButtonState();
+                createNewProtocol();
+            });
+    }
+
+    // --- 2. Обновление выпадающего списка ---
+    function updateProtocolSelector() {
+        if (!protocolSelector) return;
+
+        protocolSelector.innerHTML =
+            '<option value="">-- Создать новый протокол --</option>';
+
+        protocolsList.forEach((protocol) => {
+            const option = document.createElement("option");
+            option.value = protocol._id;
+
+            const title =
+                protocol.protocolName ||
+                (protocol.date
+                    ? `Протокол от ${formatDateForDisplay(protocol.date)}`
+                    : "Протокол без названия");
+
+            option.textContent = title;
+            if (protocol._id === currentProtocolId) {
+                option.selected = true;
+            }
+            protocolSelector.appendChild(option);
+        });
+    }
+
+    // --- 2A. Обновление состояния кнопки удаления ---
+    function updateDeleteButtonState() {
+        if (deleteProtocolBtn) {
+            deleteProtocolBtn.disabled = !currentProtocolId;
+        }
+    }
+
+    // --- 3. Форматирование даты для отображения ---
+    function formatDateForDisplay(isoDate) {
+        if (!isoDate) return "";
+        const [year, month, day] = isoDate.split("-");
+        return `${day}.${month}.${year}`;
+    }
+
+    // --- 4. Создание нового протокола ---
+    function createNewProtocol() {
+        // Сначала проверяем, есть ли черновик для нового протокола
+        const draft = loadFromLocalStorage();
+        if (!draft || draft._currentProtocolId) {
+            // Нет черновика или черновик от другого протокола - сбрасываем форму
+            currentProtocolId = null;
+            resetForm();
+            if (protocolSelector) protocolSelector.value = "";
+            updateDeleteButtonState();
+
+            // Устанавливаем сегодняшнюю дату по умолчанию
+            const today = new Date().toISOString().split("T")[0];
+            meetingDate.value = today;
+        } else {
+            // Есть черновик для нового протокола - используем его
+            currentProtocolId = null;
+            resetForm();
+            if (protocolSelector) protocolSelector.value = "";
+            updateDeleteButtonState();
+            loadProtocolData(draft);
+        }
+        console.log("Создан новый протокол");
+    }
+
+    // --- 5. Сброс формы ---
+    function resetForm() {
+        form.reset();
+
+        // Сброс динамических полей участников (оставить только первого)
+        const participantDivs =
+            participantsSection.querySelectorAll(".participant");
+        for (let i = 1; i < participantDivs.length; i++) {
+            participantDivs[i].remove();
+        }
+        participantCount = 1;
+
+        // Сброс динамических полей результатов (оставить только первого)
+        const resultDivs =
+            discussionResultsSection.querySelectorAll(".discussion-result");
+        for (let i = 1; i < resultDivs.length; i++) {
+            resultDivs[i].remove();
+        }
+        discussionResultCount = 1;
+
+        // Сброс таблицы следующих шагов (оставить только первую строку)
+        const rows = nextStepsTable.querySelectorAll("tr");
+        for (let i = 1; i < rows.length; i++) {
+            rows[i].remove();
+        }
+        nextStepCount = 1;
+
+        // Очищаем значения первой строки таблицы
+        const firstRow = nextStepsTable.rows[0];
+        if (firstRow) {
+            firstRow.querySelector("input[name^='goal_']").value = "";
+            firstRow.querySelector("input[name^='event_']").value = "";
+            firstRow.querySelector("textarea[name^='task_']").value = "";
+            firstRow.querySelector("input[name^='executor_']").value = "";
+            firstRow.querySelector("input[name^='deadline_']").value = "";
+        }
+    }
+
+    // --- 6. Загрузка выбранного протокола ---
+    function loadSelectedProtocol(protocolId) {
+        // Проверяем, есть ли несохраненные изменения для текущего протокола
+        const draft = loadFromLocalStorage();
+        if (draft && draft._currentProtocolId === currentProtocolId && currentProtocolId !== protocolId) {
+            if (!confirm('У вас есть несохраненные изменения. Перейти без сохранения?')) {
+                // Восстанавливаем предыдущее значение в селекторе
+                if (protocolSelector && currentProtocolId) {
+                    protocolSelector.value = currentProtocolId;
+                }
+                return;
+            }
+        }
+
+        fetch(`/get_meeting_protocol/${protocolId}`)
+            .then((res) => {
+                if (!res.ok) throw new Error("Protocol not found");
+                return res.json();
+            })
+            .then((data) => {
+                if (data.error) {
+                    alert("Ошибка загрузки протокола: " + data.error);
+                    return;
+                }
+                loadProtocolData(data);
+                currentProtocolId = protocolId;
+                updateDeleteButtonState();
+                // Очищаем черновик при успешной загрузке из БД
+                clearLocalStorage();
+            })
+            .catch((error) => {
+                console.error("Ошибка загрузки протокола:", error);
+                alert("Ошибка загрузки протокола");
+            });
+    }
+
+    // --- 7. Загрузка данных протокола в форму ---
+    function loadProtocolData(data) {
+        if (!data) return;
+
+        // Сначала сбрасываем форму
+        resetForm();
+
+        // Заполняем основные поля
+        protocolName.value = data.protocolName || "";
+        meetingDate.value = data.meetingDate || "";
+
+        // Участники
+        const participants = Array.isArray(data.participants)
+            ? data.participants
+            : data.participants
+            ? [data.participants]
+            : [];
+
+        // Заполняем первого участника
+        if (participants.length > 0) {
+            participantsSection.querySelector("input").value = participants[0];
+        }
+
+        // Добавляем остальных участников с кнопками удаления
+        for (let i = 1; i < participants.length; i++) {
+            participantCount++;
+            const newParticipant = document.createElement("div");
+            newParticipant.classList.add("participant");
+            newParticipant.innerHTML = `
+            <label for="participant_${participantCount}">Участник ${participantCount}:</label>
+            <input type="text" id="participant_${participantCount}" name="participant_${participantCount}" value="${participants[i]}" required>
+            <button type="button" class="remove-participant">×</button>
+        `;
+            participantsSection.insertBefore(
+                newParticipant,
+                addParticipantButton
             );
-            const sumE = el.querySelector(
-                'textarea[name*="_summarize_by_employee"]'
+        }
+
+        // Результаты обсуждения
+        const discussionResults = Array.isArray(data.discussionResults)
+            ? data.discussionResults
+            : data.discussionResults
+            ? [data.discussionResults]
+            : [];
+
+        // Заполняем первый результат
+        if (discussionResults.length > 0) {
+            discussionResultsSection.querySelector("textarea").value =
+                discussionResults[0];
+        }
+
+        // Добавляем остальные результаты с кнопками удаления
+        for (let i = 1; i < discussionResults.length; i++) {
+            discussionResultCount++;
+            const newResult = document.createElement("div");
+            newResult.classList.add("discussion-result");
+            newResult.innerHTML = `
+            <label for="discussionResult_${discussionResultCount}">Результат ${discussionResultCount}:</label>
+            <textarea id="discussionResult_${discussionResultCount}" name="discussionResult_${discussionResultCount}" rows="3" required>${discussionResults[i]}</textarea>
+            <button type="button" class="remove-result">×</button>
+        `;
+            discussionResultsSection.insertBefore(
+                newResult,
+                addDiscussionResultButton
             );
+        }
 
-            if (timeEl) timeEl.value = t.time || "";
-            if (resEl) resEl.value = t.resources || "";
-            if (sumM) sumM.value = t.feedbackMentor || "";
-            if (sumE) sumE.value = t.feedbackEmployee || "";
+        // Следующие шаги
+        const nextSteps = Array.isArray(data.nextSteps)
+            ? data.nextSteps
+            : data.nextSteps
+            ? [data.nextSteps]
+            : [];
 
-            if (idx !== 0) {
-                const wrapper = jdContainer.querySelector(".add-task-wrapper");
-                jdContainer.insertBefore(el, wrapper);
+        // Заполняем первую строку таблицы
+        if (nextSteps.length > 0) {
+            const firstRow = nextStepsTable.rows[0];
+            const firstStep = nextSteps[0];
+
+            firstRow.querySelector("input[name^='goal_']").value =
+                firstStep.goal || firstStep.task || "";
+            firstRow.querySelector("input[name^='event_']").value =
+                firstStep.event || "";
+            firstRow.querySelector("textarea[name^='task_']").value =
+                firstStep.work || firstStep.task || "";
+            firstRow.querySelector("input[name^='executor_']").value =
+                firstStep.executor || "";
+            firstRow.querySelector("input[name^='deadline_']").value =
+                firstStep.deadline || "";
+        }
+
+        // Добавляем остальные строки таблицы с кнопками удаления
+        for (let i = 1; i < nextSteps.length; i++) {
+            nextStepCount++;
+            const step = nextSteps[i];
+            const newRow = document.createElement("tr");
+            newRow.innerHTML = `
+            <td>${nextStepCount}</td>
+            <td><input type="text" name="goal_${nextStepCount}" value="${(
+                step.goal ||
+                step.task ||
+                ""
+            ).replace(/"/g, "&quot;")}"></td>
+            <td><input type="text" name="event_${nextStepCount}" value="${(
+                step.event || ""
+            ).replace(/"/g, "&quot;")}"></td>
+            <td><textarea name="task_${nextStepCount}" rows="2" required>${
+                step.work || step.task || ""
+            }</textarea></td>
+            <td><input type="text" name="executor_${nextStepCount}" value="${(
+                step.executor || ""
+            ).replace(/"/g, "&quot;")}" required></td>
+            <td><input type="date" name="deadline_${nextStepCount}" value="${
+                step.deadline || ""
+            }" required></td>
+            <td><button type="button" class="remove-step">×</button></td>
+        `;
+            nextStepsTable.appendChild(newRow);
+        }
+
+        // Если нет следующих шагов, убедимся что первая строка чистая
+        if (nextSteps.length === 0) {
+            const firstRow = nextStepsTable.rows[0];
+            firstRow.querySelector("input[name^='goal_']").value = "";
+            firstRow.querySelector("input[name^='event_']").value = "";
+            firstRow.querySelector("textarea[name^='task_']").value = "";
+            firstRow.querySelector("input[name^='executor_']").value = "";
+            firstRow.querySelector("input[name^='deadline_']").value = "";
+        }
+    }
+
+    // --- 8. Сбор данных формы ---
+    function collectProtocolData() {
+        const protocolNameValue = protocolName.value.trim();
+        // Участники
+        const participants = Array.from(
+            participantsSection.querySelectorAll(".participant input")
+        )
+            .map((inp) => inp.value.trim())
+            .filter(Boolean);
+
+        // Результаты обсуждения
+        const discussionResults = Array.from(
+            discussionResultsSection.querySelectorAll(
+                ".discussion-result textarea"
+            )
+        )
+            .map((t) => t.value.trim())
+            .filter(Boolean);
+
+        // Следующие шаги
+        const nextSteps = [];
+        Array.from(nextStepsTable.rows).forEach((row) => {
+            const goal = row.querySelector("input[name^='goal_']")?.value || "";
+            const event =
+                row.querySelector("input[name^='event_']")?.value || "";
+            const work =
+                row.querySelector("textarea[name^='task_']")?.value || "";
+            const executor =
+                row.querySelector("input[name^='executor_']")?.value || "";
+            const deadline =
+                row.querySelector("input[name^='deadline_']")?.value || "";
+
+            // Добавляем только если есть хотя бы одно заполненное поле
+            if (goal || event || work || executor || deadline) {
+                nextSteps.push({
+                    goal: goal.trim(),
+                    event: event.trim(),
+                    work: work.trim(),
+                    executor: executor.trim(),
+                    deadline: deadline.trim(),
+                });
             }
         });
-        updateJDNumbers();
-        bindJDDeletes();
+
+        return {
+            protocolName: protocolNameValue,
+            meetingDate: meetingDate.value,
+            participants,
+            discussionResults,
+            nextSteps,
+        };
     }
 
-    function collectJDTasks() {
-        return Array.from(jdContainer.querySelectorAll("fieldset.task")).map(
-            (fs) => ({
-                title: fs.querySelector("legend")?.textContent?.trim() || "",
-                time:
-                    fs.querySelector('input[name*="_time"]')?.value.trim() ||
-                    "",
-                resources:
-                    fs
-                        .querySelector('textarea[name*="_resources"]')
-                        ?.value.trim() || "",
-                customTitle:
-                    fs
-                        .querySelector('input[name*="_custom_title"]')
-                        ?.value.trim() || null,
-                feedbackMentor:
-                    fs
-                        .querySelector('textarea[name*="_summarize_by_mentor"]')
-                        ?.value.trim() || "",
-                feedbackEmployee:
-                    fs
-                        .querySelector(
-                            'textarea[name*="_summarize_by_employee"]'
-                        )
-                        ?.value.trim() || "",
-            })
-        );
-    }
+    // --- 9. Функция сохранения в БД ---
+    async function saveMeetingProtocol() {
+        const protocolData = collectProtocolData();
 
-    // Лёгкий дебаунс автосохранения
-    let saveTimer = null;
-    function autoSaveJD() {
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => {
-            const tasks = collectJDTasks();
-            fetch("/submit_adaptation_plan", {
+        if (currentProtocolId) {
+            protocolData._id = currentProtocolId;
+        }
+
+        const url = currentProtocolId ? "/update_meeting_protocol" : "/save_meeting_protocol";
+
+        try {
+            const response = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tasks }),
-            }).catch(() => {});
-        }, 400);
+                body: JSON.stringify(protocolData),
+            });
+            
+            const data = await response.json();
+            
+            if (!currentProtocolId && data.protocol_id) {
+                currentProtocolId = data.protocol_id;
+                loadProtocolsList();
+            }
+            
+            // Очищаем localStorage после успешного сохранения в БД
+            clearLocalStorage();
+            return data;
+        } catch (error) {
+            console.error("Ошибка сохранения протокола:", error);
+            throw error;
+        }
     }
 
-    function updateJDNumbers() {
-        jdContainer.querySelectorAll("fieldset.task").forEach((fs, i) => {
-            const title = fs.querySelector("legend")?.textContent || "";
-            // если заголовок не кастомный — поддержим стандартный "Задача N:"
-            if (/^Задача\s+\d+/.test(title)) {
-                fs.querySelector("legend").textContent = `Задача ${
-                    i + 1
-                }: ${title.split(":").slice(1).join(":").trim()}`;
+    // --- 10. Обработчики событий для элементов управления протоколами ---
+    if (protocolSelector) {
+        protocolSelector.addEventListener("change", function () {
+            const selectedId = this.value;
+            if (selectedId) {
+                loadSelectedProtocol(selectedId);
+            } else {
+                createNewProtocol();
             }
         });
     }
 
-    function bindJDDeletes() {
-        jdContainer.querySelectorAll(".delete-task-btn").forEach((btn) => {
-            btn.onclick = () => {
-                const all = jdContainer.querySelectorAll("fieldset.task");
-                if (all.length <= 1) return; // минимум одна должна остаться
-                btn.closest("fieldset.task")?.remove();
-                updateJDNumbers();
-                autoSaveJD();
-            };
+    if (newProtocolBtn) {
+        newProtocolBtn.addEventListener("click", function() {
+            // Проверяем, есть ли несохраненные изменения
+            const draft = loadFromLocalStorage();
+            if (draft) {
+                if (!confirm('У вас есть несохраненные изменения. Создать новый протокол без сохранения?')) {
+                    return;
+                }
+            }
+            clearLocalStorage();
+            createNewProtocol();
         });
     }
 
-    // Добавление новых задач (кнопки после 5/7/9 как на исходной странице)
-    addButton.addEventListener("click", () => {
-        const wrapper = jdContainer.querySelector(".add-task-wrapper");
-        const newEl = templateTask.cloneNode(true);
-        jdContainer.insertBefore(newEl, wrapper);
-        updateJDNumbers();
-        bindJDDeletes();
-        autoSaveJD();
+    // --- 10A. Обработчик удаления протокола ---
+    if (deleteProtocolBtn) {
+        deleteProtocolBtn.addEventListener("click", function () {
+            if (!currentProtocolId) {
+                alert("Нет выбранного протокола для удаления.");
+                return;
+            }
+
+            if (
+                !confirm(
+                    "Вы уверены, что хотите удалить этот протокол? Это действие нельзя отменить."
+                )
+            ) {
+                return;
+            }
+
+            fetch(`/delete_meeting_protocol/${currentProtocolId}`, {
+                method: "DELETE",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.error) {
+                        alert("Ошибка при удалении протокола: " + data.error);
+                    } else {
+                        alert("Протокол успешно удален.");
+                        // После удаления создаем новый протокол и обновляем список
+                        createNewProtocol();
+                        loadProtocolsList();
+                        clearLocalStorage();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Ошибка при удалении протокола:", error);
+                    alert("Ошибка при удалении протокола.");
+                });
+        });
+    }
+
+    // --- 11. Динамические элементы (участники, результаты, шаги) ---
+    addParticipantButton.addEventListener("click", () => {
+        participantCount++;
+        const el = document.createElement("div");
+        el.classList.add("participant");
+        el.innerHTML = `
+        <label for="participant_${participantCount}">Участник ${participantCount}:</label>
+        <input type="text" id="participant_${participantCount}" name="participant_${participantCount}" placeholder="Введите имя участника" required>
+        <button type="button" class="remove-participant">×</button>
+    `;
+        participantsSection.insertBefore(el, addParticipantButton);
+        saveToLocalStorage();
     });
 
-    // Автосохранение при любой правке внутри блока
-    jdContainer.addEventListener("input", autoSaveJD);
+    addDiscussionResultButton.addEventListener("click", () => {
+        discussionResultCount++;
+        const el = document.createElement("div");
+        el.classList.add("discussion-result");
+        el.innerHTML = `
+        <label for="discussionResult_${discussionResultCount}">Результат ${discussionResultCount}:</label>
+        <textarea id="discussionResult_${discussionResultCount}" name="discussionResult_${discussionResultCount}" rows="3" required></textarea>
+        <button type="button" class="remove-result">×</button>
+    `;
+        discussionResultsSection.insertBefore(el, addDiscussionResultButton);
+        saveToLocalStorage();
+    });
 
-    // Загрузка из БД (как на adaptation_plan.js)
-    fetch("/get_adaptation_plan")
-        .then((r) => r.json())
-        .then((tasks) => {
-            const has = Array.isArray(tasks) && tasks.length > 0;
-            renderJDTasks(has ? tasks : AP_DEFAULT_TASKS);
-        })
-        .catch(() => renderJDTasks(AP_DEFAULT_TASKS));
+    addNextStepButton.addEventListener("click", () => {
+        nextStepCount++;
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+        <td>${nextStepCount}</td>
+        <td><input type="text" name="goal_${nextStepCount}" placeholder="Введите задачу"></td>
+        <td><input type="text" name="event_${nextStepCount}" placeholder="Введите мероприятие"></td>
+        <td><textarea name="task_${nextStepCount}" rows="2" required></textarea></td>
+        <td><input type="text" name="executor_${nextStepCount}" required></td>
+        <td><input type="date" name="deadline_${nextStepCount}" required></td>
+        <td><button type="button" class="remove-step">×</button></td>
+    `;
+        nextStepsTable.appendChild(newRow);
+        saveToLocalStorage();
+    });
+
+    // --- 11A. Обработчики удаления динамических элементов ---
+    participantsSection.addEventListener("click", (e) => {
+        if (e.target.classList.contains("remove-participant")) {
+            // Не удаляем первого участника
+            if (
+                participantsSection.querySelectorAll(".participant").length > 1
+            ) {
+                e.target.closest(".participant").remove();
+                // Пересчитываем номера участников
+                updateParticipantLabels();
+                saveToLocalStorage();
+            }
+        }
+    });
+
+    discussionResultsSection.addEventListener("click", (e) => {
+        if (e.target.classList.contains("remove-result")) {
+            if (
+                discussionResultsSection.querySelectorAll(".discussion-result")
+                    .length > 1
+            ) {
+                e.target.closest(".discussion-result").remove();
+                updateDiscussionResultLabels();
+                saveToLocalStorage();
+            }
+        }
+    });
+
+    nextStepsTable.addEventListener("click", (e) => {
+        if (e.target.classList.contains("remove-step")) {
+            const row = e.target.closest("tr");
+            if (nextStepsTable.rows.length > 1) {
+                row.remove();
+                updateNextStepNumbers();
+                saveToLocalStorage();
+            }
+        }
+    });
+
+    // --- 11B. Функции обновления номеров после удаления ---
+    function updateParticipantLabels() {
+        const participants =
+            participantsSection.querySelectorAll(".participant");
+        participants.forEach((div, index) => {
+            const label = div.querySelector("label");
+            const input = div.querySelector("input");
+            label.textContent = `Участник ${index + 1}:`;
+            label.setAttribute("for", `participant_${index + 1}`);
+            input.id = `participant_${index + 1}`;
+            input.name = `participant_${index + 1}`;
+        });
+        participantCount = participants.length;
+    }
+
+    function updateDiscussionResultLabels() {
+        const results =
+            discussionResultsSection.querySelectorAll(".discussion-result");
+        results.forEach((div, index) => {
+            const label = div.querySelector("label");
+            const textarea = div.querySelector("textarea");
+            label.textContent = `Результат ${index + 1}:`;
+            label.setAttribute("for", `discussionResult_${index + 1}`);
+            textarea.id = `discussionResult_${index + 1}`;
+            textarea.name = `discussionResult_${index + 1}`;
+        });
+        discussionResultCount = results.length;
+    }
+
+    function updateNextStepNumbers() {
+        const rows = nextStepsTable.querySelectorAll("tr");
+        rows.forEach((row, index) => {
+            row.cells[0].textContent = index + 1;
+            // Обновляем имена полей в строке
+            const goalInput = row.querySelector("input[name^='goal_']");
+            const eventInput = row.querySelector("input[name^='event_']");
+            const taskTextarea = row.querySelector("textarea[name^='task_']");
+            const executorInput = row.querySelector("input[name^='executor_']");
+            const deadlineInput = row.querySelector("input[name^='deadline_']");
+
+            if (goalInput) goalInput.name = `goal_${index + 1}`;
+            if (eventInput) eventInput.name = `event_${index + 1}`;
+            if (taskTextarea) taskTextarea.name = `task_${index + 1}`;
+            if (executorInput) executorInput.name = `executor_${index + 1}`;
+            if (deadlineInput) deadlineInput.name = `deadline_${index + 1}`;
+        });
+        nextStepCount = rows.length;
+    }
+
+    // --- 12. Навешиваем автосохранение в localStorage ---
+    form.addEventListener("input", saveToLocalStorage);
+
+    // --- 13. Обработчик отправки формы ---
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        try {
+            // Сохраняем протокол в БД
+            await saveMeetingProtocol();
+            
+            // Синхронизируем задачи
+            await fetch("/sync_tasks_from_sources", {
+                method: "POST",
+                headers: { Accept: "application/json" },
+            });
+            alert("Протокол сохранён и задачи синхронизированы!");
+            loadProtocolsList(); // Обновляем список после сохранения
+        } catch (error) {
+            console.error("Ошибка сохранения или синхронизации:", error);
+            alert("Ошибка сохранения протокола или синхронизации задач.");
+        }
+    });
+
+    // --- 14. Экспорт .doc ---
+    const downloadBtn = document.getElementById("downloadProtocol");
+    if (downloadBtn) {
+        downloadBtn.addEventListener("click", () => {
+            const data = collectProtocolData();
+            const html = buildProtocolDocHTML(data);
+            const datePart = (
+                data.meetingDate || new Date().toISOString().slice(0, 10)
+            ).replaceAll("-", ".");
+            downloadDoc(html, `Протокол_совещания_${datePart}.doc`);
+        });
+    }
+
+    function buildProtocolDocHTML({
+        meetingDate: date,
+        participants,
+        discussionResults,
+        nextSteps,
+    }) {
+        const esc = (s) =>
+            String(s)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;");
+        const formatDateRU = (iso) => {
+            if (!iso) return "";
+            const [y, m, d] = iso.split("-");
+            return `${d}.${m}.${y}`;
+        };
+
+        const participantsHTML = participants.length
+            ? `<ol>${participants
+                  .map((p) => `<li>${esc(p)}</li>`)
+                  .join("")}</ol>`
+            : `<p style="color:#555;">—</p>`;
+
+        const resultsHTML = discussionResults.length
+            ? `<ol>${discussionResults
+                  .map((r) => `<li>${esc(r)}</li>`)
+                  .join("")}</ol>`
+            : `<p style="color:#555;">—</p>`;
+
+        const stepsRows = (
+            nextSteps.length
+                ? nextSteps
+                : [
+                      {
+                          goal: "",
+                          event: "",
+                          work: "",
+                          executor: "",
+                          deadline: "",
+                      },
+                  ]
+        )
+            .map(
+                (s, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${esc(s.goal)}</td>
+                    <td>${esc(s.event)}</td>
+                    <td>${esc(s.work)}</td>
+                    <td>${esc(s.executor)}</td>
+                    <td>${esc(formatDateRU(s.deadline))}</td>
+                </tr>`
+            )
+            .join("");
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Протокол совещания</title>
+<style>
+    body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.35; }
+    h1   { text-align: center; font-size: 18pt; margin: 0 0 12pt; }
+    .meta p { margin: 0 0 6pt; }
+    .section-title { font-weight: bold; margin: 12pt 0 6pt; }
+    table { width: 100%; border-collapse: collapse; margin: 8pt 0; }
+    th, td { border: 1px solid #000; padding: 6pt; vertical-align: top; }
+    th { text-align: center; }
+</style>
+</head>
+<body>
+    <h1>Протокол совещания</h1>
+
+    <div class="meta">
+        <p><b>Дата:</b> ${esc(formatDateRU(date))}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Участники:</div>
+        ${participantsHTML}
+    </div>
+
+    <div class="section">
+        <div class="section-title">Результаты обсуждения:</div>
+        ${resultsHTML}
+    </div>
+
+    <div class="section">
+        <div class="section-title">Следующие шаги:</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px;">№</th>
+                    <th>Задача</th>
+                    <th>Мероприятие</th>
+                    <th>Работа/Поручение</th>
+                    <th style="width:28%;">Исполнитель</th>
+                    <th style="width:18%;">Срок</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${stepsRows}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>`;
+    }
+
+    function downloadDoc(htmlString, filename) {
+        const blob = new Blob([htmlString], {
+            type: "application/msword;charset=utf-8",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    // --- 15. Инициализация ---
+    // Загружаем список протоколов при старте
+    loadProtocolsList();
+
+    // Если в URL есть параметр protocol_id, загружаем соответствующий протокол
+    const urlParams = new URLSearchParams(window.location.search);
+    const protocolIdFromUrl = urlParams.get("protocol_id");
+    if (protocolIdFromUrl) {
+        loadSelectedProtocol(protocolIdFromUrl);
+    } else {
+        // При загрузке страницы проверяем, есть ли черновик
+        setTimeout(() => {
+            restoreFromDraft();
+        }, 500);
+    }
+
+    // Обработчик перед закрытием страницы - предупреждаем о несохраненных данных
+    window.addEventListener('beforeunload', (event) => {
+        const draft = loadFromLocalStorage();
+        if (draft) {
+            event.preventDefault();
+            event.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+            return event.returnValue;
+        }
+    });
 });

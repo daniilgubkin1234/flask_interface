@@ -3,29 +3,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("protocolForm");
     const protocolName = document.getElementById("protocolName");
     const meetingDate = document.getElementById("meetingDate");
-
+    
+    // Переменные для автосохранения в localStorage
+    let autoSaveTimeout = null;
+    const AUTO_SAVE_DELAY = 1000; // 1 секунда
+    const STORAGE_KEY = 'meetingProtocolDraft';
+    
     // Управление боковым меню
-    document
-        .querySelector(".toggle-sidebar")
-        .addEventListener("click", function () {
-            const sidebar = document.querySelector(".recommendation-block");
-            const button = document.querySelector(".toggle-sidebar");
+    document.querySelector(".toggle-sidebar").addEventListener("click", function () {
+        const sidebar = document.querySelector(".recommendation-block");
+        const button = document.querySelector(".toggle-sidebar");
 
-            // Одновременно применяем классы для синхронной анимации
-            sidebar.classList.toggle("show");
-            button.classList.toggle("menu-open");
-        });
+        // Одновременно применяем классы для синхронной анимации
+        sidebar.classList.toggle("show");
+        button.classList.toggle("menu-open");
+    });
 
     // Закрытие меню при клике вне области
     document.addEventListener("click", function (e) {
         const sidebar = document.querySelector(".recommendation-block");
         const button = document.querySelector(".toggle-sidebar");
 
-        if (
-            sidebar.classList.contains("show") &&
-            !sidebar.contains(e.target) &&
-            !button.contains(e.target)
-        ) {
+        if (sidebar.classList.contains("show") && !sidebar.contains(e.target) && !button.contains(e.target)) {
             sidebar.classList.remove("show");
             button.classList.remove("menu-open");
         }
@@ -35,17 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const addParticipantButton = document.getElementById("addParticipant");
     let participantCount = 1;
 
-    const discussionResultsSection = document.getElementById(
-        "discussionResultsSection"
-    );
-    const addDiscussionResultButton = document.getElementById(
-        "addDiscussionResult"
-    );
+    const discussionResultsSection = document.getElementById("discussionResultsSection");
+    const addDiscussionResultButton = document.getElementById("addDiscussionResult");
     let discussionResultCount = 1;
 
-    const nextStepsTable = document
-        .getElementById("nextStepsTable")
-        .querySelector("tbody");
+    const nextStepsTable = document.getElementById("nextStepsTable").querySelector("tbody");
     const addNextStepButton = document.getElementById("addNextStep");
     let nextStepCount = 1;
 
@@ -54,7 +47,59 @@ document.addEventListener("DOMContentLoaded", () => {
     let protocolsList = [];
     const protocolSelector = document.getElementById("protocolSelector");
     const newProtocolBtn = document.getElementById("newProtocolBtn");
-    const deleteProtocolBtn = document.getElementById("deleteProtocolBtn"); // ДОБАВЛЯЕМ
+    const deleteProtocolBtn = document.getElementById("deleteProtocolBtn");
+
+    // --- Функции для работы с localStorage ---
+    function saveToLocalStorage() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            const protocolData = collectProtocolData();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                ...protocolData,
+                _timestamp: new Date().toISOString(),
+                _currentProtocolId: currentProtocolId
+            }));
+            console.log("Данные автосохранены в localStorage");
+        }, AUTO_SAVE_DELAY);
+    }
+
+    function loadFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                // Проверяем, не устарели ли данные (больше 24 часов)
+                const savedTime = new Date(data._timestamp);
+                const currentTime = new Date();
+                const hoursDiff = (currentTime - savedTime) / (1000 * 60 * 60);
+                
+                if (hoursDiff < 24) { // Данные актуальны менее 24 часов
+                    return data;
+                } else {
+                    // Удаляем устаревшие данные
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки из localStorage:", error);
+        }
+        return null;
+    }
+
+    function clearLocalStorage() {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log("Данные очищены из localStorage");
+    }
+
+    function restoreFromDraft() {
+        const draft = loadFromLocalStorage();
+        if (draft && confirm('Обнаружены несохраненные данные. Восстановить их?')) {
+            loadProtocolData(draft);
+            return true;
+        }
+        return false;
+    }
 
     // --- 1. Загрузка списка протоколов ---
     function loadProtocolsList() {
@@ -66,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .then((data) => {
                 protocolsList = data.protocols || [];
                 updateProtocolSelector();
-                updateDeleteButtonState(); // Обновляем состояние кнопки удаления
+                updateDeleteButtonState();
 
                 // Если есть протоколы, загружаем последний, иначе создаем новый
                 if (protocolsList.length > 0) {
@@ -88,18 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateProtocolSelector() {
         if (!protocolSelector) return;
 
-        protocolSelector.innerHTML =
-            '<option value="">-- Создать новый протокол --</option>';
+        protocolSelector.innerHTML = '<option value="">-- Создать новый протокол --</option>';
 
         protocolsList.forEach((protocol) => {
             const option = document.createElement("option");
             option.value = protocol._id;
 
-            const title =
-                protocol.protocolName ||
-                (protocol.date
-                    ? `Протокол от ${formatDateForDisplay(protocol.date)}`
-                    : "Протокол без названия");
+            const title = protocol.protocolName || (protocol.date ? `Протокол от ${formatDateForDisplay(protocol.date)}` : "Протокол без названия");
 
             option.textContent = title;
             if (protocol._id === currentProtocolId) {
@@ -125,15 +165,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 4. Создание нового протокола ---
     function createNewProtocol() {
-        currentProtocolId = null;
-        resetForm();
-        if (protocolSelector) protocolSelector.value = "";
-        updateDeleteButtonState();
+        // Сначала проверяем, есть ли черновик для нового протокола
+        const draft = loadFromLocalStorage();
+        if (!draft || draft._currentProtocolId) {
+            // Нет черновика или черновик от другого протокола - сбрасываем форму
+            currentProtocolId = null;
+            resetForm();
+            if (protocolSelector) protocolSelector.value = "";
+            updateDeleteButtonState();
 
-        // Устанавливаем сегодняшнюю дату по умолчанию
-        const today = new Date().toISOString().split("T")[0];
-        meetingDate.value = today;
-
+            // Устанавливаем сегодняшнюю дату по умолчанию
+            const today = new Date().toISOString().split("T")[0];
+            meetingDate.value = today;
+        } else {
+            // Есть черновик для нового протокола - используем его
+            currentProtocolId = null;
+            resetForm();
+            if (protocolSelector) protocolSelector.value = "";
+            updateDeleteButtonState();
+            loadProtocolData(draft);
+        }
         console.log("Создан новый протокол");
     }
 
@@ -142,16 +193,14 @@ document.addEventListener("DOMContentLoaded", () => {
         form.reset();
 
         // Сброс динамических полей участников (оставить только первого)
-        const participantDivs =
-            participantsSection.querySelectorAll(".participant");
+        const participantDivs = participantsSection.querySelectorAll(".participant");
         for (let i = 1; i < participantDivs.length; i++) {
             participantDivs[i].remove();
         }
         participantCount = 1;
 
         // Сброс динамических полей результатов (оставить только первого)
-        const resultDivs =
-            discussionResultsSection.querySelectorAll(".discussion-result");
+        const resultDivs = discussionResultsSection.querySelectorAll(".discussion-result");
         for (let i = 1; i < resultDivs.length; i++) {
             resultDivs[i].remove();
         }
@@ -173,14 +222,22 @@ document.addEventListener("DOMContentLoaded", () => {
             firstRow.querySelector("input[name^='executor_']").value = "";
             firstRow.querySelector("input[name^='deadline_']").value = "";
         }
-
-        // Устанавливаем сегодняшнюю дату по умолчанию
-        const today = new Date().toISOString().split("T")[0];
-        meetingDate.value = today;
     }
 
     // --- 6. Загрузка выбранного протокола ---
     function loadSelectedProtocol(protocolId) {
+        // Проверяем, есть ли несохраненные изменения для текущего протокола
+        const draft = loadFromLocalStorage();
+        if (draft && draft._currentProtocolId === currentProtocolId && currentProtocolId !== protocolId) {
+            if (!confirm('У вас есть несохраненные изменения. Перейти без сохранения?')) {
+                // Восстанавливаем предыдущее значение в селекторе
+                if (protocolSelector && currentProtocolId) {
+                    protocolSelector.value = currentProtocolId;
+                }
+                return;
+            }
+        }
+
         fetch(`/get_meeting_protocol/${protocolId}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Protocol not found");
@@ -194,6 +251,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 loadProtocolData(data);
                 currentProtocolId = protocolId;
                 updateDeleteButtonState();
+                // Очищаем черновик при успешной загрузке из БД
+                clearLocalStorage();
             })
             .catch((error) => {
                 console.error("Ошибка загрузки протокола:", error);
@@ -213,11 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
         meetingDate.value = data.meetingDate || "";
 
         // Участники
-        const participants = Array.isArray(data.participants)
-            ? data.participants
-            : data.participants
-            ? [data.participants]
-            : [];
+        const participants = Array.isArray(data.participants) ? data.participants : data.participants ? [data.participants] : [];
 
         // Заполняем первого участника
         if (participants.length > 0) {
@@ -230,27 +285,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const newParticipant = document.createElement("div");
             newParticipant.classList.add("participant");
             newParticipant.innerHTML = `
-            <label for="participant_${participantCount}">Участник ${participantCount}:</label>
-            <input type="text" id="participant_${participantCount}" name="participant_${participantCount}" value="${participants[i]}" required>
-            <button type="button" class="remove-participant">×</button>
-        `;
-            participantsSection.insertBefore(
-                newParticipant,
-                addParticipantButton
-            );
+                <label for="participant_${participantCount}">Участник ${participantCount}:</label>
+                <input type="text" id="participant_${participantCount}" name="participant_${participantCount}" value="${participants[i]}" required>
+                <button type="button" class="remove-participant">×</button>
+            `;
+            participantsSection.insertBefore(newParticipant, addParticipantButton);
         }
 
         // Результаты обсуждения
-        const discussionResults = Array.isArray(data.discussionResults)
-            ? data.discussionResults
-            : data.discussionResults
-            ? [data.discussionResults]
-            : [];
+        const discussionResults = Array.isArray(data.discussionResults) ? data.discussionResults : data.discussionResults ? [data.discussionResults] : [];
 
         // Заполняем первый результат
         if (discussionResults.length > 0) {
-            discussionResultsSection.querySelector("textarea").value =
-                discussionResults[0];
+            discussionResultsSection.querySelector("textarea").value = discussionResults[0];
         }
 
         // Добавляем остальные результаты с кнопками удаления
@@ -259,38 +306,26 @@ document.addEventListener("DOMContentLoaded", () => {
             const newResult = document.createElement("div");
             newResult.classList.add("discussion-result");
             newResult.innerHTML = `
-            <label for="discussionResult_${discussionResultCount}">Результат ${discussionResultCount}:</label>
-            <textarea id="discussionResult_${discussionResultCount}" name="discussionResult_${discussionResultCount}" rows="3" required>${discussionResults[i]}</textarea>
-            <button type="button" class="remove-result">×</button>
-        `;
-            discussionResultsSection.insertBefore(
-                newResult,
-                addDiscussionResultButton
-            );
+                <label for="discussionResult_${discussionResultCount}">Результат ${discussionResultCount}:</label>
+                <textarea id="discussionResult_${discussionResultCount}" name="discussionResult_${discussionResultCount}" rows="3" required>${discussionResults[i]}</textarea>
+                <button type="button" class="remove-result">×</button>
+            `;
+            discussionResultsSection.insertBefore(newResult, addDiscussionResultButton);
         }
 
         // Следующие шаги
-        const nextSteps = Array.isArray(data.nextSteps)
-            ? data.nextSteps
-            : data.nextSteps
-            ? [data.nextSteps]
-            : [];
+        const nextSteps = Array.isArray(data.nextSteps) ? data.nextSteps : data.nextSteps ? [data.nextSteps] : [];
 
         // Заполняем первую строку таблицы
         if (nextSteps.length > 0) {
             const firstRow = nextStepsTable.rows[0];
             const firstStep = nextSteps[0];
 
-            firstRow.querySelector("input[name^='goal_']").value =
-                firstStep.goal || firstStep.task || "";
-            firstRow.querySelector("input[name^='event_']").value =
-                firstStep.event || "";
-            firstRow.querySelector("textarea[name^='task_']").value =
-                firstStep.work || firstStep.task || "";
-            firstRow.querySelector("input[name^='executor_']").value =
-                firstStep.executor || "";
-            firstRow.querySelector("input[name^='deadline_']").value =
-                firstStep.deadline || "";
+            firstRow.querySelector("input[name^='goal_']").value = firstStep.goal || firstStep.task || "";
+            firstRow.querySelector("input[name^='event_']").value = firstStep.event || "";
+            firstRow.querySelector("textarea[name^='task_']").value = firstStep.work || firstStep.task || "";
+            firstRow.querySelector("input[name^='executor_']").value = firstStep.executor || "";
+            firstRow.querySelector("input[name^='deadline_']").value = firstStep.deadline || "";
         }
 
         // Добавляем остальные строки таблицы с кнопками удаления
@@ -299,26 +334,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const step = nextSteps[i];
             const newRow = document.createElement("tr");
             newRow.innerHTML = `
-            <td>${nextStepCount}</td>
-            <td><input type="text" name="goal_${nextStepCount}" value="${(
-                step.goal ||
-                step.task ||
-                ""
-            ).replace(/"/g, "&quot;")}"></td>
-            <td><input type="text" name="event_${nextStepCount}" value="${(
-                step.event || ""
-            ).replace(/"/g, "&quot;")}"></td>
-            <td><textarea name="task_${nextStepCount}" rows="2" required>${
-                step.work || step.task || ""
-            }</textarea></td>
-            <td><input type="text" name="executor_${nextStepCount}" value="${(
-                step.executor || ""
-            ).replace(/"/g, "&quot;")}" required></td>
-            <td><input type="date" name="deadline_${nextStepCount}" value="${
-                step.deadline || ""
-            }" required></td>
-            <td><button type="button" class="remove-step">×</button></td>
-        `;
+                <td>${nextStepCount}</td>
+                <td><input type="text" name="goal_${nextStepCount}" value="${(step.goal || step.task || "").replace(/"/g, "&quot;")}"></td>
+                <td><input type="text" name="event_${nextStepCount}" value="${(step.event || "").replace(/"/g, "&quot;")}"></td>
+                <td><textarea name="task_${nextStepCount}" rows="2" required>${step.work || step.task || ""}</textarea></td>
+                <td><input type="text" name="executor_${nextStepCount}" value="${(step.executor || "").replace(/"/g, "&quot;")}" required></td>
+                <td><input type="date" name="deadline_${nextStepCount}" value="${step.deadline || ""}" required></td>
+                <td><button type="button" class="remove-step">×</button></td>
+            `;
             nextStepsTable.appendChild(newRow);
         }
 
@@ -337,18 +360,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function collectProtocolData() {
         const protocolNameValue = protocolName.value.trim();
         // Участники
-        const participants = Array.from(
-            participantsSection.querySelectorAll(".participant input")
-        )
+        const participants = Array.from(participantsSection.querySelectorAll(".participant input"))
             .map((inp) => inp.value.trim())
             .filter(Boolean);
 
         // Результаты обсуждения
-        const discussionResults = Array.from(
-            discussionResultsSection.querySelectorAll(
-                ".discussion-result textarea"
-            )
-        )
+        const discussionResults = Array.from(discussionResultsSection.querySelectorAll(".discussion-result textarea"))
             .map((t) => t.value.trim())
             .filter(Boolean);
 
@@ -356,14 +373,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const nextSteps = [];
         Array.from(nextStepsTable.rows).forEach((row) => {
             const goal = row.querySelector("input[name^='goal_']")?.value || "";
-            const event =
-                row.querySelector("input[name^='event_']")?.value || "";
-            const work =
-                row.querySelector("textarea[name^='task_']")?.value || "";
-            const executor =
-                row.querySelector("input[name^='executor_']")?.value || "";
-            const deadline =
-                row.querySelector("input[name^='deadline_']")?.value || "";
+            const event = row.querySelector("input[name^='event_']")?.value || "";
+            const work = row.querySelector("textarea[name^='task_']")?.value || "";
+            const executor = row.querySelector("input[name^='executor_']")?.value || "";
+            const deadline = row.querySelector("input[name^='deadline_']")?.value || "";
 
             // Добавляем только если есть хотя бы одно заполненное поле
             if (goal || event || work || executor || deadline) {
@@ -386,32 +399,37 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    // --- 9. Модифицированная функция автосохранения ---
-    function autoSaveMeetingProtocol() {
+    // --- 9. Функция сохранения в БД ---
+    async function saveMeetingProtocol() {
         const protocolData = collectProtocolData();
 
-        // Добавляем идентификатор, если протокол уже существует
         if (currentProtocolId) {
             protocolData._id = currentProtocolId;
         }
 
-        const url = currentProtocolId
-            ? "/update_meeting_protocol"
-            : "/save_meeting_protocol";
+        const url = currentProtocolId ? "/update_meeting_protocol" : "/save_meeting_protocol";
 
-        fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(protocolData),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (!currentProtocolId && data.protocol_id) {
-                    currentProtocolId = data.protocol_id;
-                    loadProtocolsList(); // Обновляем список после создания нового
-                }
-            })
-            .catch((error) => console.error("Ошибка автосохранения:", error));
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(protocolData),
+            });
+            
+            const data = await response.json();
+            
+            if (!currentProtocolId && data.protocol_id) {
+                currentProtocolId = data.protocol_id;
+                loadProtocolsList();
+            }
+            
+            // Очищаем localStorage после успешного сохранения в БД
+            clearLocalStorage();
+            return data;
+        } catch (error) {
+            console.error("Ошибка сохранения протокола:", error);
+            throw error;
+        }
     }
 
     // --- 10. Обработчики событий для элементов управления протоколами ---
@@ -427,7 +445,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (newProtocolBtn) {
-        newProtocolBtn.addEventListener("click", createNewProtocol);
+        newProtocolBtn.addEventListener("click", function() {
+            // Проверяем, есть ли несохраненные изменения
+            const draft = loadFromLocalStorage();
+            if (draft) {
+                if (!confirm('У вас есть несохраненные изменения. Создать новый протокол без сохранения?')) {
+                    return;
+                }
+            }
+            clearLocalStorage();
+            createNewProtocol();
+        });
     }
 
     // --- 10A. Обработчик удаления протокола ---
@@ -438,17 +466,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            if (
-                !confirm(
-                    "Вы уверены, что хотите удалить этот протокол? Это действие нельзя отменить."
-                )
-            ) {
+            if (!confirm("Вы уверены, что хотите удалить этот протокол? Это действие нельзя отменить.")) {
                 return;
             }
 
-            fetch(`/delete_meeting_protocol/${currentProtocolId}`, {
-                method: "DELETE",
-            })
+            fetch(`/delete_meeting_protocol/${currentProtocolId}`, { method: "DELETE" })
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.error) {
@@ -458,6 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         // После удаления создаем новый протокол и обновляем список
                         createNewProtocol();
                         loadProtocolsList();
+                        clearLocalStorage();
                     }
                 })
                 .catch((error) => {
@@ -468,19 +491,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- 11. Динамические элементы (участники, результаты, шаги) ---
-    // В обработчиках добавления новых элементов:
-
     addParticipantButton.addEventListener("click", () => {
         participantCount++;
         const el = document.createElement("div");
         el.classList.add("participant");
         el.innerHTML = `
-        <label for="participant_${participantCount}">Участник ${participantCount}:</label>
-        <input type="text" id="participant_${participantCount}" name="participant_${participantCount}" placeholder="Введите имя участника" required>
-        <button type="button" class="remove-participant">×</button>
-    `;
+            <label for="participant_${participantCount}">Участник ${participantCount}:</label>
+            <input type="text" id="participant_${participantCount}" name="participant_${participantCount}" placeholder="Введите имя участника" required>
+            <button type="button" class="remove-participant">×</button>
+        `;
         participantsSection.insertBefore(el, addParticipantButton);
-        autoSaveMeetingProtocol();
+        saveToLocalStorage();
     });
 
     addDiscussionResultButton.addEventListener("click", () => {
@@ -488,54 +509,49 @@ document.addEventListener("DOMContentLoaded", () => {
         const el = document.createElement("div");
         el.classList.add("discussion-result");
         el.innerHTML = `
-        <label for="discussionResult_${discussionResultCount}">Результат ${discussionResultCount}:</label>
-        <textarea id="discussionResult_${discussionResultCount}" name="discussionResult_${discussionResultCount}" rows="3" required></textarea>
-        <button type="button" class="remove-result">×</button>
-    `;
+            <label for="discussionResult_${discussionResultCount}">Результат ${discussionResultCount}:</label>
+            <textarea id="discussionResult_${discussionResultCount}" name="discussionResult_${discussionResultCount}" rows="3" required></textarea>
+            <button type="button" class="remove-result">×</button>
+        `;
         discussionResultsSection.insertBefore(el, addDiscussionResultButton);
-        autoSaveMeetingProtocol();
+        saveToLocalStorage();
     });
 
     addNextStepButton.addEventListener("click", () => {
         nextStepCount++;
         const newRow = document.createElement("tr");
         newRow.innerHTML = `
-        <td>${nextStepCount}</td>
-        <td><input type="text" name="goal_${nextStepCount}" placeholder="Введите задачу"></td>
-        <td><input type="text" name="event_${nextStepCount}" placeholder="Введите мероприятие"></td>
-        <td><textarea name="task_${nextStepCount}" rows="2" required></textarea></td>
-        <td><input type="text" name="executor_${nextStepCount}" required></td>
-        <td><input type="date" name="deadline_${nextStepCount}" required></td>
-        <td><button type="button" class="remove-step">×</button></td>
-    `;
+            <td>${nextStepCount}</td>
+            <td><input type="text" name="goal_${nextStepCount}" placeholder="Введите задачу"></td>
+            <td><input type="text" name="event_${nextStepCount}" placeholder="Введите мероприятие"></td>
+            <td><textarea name="task_${nextStepCount}" rows="2" required></textarea></td>
+            <td><input type="text" name="executor_${nextStepCount}" required></td>
+            <td><input type="date" name="deadline_${nextStepCount}" required></td>
+            <td><button type="button" class="remove-step">×</button></td>
+        `;
         nextStepsTable.appendChild(newRow);
-        autoSaveMeetingProtocol();
+        saveToLocalStorage();
     });
 
     // --- 11A. Обработчики удаления динамических элементов ---
     participantsSection.addEventListener("click", (e) => {
         if (e.target.classList.contains("remove-participant")) {
             // Не удаляем первого участника
-            if (
-                participantsSection.querySelectorAll(".participant").length > 1
-            ) {
+            if (participantsSection.querySelectorAll(".participant").length > 1) {
                 e.target.closest(".participant").remove();
                 // Пересчитываем номера участников
                 updateParticipantLabels();
-                autoSaveMeetingProtocol();
+                saveToLocalStorage();
             }
         }
     });
 
     discussionResultsSection.addEventListener("click", (e) => {
         if (e.target.classList.contains("remove-result")) {
-            if (
-                discussionResultsSection.querySelectorAll(".discussion-result")
-                    .length > 1
-            ) {
+            if (discussionResultsSection.querySelectorAll(".discussion-result").length > 1) {
                 e.target.closest(".discussion-result").remove();
                 updateDiscussionResultLabels();
-                autoSaveMeetingProtocol();
+                saveToLocalStorage();
             }
         }
     });
@@ -546,15 +562,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (nextStepsTable.rows.length > 1) {
                 row.remove();
                 updateNextStepNumbers();
-                autoSaveMeetingProtocol();
+                saveToLocalStorage();
             }
         }
     });
 
     // --- 11B. Функции обновления номеров после удаления ---
     function updateParticipantLabels() {
-        const participants =
-            participantsSection.querySelectorAll(".participant");
+        const participants = participantsSection.querySelectorAll(".participant");
         participants.forEach((div, index) => {
             const label = div.querySelector("label");
             const input = div.querySelector("input");
@@ -567,8 +582,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateDiscussionResultLabels() {
-        const results =
-            discussionResultsSection.querySelectorAll(".discussion-result");
+        const results = discussionResultsSection.querySelectorAll(".discussion-result");
         results.forEach((div, index) => {
             const label = div.querySelector("label");
             const textarea = div.querySelector("textarea");
@@ -600,27 +614,28 @@ document.addEventListener("DOMContentLoaded", () => {
         nextStepCount = rows.length;
     }
 
-    // --- 12. Навешиваем автосохранение ---
-    form.addEventListener("input", autoSaveMeetingProtocol);
+    // --- 12. Навешиваем автосохранение в localStorage ---
+    form.addEventListener("input", saveToLocalStorage);
 
     // --- 13. Обработчик отправки формы ---
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        // Сначала сохраняем протокол
-        await autoSaveMeetingProtocol();
-
-        // Затем синхронизируем задачи
         try {
-            await fetch("/sync_tasks_from_sources", {
-                method: "POST",
-                headers: { Accept: "application/json" },
+            // Сохраняем протокол в БД
+            await saveMeetingProtocol();
+            
+            // Синхронизируем задачи
+            await fetch("/sync_tasks_from_sources", { 
+                method: "POST", 
+                headers: { "Accept": "application/json" } 
             });
+            
             alert("Протокол сохранён и задачи синхронизированы!");
             loadProtocolsList(); // Обновляем список после сохранения
         } catch (error) {
-            console.error("Ошибка синхронизации задач:", error);
-            alert("Протокол сохранён, но синхронизация задач не удалась.");
+            console.error("Ошибка сохранения или синхронизации:", error);
+            alert("Ошибка сохранения протокола или синхронизации задач.");
         }
     });
 
@@ -630,24 +645,18 @@ document.addEventListener("DOMContentLoaded", () => {
         downloadBtn.addEventListener("click", () => {
             const data = collectProtocolData();
             const html = buildProtocolDocHTML(data);
-            const datePart = (
-                data.date || new Date().toISOString().slice(0, 10)
-            ).replaceAll("-", ".");
+            const datePart = (data.meetingDate || new Date().toISOString().slice(0, 10)).replaceAll("-", ".");
             downloadDoc(html, `Протокол_совещания_${datePart}.doc`);
         });
     }
 
     function buildProtocolDocHTML({
-        date,
+        meetingDate: date,
         participants,
         discussionResults,
         nextSteps,
     }) {
-        const esc = (s) =>
-            String(s)
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;");
+        const esc = (s) => String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
         const formatDateRU = (iso) => {
             if (!iso) return "";
             const [y, m, d] = iso.split("-");
@@ -655,32 +664,15 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         const participantsHTML = participants.length
-            ? `<ol>${participants
-                  .map((p) => `<li>${esc(p)}</li>`)
-                  .join("")}</ol>`
+            ? `<ol>${participants.map((p) => `<li>${esc(p)}</li>`).join("")}</ol>`
             : `<p style="color:#555;">—</p>`;
 
         const resultsHTML = discussionResults.length
-            ? `<ol>${discussionResults
-                  .map((r) => `<li>${esc(r)}</li>`)
-                  .join("")}</ol>`
+            ? `<ol>${discussionResults.map((r) => `<li>${esc(r)}</li>`).join("")}</ol>`
             : `<p style="color:#555;">—</p>`;
 
-        const stepsRows = (
-            nextSteps.length
-                ? nextSteps
-                : [
-                      {
-                          goal: "",
-                          event: "",
-                          work: "",
-                          executor: "",
-                          deadline: "",
-                      },
-                  ]
-        )
-            .map(
-                (s, i) => `
+        const stepsRows = (nextSteps.length ? nextSteps : [{ goal: "", event: "", work: "", executor: "", deadline: "" }])
+            .map((s, i) => `
                 <tr>
                     <td>${i + 1}</td>
                     <td>${esc(s.goal)}</td>
@@ -688,8 +680,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td>${esc(s.work)}</td>
                     <td>${esc(s.executor)}</td>
                     <td>${esc(formatDateRU(s.deadline))}</td>
-                </tr>`
-            )
+                </tr>`)
             .join("");
 
         return `<!DOCTYPE html>
@@ -747,9 +738,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function downloadDoc(htmlString, filename) {
-        const blob = new Blob([htmlString], {
-            type: "application/msword;charset=utf-8",
-        });
+        const blob = new Blob([htmlString], { type: "application/msword;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -769,41 +758,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const protocolIdFromUrl = urlParams.get("protocol_id");
     if (protocolIdFromUrl) {
         loadSelectedProtocol(protocolIdFromUrl);
-    }
-    function removeParticipant(button) {
-        const participantBlock = button.closest(".participant-block");
-        if (participantBlock) {
-            participantBlock.remove();
-        }
-    }
-
-    // Функция для удаления результата
-    function removeResult(button) {
-        const resultBlock = button.closest(".result-block");
-        if (resultBlock) {
-            resultBlock.remove();
-        }
+    } else {
+        // При загрузке страницы проверяем, есть ли черновик
+        setTimeout(() => {
+            restoreFromDraft();
+        }, 500);
     }
 
-    // Добавляем кнопки удаления к существующим участникам
-    document.querySelectorAll(".participant-block").forEach((block) => {
-        if (!block.querySelector(".remove-btn")) {
-            const removeBtn = document.createElement("button");
-            removeBtn.className = "remove-btn";
-            removeBtn.textContent = "×";
-            removeBtn.onclick = () => removeParticipant(removeBtn);
-            block.appendChild(removeBtn);
-        }
-    });
-
-    // Добавляем кнопки удаления к существующим результатам
-    document.querySelectorAll(".result-block").forEach((block) => {
-        if (!block.querySelector(".remove-btn")) {
-            const removeBtn = document.createElement("button");
-            removeBtn.className = "remove-btn";
-            removeBtn.textContent = "×";
-            removeBtn.onclick = () => removeResult(removeBtn);
-            block.appendChild(removeBtn);
+    // Обработчик перед закрытием страницы - предупреждаем о несохраненных данных
+    window.addEventListener('beforeunload', (event) => {
+        const draft = loadFromLocalStorage();
+        if (draft) {
+            event.preventDefault();
+            event.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+            return event.returnValue;
         }
     });
 });

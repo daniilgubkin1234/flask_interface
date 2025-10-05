@@ -10,9 +10,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const additionalFieldsContainer =
         document.getElementById("additional-fields");
 
+    // --- Переменные для автосохранения в localStorage
+    let autoSaveTimeout = null;
+    const AUTO_SAVE_DELAY = 1000; // 1 секунда
+    const STORAGE_KEY = 'employeeProfileDraft';
+
     // ❶ Запретить любой автосабмит формы (Enter, implicit submit и т.п.)
     form.addEventListener("submit", (e) => e.preventDefault());
-document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+    
+    document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         const sidebar = document.querySelector('.recommendation-block');
         const button = document.querySelector('.toggle-sidebar');
         
@@ -33,9 +39,67 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
             button.classList.remove('menu-open');
         }
     });
+
     // --- State
     let employees = []; // кэш списка
     let currentId = null; // _id выбранного сотрудника
+
+    // --- Функции для работы с localStorage
+    function saveToLocalStorage() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            const data = readForm();
+            const draft = {
+                ...data,
+                _timestamp: new Date().toISOString(),
+                _currentId: currentId
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+            console.log("Данные автосохранены в localStorage");
+        }, AUTO_SAVE_DELAY);
+    }
+
+    function loadFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                // Проверяем, не устарели ли данные (больше 24 часов)
+                const savedTime = new Date(data._timestamp);
+                const currentTime = new Date();
+                const hoursDiff = (currentTime - savedTime) / (1000 * 60 * 60);
+                
+                if (hoursDiff < 24) { // Данные актуальны менее 24 часов
+                    return data;
+                } else {
+                    // Удаляем устаревшие данные
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки из localStorage:", error);
+        }
+        return null;
+    }
+
+    function clearLocalStorage() {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log("Данные очищены из localStorage");
+    }
+
+    function restoreFromDraft() {
+        const draft = loadFromLocalStorage();
+        if (draft && confirm('Обнаружены несохраненные данные. Восстановить их?')) {
+            currentId = draft._currentId || null;
+            fillForm(draft);
+            if (employeeSelect && currentId) {
+                employeeSelect.value = currentId;
+            }
+            return true;
+        }
+        return false;
+    }
 
     // --- Utils
     function getVal(id) {
@@ -214,6 +278,8 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
 
             if (data && data._id) {
                 currentId = data._id;
+                // Очищаем localStorage после успешного сохранения
+                clearLocalStorage();
                 await loadEmployees();
                 employeeSelect.value = currentId;
                 alert("Портрет создан и сохранён.");
@@ -251,6 +317,8 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
             }
 
             if (data && data.ok) {
+                // Очищаем localStorage после успешного сохранения
+                clearLocalStorage();
                 await loadEmployees();
                 employeeSelect.value = currentId;
                 alert("Портрет обновлён.");
@@ -279,6 +347,8 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         }
         const data = await res.json().catch(() => ({}));
         if (data && data.ok) {
+            // Очищаем localStorage после удаления
+            clearLocalStorage();
             await loadEmployees();
             clearForm();
             alert("Портрет удалён.");
@@ -288,6 +358,18 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
     }
 
     async function openById(id) {
+        // Проверяем, есть ли несохраненные изменения для текущего сотрудника
+        const draft = loadFromLocalStorage();
+        if (draft && draft._currentId === currentId && currentId !== id) {
+            if (!confirm('У вас есть несохраненные изменения. Перейти без сохранения?')) {
+                // Восстанавливаем предыдущее значение в селекторе
+                if (employeeSelect && currentId) {
+                    employeeSelect.value = currentId;
+                }
+                return;
+            }
+        }
+
         if (!id) {
             clearForm();
             return;
@@ -305,6 +387,8 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         }
         currentId = data._id;
         fillForm(data);
+        // Очищаем localStorage при загрузке существующего сотрудника
+        clearLocalStorage();
     }
 
     // --- Доп. поля
@@ -325,21 +409,40 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         del.type = "button";
         del.textContent = "Удалить";
         del.className = "delete-field-button";
-        del.addEventListener("click", () => wrap.remove());
+        del.addEventListener("click", () => {
+            wrap.remove();
+            saveToLocalStorage();
+        });
 
         wrap.append(label, input, del);
         additionalFieldsContainer.appendChild(wrap);
+
+        // Добавляем обработчик input для нового поля
+        input.addEventListener("input", saveToLocalStorage);
     }
 
-    addFieldButton.addEventListener("click", () => addCustomField());
+    addFieldButton.addEventListener("click", () => {
+        addCustomField();
+        saveToLocalStorage();
+    });
 
     // --- События панели
     employeeSelect.addEventListener("change", (e) => openById(e.target.value));
+    
     newBtn.addEventListener("click", () => {
+        // Проверяем, есть ли несохраненные изменения
+        const draft = loadFromLocalStorage();
+        if (draft) {
+            if (!confirm('У вас есть несохраненные изменения. Создать новый профиль без сохранения?')) {
+                return;
+            }
+        }
+        clearLocalStorage();
         employeeSelect.value = "";
         clearForm();
         document.getElementById("name").focus();
     });
+    
     saveBtn.addEventListener("click", saveCurrent);
     deleteBtn.addEventListener("click", deleteCurrent);
 
@@ -347,25 +450,44 @@ document.querySelector('.toggle-sidebar').addEventListener('click', function() {
         const resList = await fetch("/api/employees");
         if (!resList.ok) {
             const text = await resList.text().catch(() => "");
-            alert(
-                `Не удалось получить список перед отправкой: HTTP ${resList.status}\n${text}`
-            );
+            alert(`Не удалось получить список перед отправкой: HTTP ${resList.status}\n${text}`);
             return;
         }
         const list = await resList.json().catch(() => []);
-        const res = await fetch("/api/employees:submit", {
+        
+        // ✅ ПРАВИЛЬНО - используем существующий endpoint из app.py
+        const res = await fetch("/api/employees_submit", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 employees: Array.isArray(list) ? list : [],
             }),
         });
+        
         const data = await res.json().catch(() => ({}));
         if (data && data.ok)
             alert(`Все портреты отправлены (кол-во: ${data.count}).`);
         else alert("Не удалось отправить все портреты.");
     });
 
+    // --- Навешиваем автосохранение в localStorage на все поля формы
+    form.addEventListener("input", saveToLocalStorage);
+
+    // --- Обработчик перед закрытием страницы
+    window.addEventListener('beforeunload', (event) => {
+        const draft = loadFromLocalStorage();
+        if (draft) {
+            event.preventDefault();
+            event.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+            return event.returnValue;
+        }
+    });
+
     // --- init
     loadEmployees();
+
+    // При загрузке страницы проверяем, есть ли черновик
+    setTimeout(() => {
+        restoreFromDraft();
+    }, 500);
 });
