@@ -955,6 +955,73 @@ def delete_bpmn_xml():
 # 18.  «3 + 20»
 # -------------------------------------------------------------------------
 
+@app.get("/api/tpt/by_position")
+@login_required
+def tpt_get_by_position():
+    """
+    Вернуть последнюю версию 3+20 по названию должности.
+    Поддерживает старые документы, где position мог быть строкой или массивом.
+    """
+    position = (request.args.get("position") or "").strip()
+    if not position:
+        return jsonify({"error": "position required"}), 400
+
+    owner = ObjectId(current_user.id)
+    doc = three_plus_twenty_collection.find_one(
+        {
+            "owner_id": owner,
+            # сработает и для строк, и для массивов
+            "position": {"$in": [position]}
+        },
+        sort=[("updated_at", -1), ("_id", -1)]
+    )
+    if not doc:
+        # пустой ответ — фронт просто покажет чистую форму
+        return jsonify({})
+    doc["_id"] = str(doc["_id"])
+    doc.pop("owner_id", None)
+    return jsonify(doc)
+
+
+@app.delete("/api/tpt/by_position")
+@login_required
+def tpt_delete_by_position():
+    """
+    Удалить все версии 3+20 по должности (при желании можно сделать 'последнюю').
+    """
+    position = (request.args.get("position") or "").strip()
+    if not position:
+        return jsonify({"ok": False, "error": "position required"}), 400
+
+    owner = ObjectId(current_user.id)
+    res = three_plus_twenty_collection.delete_many({
+        "owner_id": owner,
+        "position": {"$in": [position]}
+    })
+    return jsonify({"ok": True, "deleted": res.deleted_count})
+
+@app.post("/api/tpt/delete")
+@login_required
+def tpt_delete_post():
+    """
+    Альтернатива DELETE: удаляет все версии 3+20 по должности по POST JSON.
+    Тело: { "position": "..." }
+    Корректно работает и с документами, где position = "..." и где position = ["..."].
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    position = (payload.get("position") or "").strip()
+    if not position:
+        return jsonify({"ok": False, "error": "position required"}), 400
+
+    owner = ObjectId(current_user.id)
+    res = three_plus_twenty_collection.delete_many({
+        "owner_id": owner,
+        "$or": [
+            {"position": position},                      # строковое поле
+            {"position": {"$elemMatch": {"$eq": position}}}  # массив, содержащий строку
+        ]
+    })
+    return jsonify({"ok": True, "deleted": res.deleted_count}), 200
 
 @app.route("/three_plus_twenty")
 @login_required
@@ -970,6 +1037,8 @@ def save_three_plus_twenty():
         return jsonify({"error": "Нет данных"}), 400
     # --- OAuth: добавлено ---
     data["owner_id"] = ObjectId(current_user.id)
+    from datetime import datetime  # наверху уже импортировано в файле
+    data["updated_at"] = datetime.utcnow()
     three_plus_twenty_collection.insert_one(data)
     return jsonify({"message": "Данные успешно сохранены!"}), 201
 
