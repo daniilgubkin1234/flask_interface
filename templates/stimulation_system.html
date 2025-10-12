@@ -17,6 +17,17 @@
     </button>
     <div class="container">
         <h2>Система стимулирования</h2>
+        <fieldset>
+    <legend>Должность</legend>
+    <div class="profiles-toolbar">
+        <div class="toolbar-left">
+            <label for="stimulationPositionSelect">Должность:</label>
+            <select id="stimulationPositionSelect" name="position">
+                <option value="">— загрузка списка… —</option>
+            </select>
+        </div>
+    </div>
+</fieldset>
         <form id="stimulation-form">
             <fieldset>
                 <legend>Материальное стимулирование</legend>
@@ -191,6 +202,9 @@
 
             <div class="button-container">
                 <button class="submit-button">Отправить</button>
+                  <button type="button" id="downloadStimulation" class="submit-button">
+        Скачать документ (.doc)
+    </button>
             </div>
         </form>
     </div>
