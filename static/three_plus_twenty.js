@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // загрузить список должностей в селект
+    // загрузить список должностей из "Портрет сотрудника" в селект
     async function populateTptSelect() {
         const sel = document.getElementById("tptSelect");
         if (!sel) return;
@@ -58,18 +59,36 @@ document.addEventListener("DOMContentLoaded", function () {
         sel.innerHTML = `<option value="">— не выбрано —</option>`;
 
         try {
-            const items = await fetchJSON("/tpt_positions"); // уже есть на бэке
-            (items || []).forEach((it) => {
-                const pos = (it.position || "").trim();
-                if (!pos) return;
+            // Берём названия должностей из портретов
+            const names = await fetchJSON("/api/employees/positions");
+            (names || []).forEach((pos) => {
+                const p = (pos || "").trim();
+                if (!p) return;
                 const opt = document.createElement("option");
-                opt.value = pos;
-                opt.textContent = pos;
+                opt.value = p;
+                opt.textContent = p;
                 sel.appendChild(opt);
             });
+
+            // (опционально) если портретов нет — подстрахуемся, подтянем старые 3+20
+            if (!sel.options || sel.options.length <= 1) {
+                const legacy = await fetchJSON("/tpt_positions").catch(
+                    () => []
+                );
+                (legacy || []).forEach((it) => {
+                    const p = (it.position || "").trim();
+                    if (!p) return;
+                    if (![...sel.options].some((o) => o.value === p)) {
+                        const opt = document.createElement("option");
+                        opt.value = p;
+                        opt.textContent = p;
+                        sel.appendChild(opt);
+                    }
+                });
+            }
         } catch (e) {
             console.warn(
-                "Не удалось получить список должностей для 3+20:",
+                "Не удалось получить список должностей:",
                 e.message || e
             );
         }

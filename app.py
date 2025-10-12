@@ -424,6 +424,28 @@ def api_employees_submit():
     employees = payload.get("employees", [])
     return jsonify({"ok": True, "count": len(employees)}), 200
 
+@app.get("/api/employees/positions")
+@login_required
+def api_employees_positions():
+    """
+    Список уникальных наименований должностей из портретов сотрудника.
+    Возвращает массив строк, отсортированный по алфавиту (без пустых значений).
+    """
+    owner = ObjectId(current_user.id)
+    cursor = employees_collection.find(
+        {"owner_id": owner},
+        projection={"_id": 0, "name": 1}
+    )
+    seen = set()
+    names = []
+    for d in cursor:
+        nm = (d.get("name") or "").strip()
+        key = nm.lower()
+        if nm and key not in seen:
+            seen.add(key)
+            names.append(nm)
+    names.sort(key=lambda s: s.lower())
+    return jsonify(names), 200
 
 # -------------------------------------------------------------------------
 # 10.  Бизнес-цели
