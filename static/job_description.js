@@ -1,9 +1,39 @@
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("jobDescriptionForm");
-
+ document.querySelectorAll('.recommendation-block button[data-route]').forEach(button => {
+        button.addEventListener('click', function() {
+            const route = this.getAttribute('data-route');
+            if (route) {
+                window.location.href = route;
+            }
+        });
     // -------------------- Вспомогательные функции --------------------
     const byName = (n) => document.getElementsByName(n)[0];
+    document
+        .querySelector(".toggle-sidebar")
+        .addEventListener("click", function () {
+            const sidebar = document.querySelector(".recommendation-block");
+            const button = document.querySelector(".toggle-sidebar");
 
+            // Одновременно применяем классы для синхронной анимации
+            sidebar.classList.toggle("show");
+            button.classList.toggle("menu-open");
+        });
+
+    // --- 2. Закрытие меню при клике вне области
+    document.addEventListener("click", function (e) {
+        const sidebar = document.querySelector(".recommendation-block");
+        const button = document.querySelector(".toggle-sidebar");
+
+        if (
+            sidebar.classList.contains("show") &&
+            !sidebar.contains(e.target) &&
+            !button.contains(e.target)
+        ) {
+            sidebar.classList.remove("show");
+            button.classList.remove("menu-open");
+        }
+    });
     // Добавить недостающие функции
     async function fetchEmployeeById(id) {
         try {
@@ -89,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   .filter(Boolean)
             : [];
 
-        if (items.length === 0) return; // никаких элементов -> никакой подписи
+        if (items.length === 0) return;
 
         const label = document.createElement("label");
         label.id = "additionalFieldsLabel";
@@ -108,14 +138,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Нормализация
     const normStr = (s) => (typeof s === "string" ? s.trim() : "");
     const normArr = (arr, len) => {
-        const a = Array.isArray(arr) ? aSafe(arr) : [];
+        const a = Array.isArray(arr) ? arr.map(normStr) : [];
         const r = typeof len === "number" ? a.slice(0, len) : a.slice();
         if (typeof len === "number") while (r.length < len) r.push("");
         return r;
-
-        function aSafe(x) {
-            return x.map(normStr);
-        }
     };
 
     // ---- 3+20 ----
@@ -128,6 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
             responsibilities: normArr(tpt?.responsibilities, 20),
         };
     }
+
     function makeJDSubsetNormalized(jd) {
         const acts = Array.isArray(jd?.mainActivity)
             ? jd.mainActivity
@@ -147,9 +174,11 @@ document.addEventListener("DOMContentLoaded", function () {
             empSig: jd?.__empSig || "",
         };
     }
+
     const eqArr = (a, b) =>
         a.length === b.length &&
         a.every((v, i) => normStr(v) === normStr(b[i]));
+
     function arraysPayloadEqual(a, b) {
         return (
             normStr(a.position) === normStr(b.position) &&
@@ -157,6 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
             eqArr(a.responsibilities, b.responsibilities)
         );
     }
+
     const computeTptSig = (obj) =>
         JSON.stringify({
             p: normStr(obj.position),
@@ -166,31 +196,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ---- EMP (портрет) ----
     const EMP_KEYS = [
-        "name",
-        "gender",
-        "age",
-        "residence",
-        "education",
-        "speech",
-        "languages",
-        "pc",
-        "appearance",
-        "habits",
-        "info",
-        "accuracy",
-        "scrupulousness",
-        "systemThinking",
-        "decisiveness",
-        "stressResistance",
-        "otherQualities",
-        "independence",
-        "organization",
-        "responsibility",
-        "managementStyle",
-        "leadership",
-        "mobility",
-        "businessTrips",
-        "car",
+        "name", "gender", "age", "residence", "education", "speech", "languages", 
+        "pc", "appearance", "habits", "info", "accuracy", "scrupulousness", 
+        "systemThinking", "decisiveness", "stressResistance", "otherQualities", 
+        "independence", "organization", "responsibility", "managementStyle", 
+        "leadership", "mobility", "businessTrips", "car",
     ];
 
     function makeEmpNormalized(emp) {
@@ -201,6 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
             : [];
         return o;
     }
+
     const computeEmpSig = (e) =>
         JSON.stringify({
             ...EMP_KEYS.reduce(
@@ -224,16 +235,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // общие (титульный и др.)
         [
-            "company",
-            "position",
-            "approval",
-            "appointedBy",
-            "documentPurpose",
-            "replaces",
-            "activityGuide",
-            "supervisor",
-            "rights",
-            "responsibility",
+            "company", "position", "approval", "appointedBy", "documentPurpose", 
+            "replaces", "activityGuide", "supervisor", "rights", "responsibility",
         ].forEach((name) => {
             const el = byName(name);
             if (el && data[name] !== undefined) el.value = data[name];
@@ -381,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
             else jsonData[key] = [jsonData[key], value];
         }
 
-        Object.assign(jsonData, extra); // подписи источников
+        Object.assign(jsonData, extra);
 
         fetch("/submit_job_description", {
             method: "POST",
@@ -444,20 +447,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     (async function initJD() {
-        // добавили 4-й запрос — анкета пользователя
         const [jd, tpt, empList, survey] = await Promise.all([
-            fetch("/get_job_description")
-                .then((r) => r.json())
-                .catch(() => ({})),
-            fetch("/get_three_plus_twenty")
-                .then((r) => r.json())
-                .catch(() => ({})),
-            fetch("/api/employees")
-                .then((r) => r.json())
-                .catch(() => []),
-            fetch("/get_user_survey")
-                .then((r) => r.json())
-                .catch(() => ({})),
+            fetch("/get_job_description").then((r) => r.json()).catch(() => ({})),
+            fetch("/get_three_plus_twenty").then((r) => r.json()).catch(() => ({})),
+            fetch("/api/employees").then((r) => r.json()).catch(() => []),
+            fetch("/get_user_survey").then((r) => r.json()).catch(() => ({})),
         ]);
 
         // 1) рендерим то, что уже сохранено в ДИ
@@ -467,10 +461,9 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const companyInput = document.getElementById("company");
             const hasJDCompany = (jd?.company || "").trim().length > 0;
-            const companyFromSurvey = (survey?.q2 || "").trim(); // «Как называется ваша компания?» (Диагностика)
+            const companyFromSurvey = (survey?.q2 || "").trim();
             if (!hasJDCompany && companyFromSurvey) {
                 companyInput.value = companyFromSurvey;
-                // сразу зафиксируем автосохранение, чтобы company попала в ДБ
                 autoSaveWithSign({ company: companyFromSurvey });
             }
         } catch (e) {
@@ -500,11 +493,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        // 4) «умный» импорт из 3+20 (как и раньше)
+        // 4) «умный» импорт из 3+20
         const tptRes = importFromTPTIfNeeded(jd, tpt);
         currentTptSig = tptRes.tptSig || currentTptSig;
 
-        // 5) «умный» импорт из выбранного портрета (как и раньше)
+        // 5) «умный» импорт из выбранного портрета
         if (currentEmpId) {
             const empDoc = await fetchEmployeeById(currentEmpId);
             if (empDoc) {
@@ -515,7 +508,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     })();
 
-    // ВЫБОР ПРОФИЛЯ: всегда импортируем поля портрета в раздел 2 ДИ и сохраняем связь
+    // ВЫБОР ПРОФИЛЯ
     jdSelect?.addEventListener("change", async () => {
         currentEmpId = jdSelect.value || "";
         if (!currentEmpId) return;
@@ -526,16 +519,14 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Применяем данные профиля
         const jdNow = snapshotJDFromForm();
         const empRes = importFromEMPIfNeeded(jdNow, empDoc);
         currentEmpSig = empRes.empSig || currentEmpSig;
         
-        // Сохраняем связь
         autoSaveWithSign();
     });
 
-    // импорт по кнопке (альтернативно/дополнительно)
+    // импорт по кнопке
     jdImportBtn?.addEventListener("click", async () => {
         const id = jdSelect.value || "";
         if (!id) {
@@ -566,7 +557,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // --- 7. Встроенный "Адаптационный план" на странице ДИ ---
     const jdContainer = document.getElementById("jdTasksContainer");
     if (jdContainer) {
-        // Тот же стартовый шаблон из adaptation_plan.js (1:1)
         const AP_DEFAULT_TASKS = [
             "Задача 1: Оформление на работу",
             "Задача 2: Знакомство с коллективом, офисом, оргтехникой",
@@ -587,33 +577,23 @@ document.addEventListener("DOMContentLoaded", function () {
             feedbackEmployee: "",
         }));
 
-        const templateTask = jdContainer
-            .querySelector("fieldset.task")
-            .cloneNode(true);
+        const templateTask = jdContainer.querySelector("fieldset.task").cloneNode(true);
         const addButton = document.getElementById("jdAddTask");
 
-        // Рендер набора задач в DOM (совместим с форматом adaptation_plan.js)
         function renderJDTasks(tasks) {
-            // Сохраняем только первый шаблон, остальное удаляем
             while (jdContainer.querySelectorAll("fieldset.task").length > 1) {
                 jdContainer.querySelectorAll("fieldset.task")[1].remove();
             }
             tasks.forEach((t, idx) => {
-                const el =
-                    idx === 0
-                        ? jdContainer.querySelector("fieldset.task")
-                        : templateTask.cloneNode(true);
-                el.querySelector("legend").textContent =
-                    t.title || `Задача ${idx + 1}`;
+                const el = idx === 0
+                    ? jdContainer.querySelector("fieldset.task")
+                    : templateTask.cloneNode(true);
+                el.querySelector("legend").textContent = t.title || `Задача ${idx + 1}`;
 
                 const timeEl = el.querySelector('input[name*="_time"]');
                 const resEl = el.querySelector('textarea[name*="_resources"]');
-                const sumM = el.querySelector(
-                    'textarea[name*="_summarize_by_mentor"]'
-                );
-                const sumE = el.querySelector(
-                    'textarea[name*="_summarize_by_employee"]'
-                );
+                const sumM = el.querySelector('textarea[name*="_summarize_by_mentor"]');
+                const sumE = el.querySelector('textarea[name*="_summarize_by_employee"]');
 
                 if (timeEl) timeEl.value = t.time || "";
                 if (resEl) resEl.value = t.resources || "";
@@ -633,32 +613,15 @@ document.addEventListener("DOMContentLoaded", function () {
             return Array.from(jdContainer.querySelectorAll("fieldset.task")).map(
                 (fs) => ({
                     title: fs.querySelector("legend")?.textContent?.trim() || "",
-                    time:
-                        fs.querySelector('input[name*="_time"]')?.value.trim() ||
-                        "",
-                    resources:
-                        fs
-                            .querySelector('textarea[name*="_resources"]')
-                            ?.value.trim() || "",
-                    customTitle:
-                        fs
-                            .querySelector('input[name*="_custom_title"]')
-                            ?.value.trim() || null,
-                    feedbackMentor:
-                        fs
-                            .querySelector('textarea[name*="_summarize_by_mentor"]')
-                            ?.value.trim() || "",
-                    feedbackEmployee:
-                        fs
-                            .querySelector(
-                                'textarea[name*="_summarize_by_employee"]'
-                            )
-                            ?.value.trim() || "",
+                    time: fs.querySelector('input[name*="_time"]')?.value.trim() || "",
+                    resources: fs.querySelector('textarea[name*="_resources"]')?.value.trim() || "",
+                    customTitle: fs.querySelector('input[name*="_custom_title"]')?.value.trim() || null,
+                    feedbackMentor: fs.querySelector('textarea[name*="_summarize_by_mentor"]')?.value.trim() || "",
+                    feedbackEmployee: fs.querySelector('textarea[name*="_summarize_by_employee"]')?.value.trim() || "",
                 })
             );
         }
 
-        // Лёгкий дебаунс автосохранения
         let saveTimer = null;
         function autoSaveJD() {
             clearTimeout(saveTimer);
@@ -675,11 +638,8 @@ document.addEventListener("DOMContentLoaded", function () {
         function updateJDNumbers() {
             jdContainer.querySelectorAll("fieldset.task").forEach((fs, i) => {
                 const title = fs.querySelector("legend")?.textContent || "";
-                // если заголовок не кастомный — поддержим стандартный "Задача N:"
                 if (/^Задача\s+\d+/.test(title)) {
-                    fs.querySelector("legend").textContent = `Задача ${
-                        i + 1
-                    }: ${title.split(":").slice(1).join(":").trim()}`;
+                    fs.querySelector("legend").textContent = `Задача ${i + 1}: ${title.split(":").slice(1).join(":").trim()}`;
                 }
             });
         }
@@ -688,7 +648,7 @@ document.addEventListener("DOMContentLoaded", function () {
             jdContainer.querySelectorAll(".delete-task-btn").forEach((btn) => {
                 btn.onclick = () => {
                     const all = jdContainer.querySelectorAll("fieldset.task");
-                    if (all.length <= 1) return; // минимум одна должна остаться
+                    if (all.length <= 1) return;
                     btn.closest("fieldset.task")?.remove();
                     updateJDNumbers();
                     autoSaveJD();
@@ -696,7 +656,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // Добавление новых задач (кнопки после 5/7/9 как на исходной странице)
         addButton.addEventListener("click", () => {
             const wrapper = jdContainer.querySelector(".add-task-wrapper");
             const newEl = templateTask.cloneNode(true);
@@ -706,10 +665,8 @@ document.addEventListener("DOMContentLoaded", function () {
             autoSaveJD();
         });
 
-        // Автосохранение при любой правке внутри блока
         jdContainer.addEventListener("input", autoSaveJD);
 
-        // Загрузка из БД (как на adaptation_plan.js)
         fetch("/get_adaptation_plan")
             .then((r) => r.json())
             .then((tasks) => {
@@ -718,4 +675,220 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(() => renderJDTasks(AP_DEFAULT_TASKS));
     }
+
+     // ===== Экспорт .doc (как в meeting_protocol.js) =====
+    function buildJobDescriptionDocHTML() {
+        const formData = new FormData(form);
+        const data = {};
+        
+        for (const [key, value] of formData.entries()) {
+            if (key === 'mainActivity[]' || key === 'jobDuty[]' || key === 'additionalFields[]') {
+                if (!data[key]) data[key] = [];
+                data[key].push(value);
+            } else {
+                data[key] = value;
+            }
+        }
+
+        const adaptationTasks = jdContainer ? collectJDTasks() : [];
+
+        // Функция экранирования как в meeting_protocol.js
+        const esc = (s) => String(s ?? '')
+            .replaceAll('&','&amp;').replaceAll('<','&lt;')
+            .replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;');
+
+        // Функция для получения читаемых названий полей
+        function getFieldLabel(key) {
+            const labels = {
+                name: 'Имя сотрудника',
+                gender: 'Пол',
+                age: 'Возраст',
+                residence: 'Проживание',
+                education: 'Образование',
+                speech: 'Грамотная речь',
+                languages: 'Знание иностранных языков',
+                pc: 'Владение ПК, оргтехникой',
+                appearance: 'Внешний вид',
+                habits: 'Вредные привычки',
+                info: 'Умение работать с информацией',
+                accuracy: 'Точность',
+                scrupulousness: 'Скурпулезность',
+                systemThinking: 'Системное мышление',
+                decisiveness: 'Решительность',
+                stressResistance: 'Стрессоустойчивость',
+                otherQualities: 'Иные качества',
+                independence: 'Умение самостоятельно принимать решение',
+                organization: 'Умение организовать труд подчиненных',
+                responsibility: 'Умение брать ответственность',
+                managementStyle: 'Стиль управления',
+                leadership: 'Лидерские качества',
+                mobility: 'Мобильность',
+                businessTrips: 'Возможность и желание командировок',
+                car: 'Наличие автомобиля'
+            };
+            return labels[key] || key;
+        }
+
+        // Форматирование даты как в meeting_protocol.js
+        const formatDateRU = (iso) => {
+            if (!iso) return '';
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return esc(iso);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth()+1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
+        };
+
+        const titleBlock = `
+            <h1>ДОЛЖНОСТНАЯ ИНСТРУКЦИЯ</h1>
+            ${data.company ? `<p><b>Наименование компании:</b> ${esc(data.company)}</p>` : ''}
+            ${data.position ? `<p><b>Наименование должности:</b> ${esc(data.position)}</p>` : ''}
+            ${data.approval ? `<p><b>Утверждение:</b> ${esc(data.approval)}</p>` : ''}
+        `;
+
+        // Участники (если нужно, аналогично meeting_protocol)
+        const rowsParticipants = ''; // Добавьте если нужны участники
+
+        // Основные направления деятельности
+        const rowsActivities = (data['mainActivity[]'] || []).map((activity, i) => `
+            <tr>
+                <td>${i+1}</td>
+                <td>${esc(activity)}</td>
+            </tr>`).join('');
+
+        // Должностные обязанности
+        const rowsDuties = (data['jobDuty[]'] || []).map((duty, i) => `
+            <tr>
+                <td>${i+1}</td>
+                <td>${esc(duty)}</td>
+            </tr>`).join('');
+
+        // Адаптационные задачи
+        const rowsTasks = (adaptationTasks || []).map((task, i) => `
+            <tr>
+                <td>${i+1}</td>
+                <td>${esc(task.title || '')}</td>
+                <td>${esc(task.time || '')}</td>
+                <td>${esc(task.resources || '')}</td>
+                <td>${esc(task.feedbackMentor || '')}</td>
+                <td>${esc(task.feedbackEmployee || '')}</td>
+            </tr>`).join('');
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc(data.position || 'Должностная инструкция')}</title>
+<style>
+    body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 1.4; }
+    h1 { text-align: center; margin: 0 0 10pt; }
+    h2 { margin-top: 15pt; margin-bottom: 10pt; }
+    table { width: 100%; border-collapse: collapse; margin: 10pt 0; }
+    th, td { border: 1px solid #000; padding: 6pt; vertical-align: top; }
+    th { background: #f2f2f2; text-align: left; }
+    .field { margin: 8pt 0; }
+    .field-label { font-weight: bold; display: inline-block; min-width: 200pt; }
+</style>
+</head>
+<body>
+    ${titleBlock}
+
+    <h2>1. Общие положения</h2>
+    <div class="field">
+        <span class="field-label">Кем назначается:</span> ${esc(data.appointedBy || '')}
+    </div>
+    <div class="field">
+        <span class="field-label">Каким документом назначается:</span> ${esc(data.documentPurpose || '')}
+    </div>
+    <div class="field">
+        <span class="field-label">Кто заменяет на период отсутствия:</span> ${esc(data.replaces || '')}
+    </div>
+    <div class="field">
+        <span class="field-label">Чем руководствуется в своей деятельности:</span> ${esc(data.activityGuide || '')}
+    </div>
+    <div class="field">
+        <span class="field-label">Кому подчиняется:</span> ${esc(data.supervisor || '')}
+    </div>
+
+    <h2>2. Требования к кандидатам на вакансию</h2>
+    ${Object.keys(data).filter(key => 
+        EMP_KEYS.includes(key) && data[key]
+    ).map(key => `
+        <div class="field">
+            <span class="field-label">${getFieldLabel(key)}:</span> ${esc(data[key])}
+        </div>
+    `).join('')}
+    
+    ${data['additionalFields[]'] && data['additionalFields[]'].length > 0 ? `
+        <h3>Дополнительные пункты:</h3>
+        ${data['additionalFields[]'].map((field, index) => `
+            <div class="field">
+                <span class="field-label">Пункт ${index + 1}:</span> ${esc(field)}
+            </div>
+        `).join('')}
+    ` : ''}
+
+    <h2>3. Основные направления деятельности</h2>
+    <table>
+        <thead><tr><th>#</th><th>Направление деятельности</th></tr></thead>
+        <tbody>${rowsActivities}</tbody>
+    </table>
+
+    <h2>4. Должностные обязанности</h2>
+    <table>
+        <thead><tr><th>#</th><th>Обязанность</th></tr></thead>
+        <tbody>${rowsDuties}</tbody>
+    </table>
+
+    <h2>5. Права</h2>
+    <div class="field">${esc(data.rights || '')}</div>
+
+    <h2>6. Ответственность</h2>
+    <div class="field">${esc(data.responsibility || '')}</div>
+
+    ${adaptationTasks.length > 0 ? `
+    <h2>7. Адаптационный план</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Задача</th>
+                <th>Время на подготовку</th>
+                <th>Ресурсы</th>
+                <th>Итоги наставника</th>
+                <th>Итоги сотрудника</th>
+            </tr>
+        </thead>
+        <tbody>${rowsTasks}</tbody>
+    </table>
+    ` : ''}
+</body>
+</html>`;
+    }
+ 
+    function downloadDoc(htmlString, filename) {
+        const blob = new Blob([htmlString], { type: 'application/msword;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    // Обработчик кнопки скачивания (используем существующую кнопку из HTML)
+    const downloadBtn = document.getElementById('downloadProtocol');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const html = buildJobDescriptionDocHTML();
+            const position = document.getElementById('position').value || 'должность';
+            const company = document.getElementById('company').value || 'компания';
+            const datePart = new Date().toISOString().slice(0,10).replaceAll('-', '.');
+            downloadDoc(html, `ДИ_${company}_${position}_${datePart}.doc`);
+        });
+    }
+});
 });

@@ -85,6 +85,21 @@ button:hover {
     background-color: #1f4b8f;
 }
 
+#downloadProtocol {
+    background-color: #2a63c2;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    margin-top: 30px;
+    width: 100%;
+}
+button[type="submit"]:hover {
+    background-color: #1f4b8f;
+}
 /* Панель выбора профиля (заимствовано по духу из employee_profile.css) */
 .profiles-toolbar {
     display: flex;
