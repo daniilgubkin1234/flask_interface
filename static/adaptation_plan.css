@@ -237,7 +237,39 @@ button[type="reset"]:hover {
     margin-top: 20px;
     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.profiles-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
 
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.profiles-toolbar label {
+    margin: 0;
+    font-weight: 600;
+}
+
+.profiles-toolbar select {
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+}
+
+.hint {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 8px;
+    font-style: italic;
+}
 /* Кнопка для скрытия/показа бокового меню */
 .toggle-sidebar {
     position: fixed;

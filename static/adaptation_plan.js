@@ -6,13 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetBtn       = document.getElementById('resetToDefault');
   const exportBtn      = document.getElementById('downloadAdaptationPlan');
 
-  // блок должности
-  const positionInput        = document.getElementById('positionInput');
-  const positionListDatalist = document.getElementById('positionList');
-  const createNewPlanBtn     = document.getElementById('createNewPlanBtn');
-  const loadSelectedPlanBtn  = document.getElementById('loadSelectedPlanBtn');
+  // блок должности - теперь используем select вместо input
+  const positionSelect     = document.getElementById('positionSelect');
+  const createNewPlanBtn   = document.getElementById('createNewPlanBtn');
 
-  // Сайдбар (если есть)
+  // Сайдбар
   const toggleBtn = document.querySelector('.toggle-sidebar');
   if (toggleBtn) {
     toggleBtn.addEventListener('click', (e) => {
@@ -44,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const draftKey = (position) => `${DRAFT_NS}:${(position||'').toLowerCase().trim()||'__no_position__'}`;
 
   function saveDraft() {
-    const pos = (positionInput.value || '').trim();
+    const pos = (positionSelect.value || '').trim();
     const tasks = collectTasksFromDOM();
     const payload = { position: pos, tasks, updatedAt: Date.now() };
     try { localStorage.setItem(draftKey(pos), JSON.stringify(payload)); } catch(_) {}
@@ -62,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try { localStorage.removeItem(draftKey(position)); } catch(_) {}
   }
 
-  // ---------- Шаблонные задачи (без "Задача N:" в тексте) ----------
+  // ---------- Шаблонные задачи ----------
   const DEFAULT_TASKS = [
     'Оформление на работу',
     'Знакомство с коллективом, офисом, оргтехникой',
@@ -82,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function collectTasksFromDOM() {
     return Array.from(tasksContainer.querySelectorAll('fieldset.task')).map((fs) => {
       const legendText = fs.querySelector('legend')?.textContent?.trim() || '';
-      const titleOnly  = stripTaskPrefix(legendText); // читаем фиксированный шаблон из легенды
+      const titleOnly  = stripTaskPrefix(legendText);
       return {
         title: titleOnly || 'Без названия',
         customTitle: fs.querySelector('input[name$="_custom_title"]')?.value.trim() || '',
@@ -97,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function createTaskFieldset(task, index) {
     const fs = document.createElement('fieldset');
     fs.className = 'task';
-    // Легенда ИСКЛЮЧИТЕЛЬНО из шаблонного title (НЕ из customTitle)
     const baseTitle = stripTaskPrefix(task.title || 'Без названия');
     fs.innerHTML = `
       <legend>Задача ${index + 1}: ${esc(baseTitle || 'Без названия')}</legend>
@@ -125,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTasks(tasks) {
     tasksContainer.innerHTML = '';
     (tasks || [])
-      // фиксируем легенды по нашему дефолтному шаблону по индексу
       .map((t, i) => ({ ...t, title: stripTaskPrefix((DEFAULT_TASKS[i]?.title) || t.title) }))
       .forEach((t, i) => tasksContainer.appendChild(createTaskFieldset(t, i)));
     bindDeleteButtons();
@@ -213,16 +209,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- API ----------
   async function fetchPositionsList() {
-    const res = await fetch('/api/adaptation_plans/positions');
-    if (!res.ok) return [];
-    const data = await res.json().catch(() => ([]));
-    return Array.isArray(data) ? data : [];
+    try {
+      const res = await fetch("/api/employees");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const employees = await res.json();
+      
+      const positions = [...new Set(employees
+        .map(emp => emp.name)
+        .filter(Boolean)
+        .sort())];
+      
+      return positions;
+    } catch (error) {
+      console.error("Ошибка загрузки должностей:", error);
+      return [];
+    }
   }
+
   async function fetchPlanByPosition(position) {
     const res = await fetch(`/api/adaptation_plans/by_position?position=${encodeURIComponent(position)}`);
     if (!res.ok) return null;
     return await res.json().catch(() => null);
   }
+
   async function upsertPlan(position, tasks) {
     const res = await fetch('/api/adaptation_plans', {
       method: 'POST',
@@ -237,30 +246,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return text ? JSON.parse(text) : {};
   }
-  function renderPositionsDatalist(items) {
-    const opts = items.filter(Boolean).map(name => `<option value="${esc(name)}"></option>`).join('');
-    positionListDatalist.innerHTML = opts;
+
+  function renderPositionsSelect(positions) {
+    const options = ['<option value="">— выберите должность —</option>']
+      .concat(positions.map(pos => 
+        `<option value="${pos.replace(/"/g, '&quot;')}">${pos}</option>`
+      ));
+    
+    positionSelect.innerHTML = options.join("");
   }
 
-  // ---------- Boot ----------
-  (async function boot() {
-    try { renderPositionsDatalist(await fetchPositionsList()); } catch {}
+  // ---------- Загрузка должностей и инициализация ----------
+  async function loadPositions() {
+    try {
+      const positions = await fetchPositionsList();
+      renderPositionsSelect(positions);
+      
+      // Восстанавливаем сохраненную позицию если есть
+      const savedPosition = getSavedPosition();
+      if (savedPosition) {
+        positionSelect.value = savedPosition;
+        await loadPlanForPosition(savedPosition);
+      }
+      
+    } catch (error) {
+      console.error("Ошибка загрузки должностей:", error);
+    }
+  }
 
-    const initialPos = (positionInput?.value || '').trim();
-    if (initialPos) { await loadPlanForPosition(initialPos); return; }
+  function getSavedPosition() {
+    try {
+      // Пробуем найти последнюю использованную позицию
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(DRAFT_NS)) {
+          const draft = JSON.parse(localStorage.getItem(key));
+          if (draft && draft.position) {
+            return draft.position;
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
 
-    const draft = loadDraftFor('');
-    if (draft?.tasks?.length) { renderTasks(draft.tasks); return; }
-
-    // fallback к старому API (если ещё используется)
-    fetch('/get_adaptation_plan')
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(tasks => Array.isArray(tasks) && tasks.length ? tasks : DEFAULT_TASKS)
-      .then(tasks => renderTasks(tasks))
-      .catch(() => renderTasks(DEFAULT_TASKS));
-  })();
-
-  // ---------- Действия ----------
+  // ---------- Обработчики событий ----------
   tasksContainer.addEventListener('input', saveDraft);
 
   addBtn?.addEventListener('click', () => {
@@ -268,27 +298,35 @@ document.addEventListener('DOMContentLoaded', () => {
     saveDraft();
   });
 
+  // Обработчик изменения выбора должности
+  positionSelect?.addEventListener('change', async function() {
+    const pos = (this.value || '').trim();
+    if (pos) {
+      await loadPlanForPosition(pos);
+    } else {
+      // Если выбрана пустая опция, очищаем форму
+      renderTasks([]);
+    }
+  });
+
   createNewPlanBtn?.addEventListener('click', () => {
-    const pos = (positionInput.value || '').trim();
+    const pos = (positionSelect.value || '').trim();
     if (!pos) {
-      alert('Введите наименование должности для нового плана.');
-      positionInput.focus();
+      alert('Выберите должность для нового плана.');
+      positionSelect.focus();
       return;
     }
     clearDraft(pos);
     renderTasks(DEFAULT_TASKS);
-    alert('Новый план для указанной должности создан как черновик. Заполните и нажмите «Сохранить план».');
-  });
-
-  loadSelectedPlanBtn?.addEventListener('click', async () => {
-    const pos = (positionInput.value || '').trim();
-    if (!pos) { alert('Введите/выберите должность.'); return; }
-    await loadPlanForPosition(pos);
+    alert('Новый план для выбранной должности создан. Заполните и нажмите «Сохранить план».');
   });
 
   async function loadPlanForPosition(position) {
     const draft = loadDraftFor(position);
-    if (draft?.tasks?.length) { renderTasks(draft.tasks); return; }
+    if (draft?.tasks?.length) { 
+      renderTasks(draft.tasks); 
+      return; 
+    }
 
     const plan = await fetchPlanByPosition(position).catch(() => null);
     if (plan && Array.isArray(plan.tasks) && plan.tasks.length) {
@@ -300,13 +338,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const pos = (positionInput.value || '').trim();
-    if (!pos) { alert('Сначала укажите должность.'); positionInput.focus(); return; }
+    const pos = (positionSelect.value || '').trim();
+    if (!pos) { 
+      alert('Сначала выберите должность.'); 
+      positionSelect.focus(); 
+      return; 
+    }
     const tasks = collectTasksFromDOM();
     try {
       await upsertPlan(pos, tasks);
       clearDraft(pos);
-      try { renderPositionsDatalist(await fetchPositionsList()); } catch {}
       alert('План сохранён для должности: ' + pos);
     } catch (err) {
       console.error('SAVE ERROR:', err);
@@ -315,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   resetBtn?.addEventListener('click', () => {
-    const pos = (positionInput.value || '').trim();
+    const pos = (positionSelect.value || '').trim();
     if (!confirm('Вернуть исходный шаблон из 10 задач? Текущий черновик будет очищен' + (pos ? ` для должности «${pos}»` : '') + '.')) return;
     clearDraft(pos);
     renderTasks(DEFAULT_TASKS);
@@ -323,11 +364,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   exportBtn?.addEventListener('click', () => {
     const tasks = collectTasksFromDOM();
-    const html  = buildAdaptationPlanDocHTML(tasks, (positionInput.value||'').trim());
+    const html  = buildAdaptationPlanDocHTML(tasks, (positionSelect.value||'').trim());
     const datePart = new Date().toISOString().slice(0,10).replaceAll('-', '.');
-    const posSlug = (positionInput.value||'').trim().replace(/[^\w\-]+/g,'_') || 'без_должности';
+    const posSlug = (positionSelect.value||'').trim().replace(/[^\w\-]+/g,'_') || 'без_должности';
     downloadDoc(html, `Адаптационный_план_${posSlug}_${datePart}.doc`);
   });
+
+  // ---------- Инициализация ----------
+  (async function init() {
+    await loadPositions();
+    
+    // Если нет сохраненной позиции, загружаем шаблон по умолчанию
+    if (!positionSelect.value) {
+      renderTasks(DEFAULT_TASKS);
+    }
+  })();
 
   // ---------- Экспорт ----------
   function buildAdaptationPlanDocHTML(tasks, position) {

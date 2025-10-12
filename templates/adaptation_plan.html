@@ -19,17 +19,21 @@
         <div class="container">
             <h2>Адаптационный план</h2>
              <fieldset class="task">
-        <legend>Должность</legend>
-        <label for="positionInput">Наименование должности:</label>
-        <input list="positionList" id="positionInput" name="positionInput" placeholder="Например: Менеджер по продажам" autocomplete="off" />
-        <datalist id="positionList"></datalist>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-          <button type="button" id="createNewPlanBtn">Создать новый план</button>
-          <button type="button" id="loadSelectedPlanBtn">Загрузить выбранный</button>
+     <fieldset>
+    <legend>Должность</legend>
+    <div class="profiles-toolbar">
+        <div class="toolbar-left">
+            <label for="positionSelect">Должность:</label>
+            <select id="positionSelect" name="position">
+                <option value="">— загрузка списка… —</option>
+            </select>
+            <button type="button" id="createNewPlanBtn" class="primary-button">
+                Создать новый план
+            </button>
         </div>
-        <p class="hint">Выберите уже сохранённый план из списка или введите новую должность и нажмите «Создать новый план». Планы хранятся отдельно по каждой должности.</p>
-      </fieldset>
+    </div>
+    <p class="hint">Выберите должность из списка или создайте новый план для выбранной должности.</p>
+</fieldset>
             <div id="tasksContainer">
                 <!-- Задачи 1-5 -->
                 <fieldset class="task">
