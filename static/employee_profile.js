@@ -13,30 +13,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Переменные для автосохранения в localStorage
     let autoSaveTimeout = null;
     const AUTO_SAVE_DELAY = 1000; // 1 секунда
-    const STORAGE_KEY = 'employeeProfileDraft';
+    const STORAGE_KEY = "employeeProfileDraft";
 
     // ❶ Запретить любой автосабмит формы (Enter, implicit submit и т.п.)
     form.addEventListener("submit", (e) => e.preventDefault());
-    
-    document.querySelector('.toggle-sidebar').addEventListener('click', function() {
-        const sidebar = document.querySelector('.recommendation-block');
-        const button = document.querySelector('.toggle-sidebar');
-        
-        // Одновременно применяем классы для синхронной анимации
-        sidebar.classList.toggle('show');
-        button.classList.toggle('menu-open');
-    });
+
+    document
+        .querySelector(".toggle-sidebar")
+        .addEventListener("click", function () {
+            const sidebar = document.querySelector(".recommendation-block");
+            const button = document.querySelector(".toggle-sidebar");
+
+            // Одновременно применяем классы для синхронной анимации
+            sidebar.classList.toggle("show");
+            button.classList.toggle("menu-open");
+        });
 
     // --- 2. Закрытие меню при клике вне области
-    document.addEventListener('click', function(e) {
-        const sidebar = document.querySelector('.recommendation-block');
-        const button = document.querySelector('.toggle-sidebar');
-        
-        if (sidebar.classList.contains('show') && 
-            !sidebar.contains(e.target) && 
-            !button.contains(e.target)) {
-            sidebar.classList.remove('show');
-            button.classList.remove('menu-open');
+    document.addEventListener("click", function (e) {
+        const sidebar = document.querySelector(".recommendation-block");
+        const button = document.querySelector(".toggle-sidebar");
+
+        if (
+            sidebar.classList.contains("show") &&
+            !sidebar.contains(e.target) &&
+            !button.contains(e.target)
+        ) {
+            sidebar.classList.remove("show");
+            button.classList.remove("menu-open");
         }
     });
 
@@ -52,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const draft = {
                 ...data,
                 _timestamp: new Date().toISOString(),
-                _currentId: currentId
+                _currentId: currentId,
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
             console.log("Данные автосохранены в localStorage");
@@ -64,13 +68,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 const data = JSON.parse(saved);
-                
+
                 // Проверяем, не устарели ли данные (больше 24 часов)
                 const savedTime = new Date(data._timestamp);
                 const currentTime = new Date();
                 const hoursDiff = (currentTime - savedTime) / (1000 * 60 * 60);
-                
-                if (hoursDiff < 24) { // Данные актуальны менее 24 часов
+
+                if (hoursDiff < 24) {
+                    // Данные актуальны менее 24 часов
                     return data;
                 } else {
                     // Удаляем устаревшие данные
@@ -90,7 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function restoreFromDraft() {
         const draft = loadFromLocalStorage();
-        if (draft && confirm('Обнаружены несохраненные данные. Восстановить их?')) {
+        if (
+            draft &&
+            confirm("Обнаружены несохраненные данные. Восстановить их?")
+        ) {
             currentId = draft._currentId || null;
             fillForm(draft);
             if (employeeSelect && currentId) {
@@ -361,7 +369,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Проверяем, есть ли несохраненные изменения для текущего сотрудника
         const draft = loadFromLocalStorage();
         if (draft && draft._currentId === currentId && currentId !== id) {
-            if (!confirm('У вас есть несохраненные изменения. Перейти без сохранения?')) {
+            if (
+                !confirm(
+                    "У вас есть несохраненные изменения. Перейти без сохранения?"
+                )
+            ) {
                 // Восстанавливаем предыдущее значение в селекторе
                 if (employeeSelect && currentId) {
                     employeeSelect.value = currentId;
@@ -428,12 +440,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- События панели
     employeeSelect.addEventListener("change", (e) => openById(e.target.value));
-    
+
     newBtn.addEventListener("click", () => {
         // Проверяем, есть ли несохраненные изменения
         const draft = loadFromLocalStorage();
         if (draft) {
-            if (!confirm('У вас есть несохраненные изменения. Создать новый профиль без сохранения?')) {
+            if (
+                !confirm(
+                    "У вас есть несохраненные изменения. Создать новый профиль без сохранения?"
+                )
+            ) {
                 return;
             }
         }
@@ -442,7 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clearForm();
         document.getElementById("name").focus();
     });
-    
+
     saveBtn.addEventListener("click", saveCurrent);
     deleteBtn.addEventListener("click", deleteCurrent);
 
@@ -450,23 +466,31 @@ document.addEventListener("DOMContentLoaded", () => {
         const resList = await fetch("/api/employees");
         if (!resList.ok) {
             const text = await resList.text().catch(() => "");
-            alert(`Не удалось получить список перед отправкой: HTTP ${resList.status}\n${text}`);
+            alert(
+                `Не удалось получить список перед отправкой: HTTP ${resList.status}\n${text}`
+            );
             return;
         }
         const list = await resList.json().catch(() => []);
-        
+
         // ✅ ПРАВИЛЬНО - используем существующий endpoint из app.py
-        const res = await fetch("/api/employees_submit", {
+        const res = await fetch("/api/employees:submit", {
+            // было /api/employees_submit
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 employees: Array.isArray(list) ? list : [],
             }),
         });
-        
-        const data = await res.json().catch(() => ({}));
-        if (data && data.ok)
-            alert(`Все портреты отправлены (кол-во: ${data.count}).`);
+        if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            alert(
+                `Сбой отправки (POST /api/employees:submit): HTTP ${res.status}\n${text}`
+            );
+            return;
+        }
+        const data = await res.json().catch(() => null);
+        if (data?.ok) alert(`Все портреты отправлены (кол-во: ${data.count}).`);
         else alert("Не удалось отправить все портреты.");
     });
 
@@ -474,11 +498,12 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("input", saveToLocalStorage);
 
     // --- Обработчик перед закрытием страницы
-    window.addEventListener('beforeunload', (event) => {
+    window.addEventListener("beforeunload", (event) => {
         const draft = loadFromLocalStorage();
         if (draft) {
             event.preventDefault();
-            event.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+            event.returnValue =
+                "У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?";
             return event.returnValue;
         }
     });
