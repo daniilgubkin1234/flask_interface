@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 window.location.href = route;
             }
         });
+    });
     // -------------------- Вспомогательные функции --------------------
     const byName = (n) => document.getElementsByName(n)[0];
     document
@@ -890,5 +891,4 @@ document.addEventListener("DOMContentLoaded", function () {
             downloadDoc(html, `ДИ_${company}_${position}_${datePart}.doc`);
         });
     }
-});
 });
