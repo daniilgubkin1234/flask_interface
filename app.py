@@ -23,7 +23,7 @@ from pymongo import ReturnDocument
 # 1.  Загрузка переменных окружения
 # -------------------------------------------------------------------------
 load_dotenv()
-
+# test
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
