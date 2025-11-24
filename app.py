@@ -197,7 +197,7 @@ def index_public():
     return render_template("index_public.html")
 
 
-#@app.route("/")
+@app.route("/")
 def landing():
     # вместо public.html рендерим landing.html
     # создайте при необходимости
