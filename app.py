@@ -84,68 +84,7 @@ yandex = oauth.register(
     client_kwargs={"scope": "login:email login:info", "response_type": "code"},
 )
 
-@app.route("/login/yandex")
-def login_yandex():
-    """Стартуем OAuth flow через Яндекс."""
-    redirect_uri = "https://astra-systems.ru/auth/yandex/callback"
-    return yandex.authorize_redirect(redirect_uri)
 
-@app.route("/auth/yandex/callback")
-def auth_yandex_callback():
-    """Обрабатываем ответ от Яндекс и логиним пользователя."""
-    try:
-        token = yandex.authorize_access_token()
-    except Exception as e:
-        app.logger.error(f"Yandex OAuth error: {e}")
-        return redirect(url_for('index'))
-    
-    # Получаем информацию о пользователе
-    resp = yandex.get('info', token=token)
-    if resp.status_code != 200:
-        app.logger.error(f"Yandex API error: {resp.status_code}")
-        return redirect(url_for('index'))
-    
-    userinfo = resp.json()
-    
-    # Ищем или создаём пользователя
-    user_doc = users_collection.find_one({"yandex_id": userinfo["id"]})
-    if not user_doc:
-        # Если нет по yandex_id, проверяем по email
-        if userinfo.get("default_email"):
-            user_doc = users_collection.find_one({"email": userinfo["default_email"]})
-    
-    if not user_doc:
-        # Создаем нового пользователя
-        user_doc = {
-            "yandex_id": userinfo["id"],
-            "email": userinfo.get("default_email", ""),
-            "name": userinfo.get("real_name", "") or userinfo.get("display_name", ""),
-            "login": userinfo.get("login", ""),
-            "picture": None,  # Яндекс не отдает аватар по умолчанию
-            "role": "user",
-            "created_at": datetime.utcnow()
-        }
-        ins = users_collection.insert_one(user_doc)
-        user_doc["_id"] = ins.inserted_id
-    else:
-        # Обновляем базовые поля, если нужно
-        updates = {}
-        if userinfo.get("default_email") and user_doc.get("email") != userinfo.get("default_email"):
-            updates["email"] = userinfo.get("default_email")
-        if userinfo.get("real_name") and user_doc.get("name") != userinfo.get("real_name"):
-            updates["name"] = userinfo.get("real_name")
-        if not user_doc.get("yandex_id"):
-            updates["yandex_id"] = userinfo["id"]
-            
-        if updates:
-            users_collection.update_one(
-                {"_id": user_doc["_id"]}, 
-                {"$set": updates}
-            )
-            user_doc.update(updates)
-
-    login_user(User(user_doc))
-    return redirect(url_for("star_navigation"))
 # -------------------------------------------------------------------------
 # 3.  Класс пользователя и загрузка из базы
 # -------------------------------------------------------------------------
@@ -262,12 +201,101 @@ def logout():
 # -------------------------------------------------------------------------
 # 7.  Публичная и защищённая главные страницы
 # -------------------------------------------------------------------------
+@app.route("/login/yandex")
+def login_yandex():
+    """Стартуем OAuth flow через Яндекс."""
+    redirect_uri = url_for("auth_yandex_callback", _external=True)
+    app.logger.info(f"Yandex OAuth redirect_uri: {redirect_uri}")
+    return yandex.authorize_redirect(redirect_uri)
 
 
-@app.route("/index_public")
-def index_public():
-    """Публичная страница — например, лендинг с кнопкой 'Войти'."""
-    return render_template("index_public.html")
+@app.route("/auth/yandex/callback")
+def auth_yandex_callback():
+    """Обрабатываем ответ от Яндекс и логиним пользователя."""
+    try:
+        token = yandex.authorize_access_token()
+        app.logger.info(f"Yandex token received successfully")
+    except Exception as e:
+        app.logger.error(f"Yandex OAuth token error: {e}")
+        return redirect(url_for('landing'))
+    
+    # Получаем информацию о пользователе
+    try:
+        resp = yandex.get('info', token=token)
+        app.logger.info(f"Yandex API response status: {resp.status_code}")
+        
+        if resp.status_code != 200:
+            app.logger.error(f"Yandex API error: {resp.status_code}, {resp.text}")
+            return redirect(url_for('landing'))
+        
+        userinfo = resp.json()
+        app.logger.info(f"Yandex userinfo received: {userinfo}")
+        
+    except Exception as e:
+        app.logger.error(f"Yandex API call error: {e}")
+        return redirect(url_for('landing'))
+    
+    # Проверяем наличие обязательных полей
+    if "id" not in userinfo:
+        app.logger.error(f"Missing 'id' in userinfo: {userinfo}")
+        return redirect(url_for('landing'))
+    
+    try:
+        # Ищем или создаём пользователя
+        user_doc = users_collection.find_one({"yandex_id": userinfo["id"]})
+        if not user_doc:
+            # Если нет по yandex_id, проверяем по email
+            email = userinfo.get("default_email", "")
+            if email:
+                user_doc = users_collection.find_one({"email": email})
+        
+        if not user_doc:
+            # Создаем нового пользователя
+            user_doc = {
+                "yandex_id": userinfo["id"],
+                "email": userinfo.get("default_email", ""),
+                "name": userinfo.get("real_name", "") or userinfo.get("display_name", "") or "Пользователь",
+                "login": userinfo.get("login", ""),
+                "picture": None,
+                "role": "user",
+                "created_at": datetime.utcnow()
+            }
+            ins = users_collection.insert_one(user_doc)
+            user_doc["_id"] = ins.inserted_id
+            app.logger.info(f"Created new user with id: {user_doc['_id']}")
+        else:
+            # Обновляем базовые поля, если нужно
+            updates = {}
+            email = userinfo.get("default_email", "")
+            if email and user_doc.get("email") != email:
+                updates["email"] = email
+            
+            name = userinfo.get("real_name", "") or userinfo.get("display_name", "")
+            if name and user_doc.get("name") != name:
+                updates["name"] = name
+                
+            if not user_doc.get("yandex_id"):
+                updates["yandex_id"] = userinfo["id"]
+                
+            if updates:
+                users_collection.update_one(
+                    {"_id": user_doc["_id"]}, 
+                    {"$set": updates}
+                )
+                user_doc.update(updates)
+                app.logger.info(f"Updated user: {updates}")
+
+        # Создаем объект пользователя и логиним
+        user_obj = User(user_doc)
+        login_user(user_obj)
+        app.logger.info(f"User {user_doc['email']} logged in successfully")
+        
+        # Перенаправляем на star_navigation
+        return redirect(url_for("star_navigation"))
+        
+    except Exception as e:
+        app.logger.error(f"Error during user processing: {e}")
+        return redirect(url_for('landing'))
 
 
 @app.route("/")
@@ -1427,7 +1455,19 @@ def save_regulations_list():
 def question_answer():
     return render_template('question_answer.html')
 
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.error(f"Internal Server Error: {error}")
+    return "Internal server error", 500
 
+@app.errorhandler(404)
+def not_found(error):
+    return "Page not found", 404
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"Unhandled exception: {e}")
+    return "Internal server error", 500
 # -------------------------------------------------------------------------
 # 21.  Запуск приложения
 # -------------------------------------------------------------------------
