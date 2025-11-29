@@ -19,6 +19,7 @@ from werkzeug.utils import secure_filename
 from flask import send_from_directory
 from prometheus_flask_exporter import PrometheusMetrics
 from pymongo import ReturnDocument
+import requests
 # -------------------------------------------------------------------------
 # 1.  Загрузка переменных окружения
 # -------------------------------------------------------------------------
@@ -72,7 +73,79 @@ google = oauth.register(                                     # --- OAuth: доб
     client_kwargs={"scope": "openid email profile"},
     jwks_uri="https://www.googleapis.com/oauth2/v3/certs"
 )
+yandex = oauth.register(
+    name="yandex",
+    client_id=os.getenv("YANDEX_CLIENT_ID"),
+    client_secret=os.getenv("YANDEX_CLIENT_SECRET"),
+    access_token_url="https://oauth.yandex.ru/token",
+    authorize_url="https://oauth.yandex.ru/authorize",
+    api_base_url="https://login.yandex.ru/",
+    userinfo_endpoint="https://login.yandex.ru/info",
+    client_kwargs={"scope": "login:email login:info", "response_type": "code"},
+)
 
+@app.route("/login/yandex")
+def login_yandex():
+    """Стартуем OAuth flow через Яндекс."""
+    redirect_uri = "https://astra-systems.ru/auth/yandex/callback"
+    return yandex.authorize_redirect(redirect_uri)
+
+@app.route("/auth/yandex/callback")
+def auth_yandex_callback():
+    """Обрабатываем ответ от Яндекс и логиним пользователя."""
+    try:
+        token = yandex.authorize_access_token()
+    except Exception as e:
+        app.logger.error(f"Yandex OAuth error: {e}")
+        return redirect(url_for('index'))
+    
+    # Получаем информацию о пользователе
+    resp = yandex.get('info', token=token)
+    if resp.status_code != 200:
+        app.logger.error(f"Yandex API error: {resp.status_code}")
+        return redirect(url_for('index'))
+    
+    userinfo = resp.json()
+    
+    # Ищем или создаём пользователя
+    user_doc = users_collection.find_one({"yandex_id": userinfo["id"]})
+    if not user_doc:
+        # Если нет по yandex_id, проверяем по email
+        if userinfo.get("default_email"):
+            user_doc = users_collection.find_one({"email": userinfo["default_email"]})
+    
+    if not user_doc:
+        # Создаем нового пользователя
+        user_doc = {
+            "yandex_id": userinfo["id"],
+            "email": userinfo.get("default_email", ""),
+            "name": userinfo.get("real_name", "") or userinfo.get("display_name", ""),
+            "login": userinfo.get("login", ""),
+            "picture": None,  # Яндекс не отдает аватар по умолчанию
+            "role": "user",
+            "created_at": datetime.utcnow()
+        }
+        ins = users_collection.insert_one(user_doc)
+        user_doc["_id"] = ins.inserted_id
+    else:
+        # Обновляем базовые поля, если нужно
+        updates = {}
+        if userinfo.get("default_email") and user_doc.get("email") != userinfo.get("default_email"):
+            updates["email"] = userinfo.get("default_email")
+        if userinfo.get("real_name") and user_doc.get("name") != userinfo.get("real_name"):
+            updates["name"] = userinfo.get("real_name")
+        if not user_doc.get("yandex_id"):
+            updates["yandex_id"] = userinfo["id"]
+            
+        if updates:
+            users_collection.update_one(
+                {"_id": user_doc["_id"]}, 
+                {"$set": updates}
+            )
+            user_doc.update(updates)
+
+    login_user(User(user_doc))
+    return redirect(url_for("star_navigation"))
 # -------------------------------------------------------------------------
 # 3.  Класс пользователя и загрузка из базы
 # -------------------------------------------------------------------------

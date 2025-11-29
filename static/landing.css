@@ -91,3 +91,13 @@ body {
     /* По высоте как кнопка */
     width: auto;
 }
+.btn-yandex {
+    background-color: #FFCC00;
+    color: #000;
+    border: 1px solid #FFCC00;
+}
+
+.btn-yandex:hover {
+    background-color: #e6b800;
+    border-color: #e6b800;
+}

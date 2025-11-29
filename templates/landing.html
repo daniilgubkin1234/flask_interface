@@ -19,14 +19,14 @@
                 <li>Удобство: вход одним кликом, без дополнительных регистраций.</li>
                 <li>Приватность: АСТРА не хранит ваши пароли, только подтверждённый email.</li>
             </ul>
-            <div class="button-group">
-                <a href="{{ url_for('login') }}" class="btn main-btn">
-                    Войти через Google
-                </a>
-                <a href="{{ url_for('login') }}" class="btn icon-btn">
-                    <img src="{{ url_for('static', filename='google-icon.svg') }}" alt="Google Login" />
-                </a>
-            </div>
+            <div class="auth-buttons">
+    <a href="{{ url_for('login') }}" class="btn btn-google">
+        <i class="fab fa-google"></i> Войти через Google
+    </a>
+    <a href="{{ url_for('login_yandex') }}" class="btn btn-yandex">
+        <i class="fab fa-yandex"></i> Войти через Яндекс
+    </a>
+</div>
         </div>
     </div>
 </body>
