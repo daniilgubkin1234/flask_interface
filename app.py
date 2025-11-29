@@ -219,7 +219,7 @@ def auth_yandex_callback():
         app.logger.error(f"Yandex OAuth token error: {e}")
         return redirect(url_for('landing'))
     
-    # Получаем информацию о пользователе
+    # Получаем информацию о пользователеe
     try:
         resp = yandex.get('info', token=token)
         app.logger.info(f"Yandex API response status: {resp.status_code}")
