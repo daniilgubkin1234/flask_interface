@@ -24,6 +24,12 @@ body {
     text-align: center;
 }
 
+.logo {
+    width: 80px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
 .card h1 {
     font-size: 24px;
     margin-bottom: 16px;
@@ -52,52 +58,32 @@ body {
     gap: 12px;
     /* Расстояние между кнопками */
 }
-
-/* Основная кнопка */
-.main-btn {
-    display: inline-flex;
-    align-items: center;
-    background: #1A73E8;
-    color: #FFFFFF;
-    text-decoration: none;
-    padding: 12px 24px;
-    border-radius: 8px;
+.auth-text {
+    font-size: 14px;
+    color: #5F6368;
+    margin-bottom: 15px;
     font-weight: 500;
-    transition: background 0.3s;
 }
 
-.main-btn:hover {
-    background: #1666C1;
-}
-
-/* Кнопка-иконка */
-.icon-btn {
-    display: inline-flex;
-    align-items: center;
-    background: #FFFFFF;
-    border: 2px solid #1A73E8;
-    padding: 10px;
+/* Иконка Яндекс */
+.yandex-icon {
+    display: inline-block;
+    width: 150px;
+    height: 60px;
     border-radius: 8px;
-    transition: background 0.3s, border-color 0.3s;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.icon-btn:hover {
-    background: #f1f1f1;
-    border-color: #1666C1;
+.yandex-icon:hover {
+    
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-color: #ff0000;
 }
 
-.icon-btn img {
-    height: 24px;
-    /* По высоте как кнопка */
-    width: auto;
-}
-.btn-yandex {
-    background-color: #FFCC00;
-    color: #000;
-    border: 1px solid #FFCC00;
-}
-
-.btn-yandex:hover {
-    background-color: #e6b800;
-    border-color: #e6b800;
+.yandex-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }

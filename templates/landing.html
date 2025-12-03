@@ -11,22 +11,21 @@
 <body>
     <div class="container">
         <div class="card">
-            <h1>Добро пожаловать в АСТРА</h1>
-            <p>В сервисе используется защищённая авторизация через Google. Это позволяет надежно хранить ваши данные,
-                не требуя от вас придумывать и запоминать новый пароль.</p>
-            <ul>
-                <li>Безопасность: Google защищает доступ к вашим данным.</li>
-                <li>Удобство: вход одним кликом, без дополнительных регистраций.</li>
-                <li>Приватность: АСТРА не хранит ваши пароли, только подтверждённый email.</li>
-            </ul>
+            <!-- Добавлен логотип -->
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Логотип АСТРА" class="logo">
+            
+            <h1>Добро пожаловать в <br>сервис управления предприятием АСТРА</br></h1>
+            <p>Пройдите регистрацию по кнопке ниже</p>
+            <div class="auth-text">Войти через Яндекс:</div>
             <div class="auth-buttons">
-    <a href="{{ url_for('login') }}" class="btn btn-google">
-        <i class="fab fa-google"></i> Войти через Google
-    </a>
-    <a href="{{ url_for('login_yandex') }}" class="btn btn-yandex">
-        <i class="fab fa-yandex"></i> Войти через Яндекс
-    </a>
-</div>
+                <!-- Заменена кнопка на иконку Яндекс -->
+                   
+                <a href="{{ url_for('login_yandex') }}" class="yandex-icon">
+    
+                    <img src="{{ url_for('static', filename='img/logo-yandex.png') }}" alt="Яндекс" class="yandex-icon">                </a>
+    
+            </a>
+            </div>
         </div>
     </div>
 </body>
