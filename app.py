@@ -19,7 +19,7 @@ from werkzeug.utils import secure_filename
 from flask import send_from_directory
 from prometheus_flask_exporter import PrometheusMetrics
 from pymongo import ReturnDocument
-import requests
+#import requests
 # -------------------------------------------------------------------------
 # 1.  Загрузка переменных окружения
 # -------------------------------------------------------------------------
