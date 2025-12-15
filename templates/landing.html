@@ -14,9 +14,9 @@
             <!-- Добавлен логотип -->
             <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Логотип АСТРА" class="logo">
             
-            <h1>Добро пожаловать в <br>сервис управления предприятием АСТРА</br></h1>
-            <p>Пройдите регистрацию по кнопке ниже</p>
-            <div class="auth-text">Войти через Яндекс:</div>
+            <h1>Добро пожаловать в <br>систему управления предприятием АСТРА</br></h1>
+            <p>Пройдите регистрацию удобным способом, нажав на кнопку ниже:</p>
+            <div class="auth-text"></div>
             <div class="auth-buttons">
                 <!-- Заменена кнопка на иконку Яндекс -->
                    
@@ -25,6 +25,9 @@
                     <img src="{{ url_for('static', filename='img/logo-yandex.png') }}" alt="Яндекс" class="yandex-icon">                </a>
     
             </a>
+            <a href="{{ url_for('login') }}" class="google-icon">
+        <img src="{{ url_for('static', filename='img/google-logo.png') }}" alt="Google" class="google-icon">
+    </a>
             </div>
         </div>
     </div>

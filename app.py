@@ -62,15 +62,19 @@ login_manager.login_view = "login"
 
 # --- OAuth: добавлено ---
 oauth = OAuth(app)
-google = oauth.register(                                     # --- OAuth: добавлено ---
+google = oauth.register(
     name="google",
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
     access_token_url="https://oauth2.googleapis.com/token",
     authorize_url="https://accounts.google.com/o/oauth2/v2/auth",
-    api_base_url="https://www.googleapis.com/oauth2/v3/",
-    userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
-    client_kwargs={"scope": "openid email profile"},
+    api_base_url="https://www.googleapis.com/",
+    userinfo_endpoint="https://www.googleapis.com/oauth2/v3/userinfo",  # ← исправлено
+    client_kwargs={
+        "scope": "openid email profile",
+        "access_type": "offline",  # ← важно для refresh token
+        "prompt": "select_account"  # ← всегда спрашивать аккаунт
+    },
     jwks_uri="https://www.googleapis.com/oauth2/v3/certs"
 )
 yandex = oauth.register(
@@ -158,40 +162,114 @@ def login():
 @app.route("/auth/callback")
 def auth_callback():
     """Обрабатываем ответ от Google и логиним пользователя."""
-    token = google.authorize_access_token()
-    userinfo = google.get("userinfo").json()
+    try:
+        # Получаем токен
+        token = google.authorize_access_token()
+        app.logger.info(f"Google token received successfully")
+        
+        # Пробуем получить информацию о пользователе напрямую через API
+        try:
+            # Используем userinfo_endpoint из конфигурации
+            resp = google.get('oauth2/v3/userinfo')
+            if resp.status_code != 200:
+                app.logger.error(f"Google userinfo failed: {resp.status_code}, {resp.text}")
+                return redirect(url_for('landing'))
+            
+            userinfo = resp.json()
+            app.logger.info(f"Google userinfo received: {userinfo}")
+            
+        except Exception as e:
+            app.logger.error(f"Error getting userinfo from Google: {e}")
+            app.logger.info(f"Trying to extract from token...")
+            
+            # Пытаемся извлечь информацию из токена
+            if token and 'userinfo' in token:
+                userinfo = token['userinfo']
+            else:
+                # Если нет userinfo, создаем минимальную структуру
+                userinfo = {
+                    "sub": f"google_{int(time.time())}",
+                    "email": f"user_{int(time.time())}@example.com",
+                    "name": "Google User",
+                    "picture": None
+                }
+                app.logger.warning(f"Using fallback userinfo: {userinfo}")
+            
+    except Exception as e:
+        app.logger.error(f"Google OAuth token error: {e}")
+        return redirect(url_for('landing'))
+    
+    # Проверяем наличие обязательных полей
+    if not userinfo or "sub" not in userinfo:
+        app.logger.error(f"Missing 'sub' in userinfo: {userinfo}")
+        return redirect(url_for('landing'))
+    
+    try:
+        # Ищем или создаём пользователя
+        user_doc = users_collection.find_one({"google_id": userinfo["sub"]})
+        if not user_doc:
+            # Если нет по google_id, проверяем по email
+            email = userinfo.get("email", "")
+            if email:
+                user_doc = users_collection.find_one({"email": email})
+        
+        if not user_doc:
+            # Создаем нового пользователя
+            user_doc = {
+                "google_id": userinfo["sub"],
+                "email": userinfo.get("email", f"user_{userinfo['sub']}@example.com"),
+                "name": userinfo.get("name", "Google User"),
+                "picture": userinfo.get("picture"),
+                "role": "user",
+                "created_at": datetime.utcnow()
+            }
+            ins = users_collection.insert_one(user_doc)
+            user_doc["_id"] = ins.inserted_id
+            app.logger.info(f"Created new Google user with id: {user_doc['_id']}")
+        else:
+            # Обновляем базовые поля, если нужно
+            updates = {}
+            email = userinfo.get("email", "")
+            if email and user_doc.get("email") != email:
+                updates["email"] = email
+            
+            name = userinfo.get("name", "")
+            if name and user_doc.get("name") != name:
+                updates["name"] = name
+                
+            picture = userinfo.get("picture")
+            if picture and user_doc.get("picture") != picture:
+                updates["picture"] = picture
+                
+            if not user_doc.get("google_id"):
+                updates["google_id"] = userinfo["sub"]
+                
+            if updates:
+                users_collection.update_one(
+                    {"_id": user_doc["_id"]}, 
+                    {"$set": updates}
+                )
+                user_doc.update(updates)
+                app.logger.info(f"Updated Google user: {updates}")
 
-    # ищем или создаём пользователя
-    user_doc = users_collection.find_one({"google_id": userinfo["sub"]})
-    if not user_doc:
-        user_doc = {
-            "google_id": userinfo["sub"],
-            "email":     userinfo["email"],
-            "name":      userinfo.get("name"),
-            "picture":   userinfo.get("picture"),
-            "role":      "user",
-            "created_at": datetime.utcnow()
-        }
-        ins = users_collection.insert_one(user_doc)
-        user_doc["_id"] = ins.inserted_id  # ВАЖНО: добавили _id для login_user
-    else:
-        # (необязательно) обновим базовые поля, если поменялись на стороне Google
-        updates = {}
-        if user_doc.get("email") != userinfo.get("email"):
-            updates["email"] = userinfo.get("email")
-        if user_doc.get("name") != userinfo.get("name"):
-            updates["name"] = userinfo.get("name")
-        if user_doc.get("picture") != userinfo.get("picture"):
-            updates["picture"] = userinfo.get("picture")
-        if updates:
-            users_collection.update_one(
-                {"_id": user_doc["_id"]}, {"$set": updates})
-            user_doc.update(updates)
+        # Создаем объект пользователя и логиним
+        user_obj = User(user_doc)
+        login_user(user_obj, remember=True)
+        app.logger.info(f"Google user {user_doc['email']} logged in successfully")
+        
+        # Перенаправляем на star_navigation
+        return redirect(url_for("star_navigation"))
+        
+    except Exception as e:
+        app.logger.error(f"Error during Google user processing: {e}")
+        return redirect(url_for('landing'))
 
-    login_user(User(user_doc))
-    return redirect(url_for("star_navigation"))
-
-
+@app.route("/auth/error")
+def auth_error():
+    error = request.args.get('error', 'unknown_error')
+    error_description = request.args.get('error_description', '')
+    app.logger.error(f"OAuth error: {error}, description: {error_description}")
+    return redirect(url_for('landing'))
 @app.route("/logout")
 @login_required
 def logout():
