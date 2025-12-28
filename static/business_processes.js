@@ -1,5 +1,3 @@
-// static/business_processes.js — Semantics + bpmn-js auto layout, lanes, colors, editor-priority, upload to registry
-
 document.addEventListener("DOMContentLoaded", () => {
     // --- DOM
    document.querySelector('.toggle-sidebar').addEventListener('click', function() {
@@ -1004,8 +1002,106 @@ document.addEventListener("DOMContentLoaded", () => {
     // Изменение названия процесса — автосейв
     bpNameInput?.addEventListener("input", autosave);
     // ========================================================
-    // 6) Таблица: добавление/удаление
+    // 6) Таблица: добавление/удаление и ПЕРЕМЕЩЕНИЕ СТРОК
     // =========================================================
+    
+    // Функция для перемещения строки вверх
+    function moveRowUp(tr) {
+        const prev = tr.previousElementSibling;
+        if (prev) {
+            tbody.insertBefore(tr, prev);
+            updateRowNumbers();
+            autosave();
+            rebuildBPMN();
+            return true;
+        }
+        return false;
+    }
+
+    // Функция для перемещения строки вниз
+    function moveRowDown(tr) {
+        const next = tr.nextElementSibling;
+        if (next) {
+            tbody.insertBefore(next, tr);
+            updateRowNumbers();
+            autosave();
+            rebuildBPMN();
+            return true;
+        }
+        return false;
+    }
+
+    // Функция для перестройки BPMN-схемы после перемещения строк
+    async function rebuildBPMN() {
+        const rows = getTableRowsData();
+        if (rows.length === 0) {
+            alert("Таблица пуста. Добавьте строки для построения схемы.");
+            return;
+        }
+
+        try {
+            // Показываем уведомление
+            alert("Таблица была перестроена. BPMN-схема будет перерисована заново.");
+            
+            // Сбрасываем локальное состояние редакторской версии
+            lastXml = "";
+            isDirty = false;
+
+            // Строим XML по обновленной таблице и отдаём bpmn-js на автоукладку
+            const xmlBuilt = buildBpmnXml(rows);
+            await ensureModelerWithXml(xmlBuilt);
+
+            // Фиксируем текущую (сгенерённую) версию в lastXml
+            const saved = await bpmnModeler.saveXML({ format: true });
+            lastXml = saved.xml;
+
+            // Уведомление о завершении
+            console.log("BPMN-схема успешно перестроена после перемещения строк");
+        } catch (e) {
+            console.error("Ошибка при перестроении BPMN-схемы:", e);
+            alert("Ошибка при перестроении BPMN-схемы: " + (e.message || e));
+        }
+    }
+
+    // Обработчик кликов для кнопок перемещения
+    tbody.addEventListener("click", (e) => {
+        // Обработка кнопки "Вверх"
+        if (e.target.closest(".moveUp")) {
+            const tr = e.target.closest("tr");
+            moveRowUp(tr);
+            return;
+        }
+
+        // Обработка кнопки "Вниз"
+        if (e.target.closest(".moveDown")) {
+            const tr = e.target.closest("tr");
+            moveRowDown(tr);
+            return;
+        }
+
+        // Обработка кнопки удаления (существующий код)
+        const btn = e.target.closest(".deleteRow");
+        if (btn) {
+            const tr = btn.closest("tr");
+            if (tbody.rows.length === 1) {
+                setValue(tr, ".stepNameField", "");
+                setValue(tr, ".stepTypeField", "task");
+                setValue(tr, ".roleField", "");
+                setValue(tr, ".commentsField", "");
+                ensureNextControls(tr, "task");
+            } else {
+                tr.remove();
+                // После удаления строки также перестраиваем BPMN
+                setTimeout(() => {
+                    updateRowNumbers();
+                    rebuildBPMN();
+                }, 10);
+            }
+            updateRowNumbers();
+            autosave();
+        }
+    });
+
     addRowBtn?.addEventListener("click", () => {
         const tr = tbody.rows[0].cloneNode(true);
         setValue(tr, ".stepNameField", "");
@@ -1016,23 +1112,6 @@ document.addEventListener("DOMContentLoaded", () => {
         tbody.appendChild(tr);
         updateRowNumbers();
         attachTypeChangeListeners();
-        autosave();
-    });
-
-    tbody.addEventListener("click", (e) => {
-        const btn = e.target.closest(".deleteRow");
-        if (!btn) return;
-        const tr = btn.closest("tr");
-        if (tbody.rows.length === 1) {
-            setValue(tr, ".stepNameField", "");
-            setValue(tr, ".stepTypeField", "task");
-            setValue(tr, ".roleField", "");
-            setValue(tr, ".commentsField", "");
-            ensureNextControls(tr, "task");
-        } else {
-            tr.remove();
-        }
-        updateRowNumbers();
         autosave();
     });
 

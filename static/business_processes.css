@@ -18,7 +18,42 @@ body {
     position: relative;
     overflow: hidden;
 }
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
 
+.moveUp, .moveDown {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #2a63c2;
+    background: #2a63c2;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.moveUp:hover, .moveDown:hover {
+    background: #3f80f1;
+    border-color: #3f80f1;
+}
+
+.moveUp:active, .moveDown:active {
+    background: #3f80f1;
+    transform: scale(0.95);
+}
+
+.deleteRow {
+    width: 100%;
+    margin-top: 2px;
+}
 /* Заголовок h2 */
 h2 {
     text-align: center;
